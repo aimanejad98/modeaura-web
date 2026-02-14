@@ -1,0 +1,196 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link [ref=e6] [cursor=pointer]:
+          - /url: https://www.instagram.com/modeaura1/
+          - img [ref=e7]
+        - link [ref=e10] [cursor=pointer]:
+          - /url: https://www.facebook.com/profile.php?id=61561081692244
+          - img [ref=e11]
+      - generic [ref=e16]: Complimentary Shipping on Orders Above $250
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - link "+1 (226) 506-0808" [ref=e19] [cursor=pointer]:
+            - /url: tel:+12265060808
+            - img [ref=e20]
+            - text: +1 (226) 506-0808
+          - link "info@modeaura.com" [ref=e22] [cursor=pointer]:
+            - /url: mailto:info@modeaura.com
+            - img [ref=e23]
+            - text: info@modeaura.com
+        - button "$ CAD" [ref=e27] [cursor=pointer]:
+          - img [ref=e28]
+          - text: $ CAD
+          - img [ref=e31]
+    - generic [ref=e34]:
+      - link "Mode Aura WHERE FASHION MEETS ACCESSORIES" [ref=e35] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - heading "Mode" [level=1] [ref=e38]
+            - heading "Aura" [level=1] [ref=e39]
+          - generic [ref=e41]: WHERE FASHION MEETS ACCESSORIES
+      - generic [ref=e43]:
+        - textbox "SEARCH THE ATELIER..." [ref=e44]
+        - img [ref=e45]
+      - generic [ref=e48]:
+        - link [ref=e49] [cursor=pointer]:
+          - /url: /wishlist
+          - img [ref=e50]
+        - link "Sign In" [ref=e52] [cursor=pointer]:
+          - /url: /login
+          - img [ref=e54]
+          - generic [ref=e57]: Sign In
+        - link [ref=e58] [cursor=pointer]:
+          - /url: /bag
+          - img [ref=e59]
+    - generic [ref=e63]:
+      - link "NEW ARRIVALS" [ref=e65] [cursor=pointer]:
+        - /url: /shop?filter=new
+        - text: NEW ARRIVALS
+      - link "ABAYAS" [ref=e67] [cursor=pointer]:
+        - /url: /shop?category=cmlgwtpdg0000f3u8pebopygv
+        - text: ABAYAS
+      - link "SCARFS" [ref=e69] [cursor=pointer]:
+        - /url: /shop?category=cmlgwtpgo0001f3u86s3kow6e
+        - text: SCARFS
+      - link "BAGS" [ref=e71] [cursor=pointer]:
+        - /url: /shop?category=cmlgwtpmg0003f3u8zjn6k435
+        - text: BAGS
+      - link "ACCESSORIES" [ref=e73] [cursor=pointer]:
+        - /url: /shop?category=cmlgwtpp30004f3u8undg7ax6
+        - text: ACCESSORIES
+      - link "SALE" [ref=e75] [cursor=pointer]:
+        - /url: /shop?filter=sale
+        - text: SALE
+  - generic [ref=e77]:
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - img "Mode Aura Atelier" [ref=e80]
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - heading "THE ATELIER CIRCLE" [level=4] [ref=e84]
+            - heading "Uncompromising Elegance, Timeless Sophistication." [level=2] [ref=e85]:
+              - text: Uncompromising Elegance,
+              - text: Timeless Sophistication.
+          - paragraph [ref=e86]: Step into a world where modern design meets traditional modesty. Members receive priority access to our limited-run atelier collections and bespoke seasonal previews.
+      - generic [ref=e88]:
+        - generic [ref=e89]:
+          - link "Mode Aura Home":
+            - /url: /
+            - generic [ref=e90] [cursor=pointer]: Mode Aura Home
+          - generic [ref=e91]:
+            - img "Mode Aura" [ref=e92]
+            - paragraph [ref=e93]: Where Fashion Meets Accessories
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - heading "Welcome Back" [level=2] [ref=e96]
+            - paragraph [ref=e97]: Enter your credentials to enter the atelier
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - text: Email Address
+              - textbox "name@email.com" [ref=e100]
+            - generic [ref=e101]:
+              - generic [ref=e102]:
+                - generic [ref=e103]: PASSWORD
+                - link "Forgot?" [ref=e104] [cursor=pointer]:
+                  - /url: /forgot-password
+              - textbox "••••••••••••" [ref=e105]
+            - button "Sign In" [ref=e106]
+          - paragraph [ref=e108]:
+            - text: Not a member yet?
+            - link "REGISTER" [ref=e109] [cursor=pointer]:
+              - /url: /register
+    - contentinfo [ref=e110]:
+      - generic [ref=e111]:
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - link "Mode Aura" [ref=e114] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e115]:
+                - generic [ref=e116]: Mode
+                - generic [ref=e117]: Aura
+            - paragraph [ref=e118]: Luxury Modest Fashion
+            - generic [ref=e119]:
+              - link [ref=e120] [cursor=pointer]:
+                - /url: https://www.instagram.com/modeaura1/
+                - img [ref=e121]
+              - link [ref=e124] [cursor=pointer]:
+                - /url: https://www.facebook.com/profile.php?id=61561081692244
+                - img [ref=e125]
+          - generic [ref=e127]:
+            - heading "The Atelier" [level=4] [ref=e128]
+            - list [ref=e129]:
+              - listitem [ref=e130]:
+                - link "Bespoke Collection" [ref=e131] [cursor=pointer]:
+                  - /url: /shop
+                  - text: Bespoke Collection
+              - listitem [ref=e132]:
+                - link "New Arrivals" [ref=e133] [cursor=pointer]:
+                  - /url: /shop?filter=new
+                  - text: New Arrivals
+              - listitem [ref=e134]:
+                - link "Kids Line" [ref=e135] [cursor=pointer]:
+                  - /url: /shop?kids=true
+                  - text: Kids Line
+              - listitem [ref=e136]:
+                - link "Our Heritage" [ref=e137] [cursor=pointer]:
+                  - /url: /about
+                  - text: Our Heritage
+          - generic [ref=e138]:
+            - heading "Curated Support" [level=4] [ref=e139]
+            - list [ref=e140]:
+              - listitem [ref=e141]:
+                - link "Contact Us" [ref=e142] [cursor=pointer]:
+                  - /url: /contact
+                  - text: Contact Us
+              - listitem [ref=e143]:
+                - link "Size Precision" [ref=e144] [cursor=pointer]:
+                  - /url: /size-guide
+                  - text: Size Precision
+              - listitem [ref=e145]:
+                - link "Shipping Grace" [ref=e146] [cursor=pointer]:
+                  - /url: /shipping
+                  - text: Shipping Grace
+              - listitem [ref=e147]:
+                - link "Exchange Policy" [ref=e148] [cursor=pointer]:
+                  - /url: /returns
+                  - text: Exchange Policy
+          - generic [ref=e149]:
+            - heading "Reach The Atelier" [level=4] [ref=e150]
+            - generic [ref=e151]:
+              - generic [ref=e152]:
+                - paragraph [ref=e153]: Correspondence
+                - link "info@modeaura.ca" [ref=e154] [cursor=pointer]:
+                  - /url: mailto:info@modeaura.ca
+              - generic [ref=e155]:
+                - paragraph [ref=e156]: Consultation
+                - link "+1 (226) 506-0808" [ref=e157] [cursor=pointer]:
+                  - /url: tel:+12265060808
+              - generic [ref=e158]:
+                - paragraph [ref=e159]: Presence
+                - paragraph [ref=e160]: Windsor, ON, Canada
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - paragraph [ref=e163]: © 2026 Mode AURA Atelier. Crafted for Grace.
+            - generic [ref=e164]:
+              - link "Privacy Policy" [ref=e165] [cursor=pointer]:
+                - /url: /privacy-policy
+              - link "Terms of Service" [ref=e166] [cursor=pointer]:
+                - /url: /terms-of-service
+          - generic [ref=e167]:
+            - link "Visit Sanctuary" [ref=e168] [cursor=pointer]:
+              - /url: /contact
+              - text: Visit Sanctuary
+              - img [ref=e169]
+            - button "Back To Top" [ref=e171]:
+              - text: Back To Top
+              - img [ref=e172]
+  - button "Open Next.js Dev Tools" [ref=e179] [cursor=pointer]:
+    - img [ref=e180]
+  - alert [ref=e183]
+```

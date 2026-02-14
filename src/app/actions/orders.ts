@@ -1,0 +1,223 @@
+"use server";
+
+import prisma from "@/lib/db";
+import { revalidatePath } from "next/cache";
+
+export async function getOrders() {
+    try {
+        const orders = await prisma.order.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: { customerRef: true }
+        });
+        return JSON.parse(JSON.stringify(orders));
+    } catch (error) {
+        console.error('[Orders] Fetch failed:', error);
+        return [];
+    }
+}
+
+export async function getOrdersByCustomer(customerId: string) {
+    try {
+        const orders = await prisma.order.findMany({
+            where: { customerId },
+            orderBy: { createdAt: 'desc' }
+        });
+        return JSON.parse(JSON.stringify(orders));
+    } catch (error) {
+        console.error('[Orders] Customer fetch failed:', error);
+        return [];
+    }
+}
+
+export async function createOrder(data: {
+    orderId: string;
+    customer: string;
+    customerId?: string;
+    total: number;
+    date: string;
+    items: any;
+    paymentMethod?: string;
+    amountPaid?: number;
+    change?: number;
+    source?: string;
+    status?: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    shippingMethod?: string;
+    discountCode?: string;
+    discountAmount?: number;
+}) {
+    try {
+        const { paymentMethod, amountPaid, change, source, status, items, ...rest } = data;
+
+        // Ensure we only pass fields that exist in the schema
+        const dbData: any = {
+            orderId: rest.orderId,
+            customer: rest.customer,
+            customerId: rest.customerId || null,
+            total: data.total,
+            date: data.date,
+            items: items,
+            address: data.address,
+            city: data.city,
+            postalCode: data.postalCode,
+            shippingMethod: data.shippingMethod,
+            status: status || 'Pending',
+            payment: paymentMethod === 'Stripe (Simulated)' ? 'Paid' : (paymentMethod || 'Paid'),
+            paymentMethod: paymentMethod || 'Cash',
+            amountPaid: amountPaid || null,
+            change: change || null,
+            source: source || 'WEBSITE',
+            discountCode: data.discountCode || null,
+            discountAmount: data.discountAmount || 0
+        };
+
+        const order = await prisma.order.create({
+            data: dbData
+        });
+
+        revalidatePath('/dashboard/pos');
+        revalidatePath('/dashboard/orders');
+        revalidatePath('/dashboard/receipts');
+        revalidatePath('/dashboard/shipping');
+        revalidatePath('/account');
+        return JSON.parse(JSON.stringify(order));
+    } catch (error) {
+        console.error('[Orders] Create failed:', error);
+        throw error;
+    }
+}
+
+export async function updateOrderStatus(id: string, status: string) {
+    try {
+        const data: any = { status };
+
+        // Auto-set shipping fields when marking as Shipped
+        if (status === 'Shipped') {
+            const today = new Date();
+            data.shippedDate = today.toISOString().split('T')[0];
+            data.shippingStatus = 'Shipped';
+            // Default ETA: 5 business days from today
+            const eta = new Date(today);
+            let daysAdded = 0;
+            while (daysAdded < 5) {
+                eta.setDate(eta.getDate() + 1);
+                if (eta.getDay() !== 0 && eta.getDay() !== 6) daysAdded++;
+            }
+            data.estimatedDeliveryDate = eta.toISOString().split('T')[0];
+        }
+
+        const order = await prisma.order.update({
+            where: { id },
+            data
+        });
+        revalidatePath('/dashboard/orders');
+        revalidatePath('/dashboard/shipping');
+        revalidatePath(`/api/orders/${order.orderId}`);
+        return JSON.parse(JSON.stringify(order));
+    } catch (error) {
+        console.error('[Orders] Status update failed:', error);
+        throw error;
+    }
+}
+
+export async function updateTracking(id: string, trackingNumber: string, courier: string) {
+    try {
+        const today = new Date();
+        const eta = new Date(today);
+        let daysAdded = 0;
+        while (daysAdded < 5) {
+            eta.setDate(eta.getDate() + 1);
+            if (eta.getDay() !== 0 && eta.getDay() !== 6) daysAdded++;
+        }
+
+        const order = await prisma.order.update({
+            where: { id },
+            data: {
+                trackingNumber,
+                courier,
+                status: 'Shipped',
+                shippedDate: today.toISOString().split('T')[0],
+                shippingStatus: 'Shipped',
+                estimatedDeliveryDate: eta.toISOString().split('T')[0]
+            }
+        });
+        revalidatePath('/dashboard/orders');
+        revalidatePath('/dashboard/shipping');
+        revalidatePath(`/api/orders/${order.orderId}`);
+        return JSON.parse(JSON.stringify(order));
+    } catch (error) {
+        console.error('[Orders] Update tracking failed:', error);
+        throw error;
+    }
+}
+
+export async function updateShippingStatus(id: string, shippingStatus: string) {
+    try {
+        const order = await prisma.order.update({
+            where: { id },
+            data: { shippingStatus }
+        });
+        revalidatePath('/dashboard/orders');
+        revalidatePath('/dashboard/shipping');
+        return JSON.parse(JSON.stringify(order));
+    } catch (error) {
+        console.error('[Orders] Shipping status update failed:', error);
+        throw error;
+    }
+}
+
+export async function updateEstimatedDelivery(id: string, estimatedDate: string) {
+    try {
+        const order = await prisma.order.update({
+            where: { id },
+            data: { estimatedDeliveryDate: estimatedDate }
+        });
+        revalidatePath('/dashboard/orders');
+        revalidatePath('/dashboard/shipping');
+        return JSON.parse(JSON.stringify(order));
+    } catch (error) {
+        console.error('[Orders] ETA update failed:', error);
+        throw error;
+    }
+}
+
+export async function trackOrder(orderId: string) {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { orderId }
+        });
+        if (!order) return null;
+        // Return limited public data only
+        return {
+            orderId: order.orderId,
+            status: order.status,
+            shippingStatus: order.shippingStatus || 'Processing',
+            shippingMethod: order.shippingMethod,
+            trackingNumber: order.trackingNumber,
+            courier: order.courier,
+            shippedDate: order.shippedDate,
+            estimatedDeliveryDate: order.estimatedDeliveryDate,
+            date: order.date,
+            city: order.city,
+            province: order.province
+        };
+    } catch (error) {
+        console.error('[Orders] Track order failed:', error);
+        return null;
+    }
+}
+
+export async function deleteOrder(id: string) {
+    try {
+        await prisma.order.delete({
+            where: { id }
+        });
+        revalidatePath('/dashboard/orders');
+        return { success: true };
+    } catch (error) {
+        console.error('[Orders] Delete failed:', error);
+        return { success: false };
+    }
+}

@@ -1,0 +1,99 @@
+function PriceFilter({ min, max, selectedRange, onApply }: {
+        min: number;
+        max: number;
+        selectedRange: [number, number];
+        onApply: (range: [number, number]) => void;
+    }) {
+        const [isOpen, setIsOpen] = useState(false);
+        const [localRange, setLocalRange] = useState<[number, number]>(selectedRange);
+
+        // Sync when opening
+        useEffect(() => {
+            if (isOpen) setLocalRange(selectedRange);
+        }, [isOpen, selectedRange]);
+
+        const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const val = Math.min(Number(e.target.value), localRange[1] - 1);
+            setLocalRange([val, localRange[1]]);
+        };
+
+        const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const val = Math.max(Number(e.target.value), localRange[0] + 1);
+            setLocalRange([localRange[0], val]);
+        };
+
+        const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>, index: 0 | 1) => {
+            const val = Number(e.target.value);
+            const newRange = [...localRange] as [number, number];
+            newRange[index] = val;
+
+            // Prevent crossing
+            if (index === 0 && val >= localRange[1]) newRange[0] = localRange[1] - 10;
+            if (index === 1 && val <= localRange[0]) newRange[1] = localRange[0] + 10;
+
+            setLocalRange(newRange);
+        };
+
+        // Calculate percentage for slider track positions
+        const getPercent = (value: number) => Math.round(((value - min) / (max - min)) * 100);
+
+        return (
+            <div className="relative">
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-widest transition-colors whitespace-nowrap py-2 ${isOpen || (selectedRange[0] > min || selectedRange[1] < max) ? 'text-black' : 'text-gray-400 hover:text-black'}`}
+                >
+                    Price
+                    {(selectedRange[0] > min || selectedRange[1] < max) && <span className="text-[var(--gold)] text-[9px]">(${selectedRange[0]}-${selectedRange[1]})</span>}
+                    <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isOpen && (
+                    <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+                        <div className="absolute top-full left-0 mt-4 bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-3xl p-8 min-w-[350px] z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+                            {/* Inputs */}
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="flex-1 border border-gray-200 rounded-xl px-4 py-3 bg-white hover:border-gray-300 focus-within:border-black transition-all">
+                                    <span className="text-xs font-bold text-gray-400 mr-1">$</span>
+                                    <input
+                                        type="number"
+                                        value={localRange[0]}
+                                        onChange={handleMinChange}
+                                        className="w-full outline-none text-sm font-bold text-black"
+                                    />
+                                </div>
+                                <span className="text-gray-300">-</span>
+                                <div className="flex-1 border border-gray-200 rounded-xl px-4 py-3 bg-white hover:border-gray-300 focus-within:border-black transition-all">
+                                    <span className="text-xs font-bold text-gray-400 mr-1">$</span>
+                                    <input
+                                        type="number"
+                                        value={localRange[1]}
+                                        onChange={handleMaxChange}
+                                        className="w-full outline-none text-sm font-bold text-black"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Slider */}
+                            <div className="relative h-2 mb-12">
+                                <div className="absolute w-full h-full bg-gray-100 rounded-full"></div>
+                                <div
+                                    className="absolute h-full bg-black rounded-full"
+                                    style={{
+                                        left: `${getPercent(localRange[0])}%`,
+                                        width: `${getPercent(localRange[1]) - getPercent(localRange[0])}%`
+                                    }}
+                                ></div>
+
+                                {/* Range Inputs (invisible but clickable) */}
+                                <input
+                                    type="range"
+                                    min={min}
+                                    max={max}
+                                    value={localRange[0]}
+                                    onChange={(e) => handleSliderChange(e, 0)}
+                                    className="absolute w-full h-full appearance-none bg-transparent pointer-events-none z-30 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
+                                />
+                                <input
+                      

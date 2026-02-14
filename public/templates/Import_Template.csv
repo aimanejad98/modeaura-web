@@ -1,0 +1,5 @@
+images,name,category,subcategory,price,costprice,stock,size,color,material,isKids,isNewArrival
+"https://example.com/item1.jpg|https://example.com/item1_alt.jpg","Elegant Abaya",Abaya,"Classic Abayas",120.00,45.00,10,M,Black,Silk,FALSE,TRUE
+"https://example.com/item1.jpg|https://example.com/item1_alt.jpg","Elegant Abaya",Abaya,"Classic Abayas",120.00,45.00,10,L,Black,Silk,FALSE,TRUE
+"https://example.com/kids_dress.jpg","Floral Kids Dress",Kids,"Dresses",45.00,15.00,25,4Y,Pink,Cotton,TRUE,FALSE
+"https://example.com/kids_dress.jpg","Floral Kids Dress",Kids,"Dresses",45.00,15.00,25,6Y,Pink,Cotton,TRUE,FALSE

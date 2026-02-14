@@ -1,0 +1,355 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id                String             @id @default(cuid())
+  name              String
+  code              String             @default("")
+  type              String             @default("Product")
+  fields            String             @default("size,color,material")
+  parentId          String?
+  createdAt         DateTime           @default(now())
+  image             String?
+  parent            Category?          @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children          Category[]         @relation("CategoryHierarchy")
+  colors            Color[]
+  expenses          Expense[]
+  materials         Material[]
+  patterns          Pattern[]
+  products          Product[]
+  recurringExpenses RecurringExpense[]
+  sizes             Size[]
+
+  @@unique([name, parentId])
+}
+
+model Staff {
+  id                String    @id @default(cuid())
+  employeeId        String?   @unique
+  name              String
+  email             String    @unique
+  password          String?
+  phone             String?
+  role              String    @default("Staff")
+  hourlyRate        Float     @default(0)
+  status            String    @default("Clocked Out")
+  address           String?
+  sin               String?
+  dob               String?
+  bankName          String?
+  transitNumber     String?
+  institutionNumber String?
+  accountNumber     String?
+  emergencyName     String?
+  emergencyPhone    String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  shifts            Shift[]
+}
+
+model Shift {
+  id         String   @id @default(cuid())
+  date       String
+  startTime  String
+  endTime    String?
+  totalHours Float    @default(0)
+  staffId    String
+  createdAt  DateTime @default(now())
+  staff      Staff    @relation(fields: [staffId], references: [id])
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  sku           String   @unique @default("")
+  name          String
+  description   String?
+  categoryId    String
+  price         Float
+  costPrice     Float    @default(0)
+  comparePrice  Float?
+  stock         Int      @default(0)
+  size          String?
+  color         String?
+  material      String?
+  images        String   @default("")
+  featured      Boolean  @default(false)
+  isNewArrival  Boolean  @default(false)
+  isKids        Boolean  @default(false)
+  showOnWebsite Boolean  @default(true)
+  attributes    Json?
+  discountPrice Float?
+  saleId        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  style         String?
+  sale          Sale?    @relation(fields: [saleId], references: [id])
+  category      Category @relation(fields: [categoryId], references: [id])
+}
+
+model Sale {
+  id          String    @id @default(cuid())
+  name        String
+  type        String    @default("Percentage")
+  value       Float
+  startDate   DateTime
+  endDate     DateTime
+  active      Boolean   @default(true)
+  description String?
+  createdAt   DateTime  @default(now())
+  products    Product[]
+}
+
+model Pattern {
+  id         String   @id @default(cuid())
+  name       String
+  categoryId String
+  createdAt  DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id])
+}
+
+model Banner {
+  id            String   @id @default(cuid())
+  title         String
+  subtitle      String?
+  image         String
+  link          String?
+  designLayout  String   @default("Full")
+  order         Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  textColor     String?  @default("#000000")
+  subtitleColor String?  @default("#D4AF37")
+}
+
+model Order {
+  id             String    @id @default(cuid())
+  orderId        String    @unique
+  customer       String    @default("Guest")
+  customerId     String?
+  total          Float
+  status         String    @default("In Progress")
+  payment        String    @default("Unpaid")
+  paymentMethod  String    @default("Cash")
+  amountPaid     Float?
+  change         Float?
+  source         String    @default("WEBSITE")
+  date           String
+  items          Json
+  createdAt      DateTime  @default(now())
+  address        String?
+  city           String?
+  postalCode     String?
+  shippingMethod String?   @default("Standard")
+  discountAmount Float?    @default(0)
+  discountCode   String?
+  trackingNumber String?
+  courier               String?
+  province              String?
+  shippedDate           String?
+  estimatedDeliveryDate String?
+  shippingStatus        String?   @default("Processing")
+  customerRef           Customer? @relation("CustomerOrders", fields: [customerId], references: [id])
+}
+
+model DiscountCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  type           String    @default("Percentage")
+  value          Float
+  minOrderAmount Float     @default(0)
+  maxUses        Int?
+  uses           Int       @default(0)
+  expiresAt      DateTime?
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Theme {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  isActive        Boolean  @default(false)
+  primaryColor    String   @default("#D4AF37")
+  secondaryColor  String   @default("#1B2936")
+  backgroundColor String   @default("#FAF9F6")
+  accentColor     String   @default("#C9A227")
+  logoUrl         String?
+  bannerUrl       String?
+  announcement    String?
+  customCss       String?  @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  auraColor       String?
+  fontFamily      String?
+  visualArt       String?
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Page {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  content      String?
+  status       String   @default("Draft")
+  lastModified DateTime @updatedAt
+  createdAt    DateTime @default(now())
+}
+
+model Expense {
+  id          String    @id @default(cuid())
+  categoryId  String?
+  description String
+  amount      Float
+  date        String
+  isRecurring Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  category    Category? @relation(fields: [categoryId], references: [id])
+}
+
+model RecurringExpense {
+  id          String    @id @default(cuid())
+  description String
+  amount      Float
+  categoryId  String?
+  frequency   String    @default("Monthly")
+  nextDueDate DateTime
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  category    Category? @relation(fields: [categoryId], references: [id])
+}
+
+model Customer {
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  password         String?
+  phone            String?
+  role             String    @default("Customer")
+  isVerified       Boolean   @default(false)
+  verificationCode String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  totalSpend       Float     @default(0)
+  lastVisit        String?
+  tags             String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  address          String?
+  city             String?
+  province         String?
+  postalCode       String?
+  orders           Order[]   @relation("CustomerOrders")
+}
+
+model SkuCounter {
+  id      String @id @default(cuid())
+  prefix  String @unique
+  counter Int    @default(0)
+}
+
+model StoreSetting {
+  id             String   @id @default(cuid())
+  storeName      String   @default("Mode AURA")
+  tagline        String?
+  logo           String?
+  address        String?
+  phone          String?
+  email          String?
+  instagram      String?
+  facebook       String?
+  website        String?
+  taxRate        Float    @default(13)
+  currency       String   @default("CAD")
+  receiptNote    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  favicon        String?
+  seoDescription String?
+  seoTitle       String?
+  announcement   String?  @default("Complimentary Shipping on Orders Above $250")
+}
+
+model NavItem {
+  id        String    @id @default(cuid())
+  label     String
+  href      String
+  order     Int       @default(0)
+  parentId  String?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  parent    NavItem?  @relation("NavHierarchy", fields: [parentId], references: [id])
+  children  NavItem[] @relation("NavHierarchy")
+}
+
+model Material {
+  id         String    @id @default(cuid())
+  name       String    @unique
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  name       String
+  email      String?
+  location   String?
+  content    String
+  rating     Int      @default(5)
+  showOnHome Boolean  @default(false)
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  title      String?
+}
+
+model BusinessAsset {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  type         String   @default("Equipment")
+  value        Float
+  dateAcquired String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Color {
+  id         String    @id @default(cuid())
+  name       String    @unique
+  hex        String?
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+}
+
+model Size {
+  id         String    @id @default(cuid())
+  name       String
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  @@unique([name, categoryId])
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  url       String
+  filename  String
+  type      String   @default("image")
+  size      Int?
+  createdAt DateTime @default(now())
+}
