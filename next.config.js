@@ -4,7 +4,13 @@ const nextConfig = {
         ignoreDuringBuilds: true,
     },
     images: {
-        domains: ['localhost'],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: '**',
+            },
+        ],
+        unoptimized: true,
     },
     async redirects() {
         return [
