@@ -1,36 +1,36 @@
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const db = new PrismaClient();
 
 async function retroSync() {
     console.log("--- Starting Retro-Sync ---");
 
     // 1. Ensure all subcategories have patterns
-    const subCategories = await prisma.category.findMany({
+    const subCategories = await db.category.findMany({
         where: { parentId: { not: null } }
     });
 
     for (const sub of subCategories) {
-        const existingPattern = await prisma.pattern.findFirst({
+        const existingPattern = await db.pattern.findFirst({
             where: { name: sub.name, categoryId: sub.parentId }
         });
         if (!existingPattern) {
             console.log(`Creating missing Pattern for subcategory: ${sub.name}`);
-            await prisma.pattern.create({
+            await db.pattern.create({
                 data: { name: sub.name, categoryId: sub.parentId }
             });
         }
     }
 
     // 2. Ensure all patterns have subcategories
-    const patterns = await prisma.pattern.findMany();
+    const patterns = await db.pattern.findMany();
     for (const pat of patterns) {
-        const existingSub = await prisma.category.findFirst({
+        const existingSub = await db.category.findFirst({
             where: { name: pat.name, parentId: pat.categoryId }
         });
         if (!existingSub) {
             console.log(`Creating missing subcategory for Pattern: ${pat.name}`);
             const code = pat.name.replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || 'SUB';
-            await (prisma.category as any).create({
+            await (db.category as any).create({
                 data: {
                     name: pat.name,
                     code,
@@ -45,4 +45,4 @@ async function retroSync() {
     console.log("--- Retro-Sync Complete ---");
 }
 
-retroSync().finally(() => prisma.$disconnect());
+retroSync().finally(() => db.$disconnect());
