@@ -5,7 +5,7 @@ import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Price from '@/components/Price';
-import { ShieldCheck, Truck, CreditCard, ArrowRight, Apple, Smartphone, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Truck, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createOrder } from '@/app/actions/orders';
@@ -13,14 +13,25 @@ import { getCurrentUser } from '@/app/actions/auth';
 import { validateDiscountCode, incrementDiscountUses } from '@/app/actions/discounts';
 import { Ticket, X, Loader2 } from 'lucide-react';
 
+// Stripe Imports
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import CheckoutForm from './CheckoutForm';
+
+// Initialize Stripe outside of component
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
 export default function CheckoutPage() {
     const { cart, cartTotal, clearCart, discount, applyDiscount, removeDiscount, totalAfterDiscount } = useCart();
-    const [isProcessing, setIsProcessing] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [paymentStep, setPaymentStep] = useState<'info' | 'payment' | 'success'>('info');
     const [promoCode, setPromoCode] = useState('');
     const [promoError, setPromoError] = useState('');
     const [isValidating, setIsValidating] = useState(false);
+
+    // Stripe State
+    const [clientSecret, setClientSecret] = useState('');
+    const [loadingPayment, setLoadingPayment] = useState(false);
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -76,38 +87,57 @@ export default function CheckoutPage() {
         return city === 'windsor' || city === 'lasalle';
     }, [formData.city]);
 
-    // Calculate shipping cost based on location
     const shippingCost = useMemo(() => {
-        // Local delivery is free
         if (isLocalDelivery) return 0;
-
-        // If no country selected yet, show 0
         if (!formData.country) return 0;
-
-        // Canada shipping rates (excluding local)
         if (formData.country === 'Canada') {
             const province = formData.province.toLowerCase();
-            if (province === 'ontario') return 8; // Ontario standard shipping
-            return 12; // Other provinces standard shipping
+            if (province === 'ontario') return 8;
+            return 12;
         }
-
-        // United States shipping
         if (formData.country === 'United States') {
-            return 18; // Standard US shipping
+            return 18;
         }
-
         return 0;
     }, [formData.country, formData.province, formData.city, isLocalDelivery]);
+
+    const finalTotal = (totalAfterDiscount + shippingCost) * 1.13;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleProceedToPayment = (e: React.FormEvent) => {
+    const handleProceedToPayment = async (e: React.FormEvent) => {
         e.preventDefault();
-        setPaymentStep('payment');
-        window.scrollTo(0, 0);
+        setLoadingPayment(true);
+
+        try {
+            // Fetch Client Secret
+            // We pass the *calculated* amount to API mostly for validation or just simple init
+            // API should ideally recalculate, but for now we trust the flow
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: cart,
+                    amount: finalTotal, // Pass the total including tax/shipping
+                    email: formData.email
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to init payment');
+
+            const data = await res.json();
+            setClientSecret(data.clientSecret);
+            setPaymentStep('payment');
+            window.scrollTo(0, 0);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to load payment system. Please try again.');
+        } finally {
+            setLoadingPayment(false);
+        }
     };
 
     const handleApplyPromo = async () => {
@@ -125,9 +155,7 @@ export default function CheckoutPage() {
         setIsValidating(false);
     };
 
-    const handleFinalizeCheckout = async () => {
-        setIsProcessing(true);
-
+    const handleSuccess = async (paymentIntentId: string) => {
         try {
             const orderId = `MA-${Math.floor(100000 + Math.random() * 900000)}`;
             const orderData = {
@@ -135,7 +163,7 @@ export default function CheckoutPage() {
                 customer: `${formData.firstName} ${formData.lastName}`,
                 customerId: user?.id || null,
                 email: formData.email,
-                total: (totalAfterDiscount + shippingCost) * 1.13,
+                total: finalTotal,
                 date: new Date().toISOString(),
                 items: cart.map(item => ({
                     ...item,
@@ -146,7 +174,8 @@ export default function CheckoutPage() {
                 province: formData.province,
                 postalCode: formData.postalCode,
                 status: 'Pending',
-                paymentMethod: 'Chase (Pending Integration)',
+                paymentMethod: 'Credit Card (Stripe)',
+                amountPaid: finalTotal,
                 source: 'WEBSITE',
                 shippingMethod: isLocalDelivery ? 'Local Hand-Delivery' : 'Standard',
                 discountCode: discount?.code,
@@ -161,11 +190,10 @@ export default function CheckoutPage() {
             clearCart();
             removeDiscount();
             setPaymentStep('success');
+            window.scrollTo(0, 0);
         } catch (error) {
-            console.error('Checkout failed:', error);
-            alert('Something went wrong. Please try again.');
-        } finally {
-            setIsProcessing(false);
+            console.error('Order creation failed:', error);
+            alert('Payment successful but order creation failed. Please contact support.');
         }
     };
 
@@ -320,8 +348,8 @@ export default function CheckoutPage() {
                                     )}
                                 </div>
 
-                                <button type="submit" className="w-full bg-[#1B2936] text-white py-6 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl">
-                                    Proceed to Payment <ArrowRight size={16} />
+                                <button type="submit" disabled={loadingPayment} className="w-full bg-[#1B2936] text-white py-6 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl">
+                                    {loadingPayment ? <Loader2 className="animate-spin" /> : <>Proceed to Payment <ArrowRight size={16} /></>}
                                 </button>
                             </form>
                         ) : (
@@ -332,64 +360,12 @@ export default function CheckoutPage() {
                                         <button onClick={() => setPaymentStep('info')} className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors">← Edit Shipping</button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-4">
-                                        <div className="p-8 bg-black text-white rounded-[2.5rem] flex items-center justify-between group cursor-pointer hover:scale-[1.02] transition-all">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center"><Apple size={24} /></div>
-                                                <div>
-                                                    <p className="font-bold">Apple Pay</p>
-                                                    <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Instant Activation</p>
-                                                </div>
-                                            </div>
-                                            <div className="w-6 h-6 border-2 border-white/20 rounded-full group-hover:border-[var(--gold)] transition-colors" />
-                                        </div>
-
-                                        <div className="p-8 bg-zinc-900 text-white rounded-[2.5rem] flex items-center justify-between group cursor-pointer hover:scale-[1.02] transition-all">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center"><Smartphone size={24} /></div>
-                                                <div>
-                                                    <p className="font-bold">Google Pay</p>
-                                                    <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Secure Tap-to-Pay</p>
-                                                </div>
-                                            </div>
-                                            <div className="w-6 h-6 border-2 border-white/20 rounded-full group-hover:border-[var(--gold)] transition-colors" />
-                                        </div>
-
-                                        <div className="p-10 bg-white border border-gray-100 rounded-[3rem] shadow-sm space-y-6">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <CreditCard size={24} className="text-[#1B2936]" />
-                                                    <span className="font-bold italic text-[#1B2936]">Debit or Credit Card</span>
-                                                </div>
-                                                <div className="flex gap-2 opacity-30">
-                                                    <div className="w-8 h-5 bg-gray-200 rounded" />
-                                                    <div className="w-8 h-5 bg-gray-200 rounded" />
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-4 pt-4 border-t border-gray-50">
-                                                <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3 text-gray-400">
-                                                    <ShieldCheck size={18} />
-                                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]">Chase Secure Payment Gateway</span>
-                                                </div>
-                                                <p className="text-[10px] text-gray-400 text-center italic">
-                                                    (Secure payment fields will appear here once Chase API credentials are connected)
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {clientSecret && (
+                                        <Elements options={{ clientSecret, appearance: { theme: 'stripe' } }} stripe={stripePromise}>
+                                            <CheckoutForm total={finalTotal} onSuccess={handleSuccess} />
+                                        </Elements>
+                                    )}
                                 </div>
-
-                                <button
-                                    onClick={handleFinalizeCheckout}
-                                    disabled={isProcessing}
-                                    className="w-full bg-[#1B2936] text-white py-6 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl"
-                                >
-                                    {isProcessing ? 'Authenticating...' : 'Secure Authorization'} <ShieldCheck size={16} />
-                                </button>
-                                <p className="text-center text-[9px] text-gray-400 font-bold uppercase tracking-widest">
-                                    Encrypted by Mode Aura Security Tier
-                                </p>
                             </div>
                         )}
                     </div>
