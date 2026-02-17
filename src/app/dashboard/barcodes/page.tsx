@@ -63,12 +63,12 @@ export default function BarcodeHub() {
     return (
         <div className="space-y-8 animate-fade-in">
             {/* Header */}
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
                 <div>
-                    <h2 className="text-4xl font-black italic text-gray-900">Vault Labels</h2>
+                    <h2 className="text-3xl md:text-4xl font-black italic text-gray-900">Vault Labels</h2>
                     <p className="text-gray-500 mt-1 uppercase text-[10px] font-bold tracking-[0.2em]">Generate secure barcodes for inventory & personnel</p>
                 </div>
-                <div className="flex bg-white rounded-2xl p-1 border border-gray-100 shadow-sm">
+                <div className="flex bg-white rounded-2xl p-1 border border-gray-100 shadow-sm w-fit">
                     <button
                         onClick={() => setTab('products')}
                         className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === 'products' ? 'bg-[#D4AF37] text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
@@ -110,7 +110,14 @@ export default function BarcodeHub() {
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 truncate">{p.name}</h3>
+                                    <h3 className="font-bold text-gray-900 truncate">
+                                        {p.name}
+                                        {(p.size || p.color) && (
+                                            <span className="text-[10px] font-black text-[var(--gold)] ml-2 bg-[var(--gold)]/5 px-2 py-0.5 rounded uppercase">
+                                                {p.size}{p.size && p.color ? ' | ' : ''}{p.color}
+                                            </span>
+                                        )}
+                                    </h3>
                                     <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest mt-1">SKU: {p.sku}</p>
                                     <p className="text-sm font-black text-[var(--gold)] mt-1">${p.price.toFixed(2)}</p>
                                 </div>

@@ -78,8 +78,8 @@ function VerifyEmailContent() {
                     <p className="text-gray-400 text-sm font-bold leading-relaxed">{message}</p>
 
                     <div className="pt-6 space-y-4">
-                        <Link href="/register" className="block text-[10px] font-black text-[var(--gold)] uppercase tracking-widest hover:text-black transition-colors">
-                            Try Registering Again
+                        <Link href="/login" className="block text-[10px] font-black text-[var(--gold)] uppercase tracking-widest hover:text-black transition-colors">
+                            Return to Login
                         </Link>
                         <div className="border-t border-gray-50 pt-6">
                             <p className="text-[9px] text-gray-300 uppercase font-black tracking-widest mb-4">Link expired? Request a new one:</p>

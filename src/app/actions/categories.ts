@@ -26,7 +26,7 @@ export async function getMainCategories() {
     try {
         const categories = await prisma.category.findMany({
             where: { type: 'Product', parentId: null },
-            include: { children: true },
+            include: { children: true, sizes: true },
             orderBy: { name: 'asc' }
         });
         return JSON.parse(JSON.stringify(categories));
@@ -60,6 +60,18 @@ export async function addCategory(data: {
                 // image: data.image || null,
             }
         });
+
+        // If this is a subcategory, create a matching Pattern for the parent category
+        if (data.parentId) {
+            await prisma.pattern.create({
+                data: {
+                    name: data.name,
+                    categoryId: data.parentId
+                }
+            });
+            revalidatePath('/dashboard/filters');
+        }
+
         revalidatePath('/dashboard/categories');
         revalidatePath('/dashboard/inventory');
         revalidatePath('/'); // Refresh homepage category grid
@@ -74,6 +86,8 @@ export async function addCategory(data: {
 // Update category
 export async function updateCategory(id: string, data: { name?: string; code?: string; fields?: string; image?: string }) {
     try {
+        const oldCategory = await prisma.category.findUnique({ where: { id } });
+
         const category = await (prisma.category as any).update({
             where: { id },
             data: {
@@ -83,6 +97,19 @@ export async function updateCategory(id: string, data: { name?: string; code?: s
                 ...(data.image !== undefined && { image: data.image }),
             }
         });
+
+        // If subcategory name changed, update matching Pattern
+        if (data.name && oldCategory?.parentId) {
+            await prisma.pattern.updateMany({
+                where: {
+                    name: oldCategory.name,
+                    categoryId: oldCategory.parentId
+                },
+                data: { name: data.name }
+            });
+            revalidatePath('/dashboard/filters');
+        }
+
         revalidatePath('/dashboard/categories');
         revalidatePath('/dashboard/inventory');
         revalidatePath('/'); // Refresh homepage category grid
@@ -97,6 +124,10 @@ export async function updateCategory(id: string, data: { name?: string; code?: s
 // Delete category (only if no products)
 export async function deleteCategory(id: string) {
     try {
+        // Find category info first
+        const category = await prisma.category.findUnique({ where: { id } });
+        if (!category) return { success: false, message: 'Category not found' };
+
         // Check for products
         const productCount = await prisma.product.count({ where: { categoryId: id } });
         if (productCount > 0) {
@@ -107,6 +138,17 @@ export async function deleteCategory(id: string) {
         const childCount = await prisma.category.count({ where: { parentId: id } });
         if (childCount > 0) {
             return { success: false, message: `Cannot delete: ${childCount} subcategories exist` };
+        }
+
+        // If it's a subcategory, delete matching pattern
+        if (category.parentId) {
+            await prisma.pattern.deleteMany({
+                where: {
+                    name: category.name,
+                    categoryId: category.parentId
+                }
+            });
+            revalidatePath('/dashboard/filters');
         }
 
         await prisma.category.delete({ where: { id } });

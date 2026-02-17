@@ -15,7 +15,9 @@ export default function BannersPage() {
     const [editingBanner, setEditingBanner] = useState<any>(null);
     const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState({
-        title: '', subtitle: '', image: '', link: '', designLayout: 'Full', order: 0, active: true, textColor: '#000000', subtitleColor: '#D4AF37'
+        title: '', subtitle: '', image: '', link: '', designLayout: 'Full', order: 0, active: true,
+        textColor: '#000000', subtitleColor: '#D4AF37',
+        titleFont: 'font-display italic', subtitleFont: 'font-sans', buttonText: 'Discover More'
     });
     const imageRef = useRef<HTMLInputElement>(null);
 
@@ -64,7 +66,10 @@ export default function BannersPage() {
             order: banner.order,
             active: banner.active,
             textColor: banner.textColor || '#000000',
-            subtitleColor: banner.subtitleColor || '#D4AF37'
+            subtitleColor: banner.subtitleColor || '#D4AF37',
+            titleFont: banner.titleFont || 'font-display italic',
+            subtitleFont: banner.subtitleFont || 'font-sans',
+            buttonText: banner.buttonText || 'Discover More'
         });
         setShowAdd(true);
     }
@@ -84,7 +89,11 @@ export default function BannersPage() {
                 // Add new banner
                 await addBanner(formData);
             }
-            setFormData({ title: '', subtitle: '', image: '', link: '', designLayout: 'Full', order: banners.length + 1, active: true, textColor: '#000000', subtitleColor: '#D4AF37' });
+            setFormData({
+                title: '', subtitle: '', image: '', link: '', designLayout: 'Full',
+                order: banners.length + 1, active: true, textColor: '#000000', subtitleColor: '#D4AF37',
+                titleFont: 'font-display italic', subtitleFont: 'font-sans', buttonText: 'Discover More'
+            });
             setShowAdd(false);
             setEditingBanner(null);
             await loadBanners();
@@ -134,9 +143,9 @@ export default function BannersPage() {
                         <div className="relative h-full w-full flex items-center justify-center text-center">
                             <div className="max-w-xl space-y-4">
                                 <div className="max-w-xl space-y-4">
-                                    <h5 className="font-black uppercase tracking-[0.6em] text-[10px]" style={{ color: slide.subtitleColor || 'var(--gold)' }}>{slide.subtitle || 'Subtitle'}</h5>
-                                    <h1 className="text-3xl md:text-5xl font-display font-medium italic" style={{ color: slide.textColor || 'white' }}>{slide.title || 'Banner Title'}</h1>
-                                    <span className="inline-block px-8 py-3 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'black' }}>Shop Now</span>
+                                    <h5 className={`${slide.subtitleFont || 'font-sans'} uppercase tracking-[0.6em] text-[10px]`} style={{ color: slide.subtitleColor || 'var(--gold)' }}>{slide.subtitle || 'Subtitle'}</h5>
+                                    <h1 className={`text-3xl md:text-5xl ${slide.titleFont || 'font-display italic'}`} style={{ color: slide.textColor || 'white' }}>{slide.title || 'Banner Title'}</h1>
+                                    <span className="inline-block px-8 py-3 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'black' }}>{slide.buttonText || 'Shop Now'}</span>
                                 </div>
                             </div>
                         </div>
@@ -149,9 +158,9 @@ export default function BannersPage() {
                         <div className="w-1/2 h-full flex items-center justify-center p-8 bg-white relative z-10">
                             <div className="space-y-4 text-center md:text-left">
                                 <div className="space-y-4 text-center md:text-left">
-                                    <h5 className="font-black uppercase tracking-[0.4em] text-[8px]" style={{ color: slide.subtitleColor || 'var(--gold)' }}>{slide.subtitle || 'Subtitle'}</h5>
-                                    <h1 className="text-2xl md:text-4xl font-display italic leading-tight" style={{ color: slide.textColor || '#111827' }}>{slide.title || 'Title'}</h1>
-                                    <span className="inline-block border-2 px-6 py-2 text-[8px] font-black uppercase tracking-[0.2em]" style={{ borderColor: slide.textColor || 'black', color: slide.textColor || 'black' }}>Discover</span>
+                                    <h5 className={`${slide.subtitleFont || 'font-sans'} uppercase tracking-[0.4em] text-[8px]`} style={{ color: slide.subtitleColor || 'var(--gold)' }}>{slide.subtitle || 'Subtitle'}</h5>
+                                    <h1 className={`text-2xl md:text-4xl ${slide.titleFont || 'font-display italic'} leading-tight`} style={{ color: slide.textColor || '#111827' }}>{slide.title || 'Title'}</h1>
+                                    <span className="inline-block border-2 px-6 py-2 text-[8px] font-black uppercase tracking-[0.2em]" style={{ borderColor: slide.textColor || 'black', color: slide.textColor || 'black' }}>{slide.buttonText || 'Discover'}</span>
                                 </div>
                             </div>
                         </div>
@@ -167,9 +176,9 @@ export default function BannersPage() {
                 {layout === 'Glass' && (
                     <div className="h-full flex items-center justify-center p-8 bg-cover bg-center" style={{ backgroundImage: `url(${slide.image || '/placeholder.jpg'})` }}>
                         <div className="backdrop-blur-md bg-white/10 p-8 rounded-3xl border border-white/20 text-center space-y-4 max-w-sm">
-                            <h1 className="text-2xl font-display italic text-white" style={{ color: slide.textColor || 'white' }}>{slide.title || 'Title'}</h1>
-                            <p className="text-white/80 text-xs" style={{ color: slide.subtitleColor || 'white' }}>{slide.subtitle || 'Subtitle'}</p>
-                            <span className="inline-block bg-[var(--gold)] text-white px-6 py-2 rounded-full text-[10px] font-black uppercase">View</span>
+                            <h1 className={`text-2xl ${slide.titleFont || 'font-display italic'} text-white`} style={{ color: slide.textColor || 'white' }}>{slide.title || 'Title'}</h1>
+                            <p className={`text-white/80 text-xs ${slide.subtitleFont || 'font-sans'}`} style={{ color: slide.subtitleColor || 'white' }}>{slide.subtitle || 'Subtitle'}</p>
+                            <span className="inline-block bg-[var(--gold)] text-white px-6 py-2 rounded-full text-[10px] font-black uppercase">{slide.buttonText || 'View'}</span>
                         </div>
                     </div>
                 )}
@@ -179,8 +188,8 @@ export default function BannersPage() {
                     <div className="absolute inset-0 bg-cover bg-center flex flex-col justify-end p-8" style={{ backgroundImage: `url(${slide.image || '/placeholder.jpg'})` }}>
                         <div className="space-y-2">
                             <div className="w-8 h-0.5 bg-[var(--gold)]" />
-                            <h1 className="text-2xl font-black uppercase" style={{ color: slide.textColor || 'white' }}>{slide.title || 'Title'}</h1>
-                            <span className="text-[10px] uppercase tracking-widest text-[var(--gold)]">Shop →</span>
+                            <h1 className={`text-2xl font-black uppercase ${slide.titleFont || ''}`} style={{ color: slide.textColor || 'white' }}>{slide.title || 'Title'}</h1>
+                            <span className={`text-[10px] uppercase tracking-widest text-[var(--gold)] ${slide.subtitleFont || ''}`}>{slide.buttonText || 'Shop'} →</span>
                         </div>
                     </div>
                 )}
@@ -372,6 +381,59 @@ export default function BannersPage() {
                                                 ))}
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A3968C] mb-2 block">Title Font</label>
+                                        <select
+                                            value={formData.titleFont}
+                                            onChange={(e) => setFormData({ ...formData, titleFont: e.target.value })}
+                                            className="w-full bg-black/20 border border-white/5 p-3 text-white outline-none focus:border-[var(--gold)] rounded-lg"
+                                            style={{ backgroundColor: '#1B2936' }}
+                                        >
+                                            <option value="font-display italic">Luxury Italic (Garamond)</option>
+                                            <option value="font-display">Luxury Classic (Garamond)</option>
+                                            <option value="font-sans font-black uppercase">Modern Bold (Inter)</option>
+                                            <option value="font-sans italic">Modern Italic (Inter)</option>
+                                            <option value="font-sans">Modern Clean (Inter)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A3968C] mb-2 block">Subtitle Font</label>
+                                        <select
+                                            value={formData.subtitleFont}
+                                            onChange={(e) => setFormData({ ...formData, subtitleFont: e.target.value })}
+                                            className="w-full bg-black/20 border border-white/5 p-3 text-white outline-none focus:border-[var(--gold)] rounded-lg"
+                                            style={{ backgroundColor: '#1B2936' }}
+                                        >
+                                            <option value="font-sans">Modern Clean (Inter)</option>
+                                            <option value="font-sans italic">Modern Italic (Inter)</option>
+                                            <option value="font-display italic">Luxury Italic (Garamond)</option>
+                                            <option value="font-display">Luxury Classic (Garamond)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A3968C] mb-2 block">Button Text</label>
+                                        <input
+                                            value={formData.buttonText}
+                                            onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
+                                            placeholder="Discover More"
+                                            className="w-full bg-black/20 border border-white/5 p-3 text-white outline-none focus:border-[var(--gold)] rounded-lg"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A3968C] mb-2 block">Button Link (URL)</label>
+                                        <input
+                                            value={formData.link}
+                                            onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                                            placeholder="/shop or https://..."
+                                            className="w-full bg-black/20 border border-white/5 p-3 text-white outline-none focus:border-[var(--gold)] rounded-lg"
+                                        />
                                     </div>
                                 </div>
 

@@ -329,59 +329,87 @@ export default function Navbar() {
                 <div className={`transition-all duration-700 bg-white/80 backdrop-blur-md border-b border-[var(--mocha-border)] hidden lg:block ${scrolled ? 'h-10' : 'h-12'}`}>
                     <div className="max-w-7xl mx-auto px-8 h-full flex justify-center items-center gap-10">
                         {navItems.length > 0 ? (
-                            navItems.map((item) => (
-                                <div key={item.id} className="relative group h-full flex items-center">
-                                    <NavLink
-                                        href={item.href}
-                                        label={item.label.toUpperCase()}
-                                        color={item.href === '/shop?filter=new' ? 'text-[var(--gold)]' : 'text-[var(--text-primary)]'}
-                                    />
-                                    {item.children?.length > 0 && (
-                                        <>
-                                            <ChevronDown size={10} className="ml-1 text-[var(--gold)] opacity-50 group-hover:rotate-180 transition-transform" />
-                                            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                                                <div className="bg-white border border-[var(--mocha-border)] shadow-2xl rounded-2xl p-4 min-w-[200px] grid gap-2">
-                                                    {item.children.map((child: any) => (
-                                                        <Link
-                                                            key={child.id}
-                                                            href={child.href}
-                                                            className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--gold)] p-2 hover:bg-[#FAF9F6] rounded-xl transition-all"
-                                                        >
-                                                            {child.label}
-                                                        </Link>
-                                                    ))}
+                            navItems.map((item) => {
+                                // Dynamic children injection: If no nav children, check for category subcategories
+                                let displayChildren = item.children || [];
+                                if (displayChildren.length === 0) {
+                                    const catIdMatch = item.href.match(/category=([^&]+)/);
+                                    if (catIdMatch) {
+                                        const catId = catIdMatch[1];
+                                        const cat = categories.find(c => c.id === catId);
+                                        if (cat && cat.children?.length > 0) {
+                                            displayChildren = cat.children.map((sub: any) => ({
+                                                id: sub.id,
+                                                label: sub.name,
+                                                href: `/shop?category=${sub.id}`
+                                            }));
+                                        }
+                                    }
+                                }
+
+                                return (
+                                    <div key={item.id} className="relative group h-full flex items-center">
+                                        <NavLink
+                                            href={item.href}
+                                            label={item.label.toUpperCase()}
+                                            color={item.href === '/shop?filter=new' ? 'text-[var(--gold)]' : 'text-[var(--text-primary)]'}
+                                        />
+                                        {displayChildren.length > 0 && (
+                                            <>
+                                                <ChevronDown size={10} className="ml-1 text-[var(--gold)] opacity-50 group-hover:rotate-180 transition-transform" />
+                                                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                                                    <div className="bg-white border border-[var(--mocha-border)] shadow-2xl rounded-2xl p-4 min-w-[200px] grid gap-2">
+                                                        {displayChildren.map((child: any) => (
+                                                            <Link
+                                                                key={child.id}
+                                                                href={child.href}
+                                                                className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--gold)] p-2 hover:bg-[#FAF9F6] rounded-xl transition-all"
+                                                            >
+                                                                {child.label || child.name}
+                                                            </Link>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            ))
+                                            </>
+                                        )}
+                                    </div>
+                                );
+                            })
                         ) : (
                             <>
                                 <NavLink href="/shop?filter=new" label="NEW ARRIVALS" color="text-[var(--gold)]" />
-                                {['ABAYAS', 'THOBES'].map(catName => {
+                                {['ABAYAS', 'THOBES', 'HIJABS', 'BAGS', 'ACCESSORIES'].map(catName => {
                                     const cat = categories.find(c => c.name.toUpperCase() === catName);
-                                    return cat ? (
-                                        <NavLink
-                                            key={cat.id}
-                                            href={`/shop?category=${cat.id}`}
-                                            label={catName}
-                                            color="text-[var(--text-primary)]"
-                                        />
-                                    ) : null;
+                                    if (!cat) return null;
+                                    return (
+                                        <div key={cat.id} className="relative group h-full flex items-center">
+                                            <NavLink
+                                                href={`/shop?category=${cat.id}`}
+                                                label={cat.name.toUpperCase()}
+                                                color="text-[var(--text-primary)]"
+                                            />
+                                            {cat.children?.length > 0 && (
+                                                <>
+                                                    <ChevronDown size={10} className="ml-1 text-[var(--gold)] opacity-50 group-hover:rotate-180 transition-transform" />
+                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                                                        <div className="bg-white border border-[var(--mocha-border)] shadow-2xl rounded-2xl p-4 min-w-[200px] grid gap-2">
+                                                            {cat.children.map((sub: any) => (
+                                                                <Link
+                                                                    key={sub.id}
+                                                                    href={`/shop?category=${sub.id}`}
+                                                                    className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--gold)] p-2 hover:bg-[#FAF9F6] rounded-xl transition-all"
+                                                                >
+                                                                    {sub.name}
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    );
                                 })}
                                 <NavLink href="/shop?kids=true" label="KIDS" color="text-[var(--text-primary)]" />
-                                {['HIJABS', 'BAGS', 'ACCESSORIES'].map(catName => {
-                                    const cat = categories.find(c => c.name.toUpperCase() === catName);
-                                    return cat ? (
-                                        <NavLink
-                                            key={cat.id}
-                                            href={`/shop?category=${cat.id}`}
-                                            label={catName}
-                                            color="text-[var(--text-primary)]"
-                                        />
-                                    ) : null;
-                                })}
                             </>
                         )}
                     </div>
@@ -389,7 +417,7 @@ export default function Navbar() {
 
                 {/* Mobile Menu Slide-out */}
                 <div className={`fixed inset-0 bg-white z-[100] transition-transform duration-700 md:hidden ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                    <div className="p-8 h-full flex flex-col pt-24 text-center">
+                    <div className="p-8 h-full flex flex-col pt-24 text-center overflow-y-auto">
                         <button onClick={() => setIsMenuOpen(false)} className="absolute top-8 right-8 p-2 text-[var(--text-secondary)]">
                             <X size={32} strokeWidth={1} />
                         </button>
@@ -400,21 +428,85 @@ export default function Navbar() {
                                 <span className="font-bold text-4xl uppercase text-[var(--gold)] tracking-widest ml-1">Aura</span>
                             </Link>
 
-                            <div className="space-y-8">
-                                <Link href="/shop?filter=new" onClick={() => setIsMenuOpen(false)} className="block text-3xl font-display italic text-[var(--gold)]">New Arrivals</Link>
-                                <Link href="/shop?kids=true" onClick={() => setIsMenuOpen(false)} className="block text-3xl font-display italic text-[var(--brand-navy)]">Kids Collection</Link>
-                                {categories.slice(0, 5).map(cat => (
-                                    <Link
-                                        key={cat.id}
-                                        href={`/shop?category=${cat.id}`}
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="block text-3xl font-display italic text-[var(--brand-navy)]"
-                                    >
-                                        {cat.name}
-                                    </Link>
-                                ))}
-                                <Link href="/about" onClick={() => setIsMenuOpen(false)} className="block text-3xl font-display italic text-[var(--brand-navy)] opacity-40">Our Heritage</Link>
-                                <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="block text-3xl font-display italic text-[var(--brand-navy)] opacity-40">Contact Atelier</Link>
+                            <div className="space-y-8 pb-12">
+                                {navItems.length > 0 ? (
+                                    navItems.map((item) => {
+                                        // Same injection logic as desktop
+                                        let displayChildren = item.children || [];
+                                        if (displayChildren.length === 0) {
+                                            const catIdMatch = item.href.match(/category=([^&]+)/);
+                                            if (catIdMatch) {
+                                                const catId = catIdMatch[1];
+                                                const cat = categories.find(c => c.id === catId);
+                                                if (cat && cat.children?.length > 0) {
+                                                    displayChildren = cat.children.map((sub: any) => ({
+                                                        id: sub.id,
+                                                        label: sub.name,
+                                                        href: `/shop?category=${sub.id}`
+                                                    }));
+                                                }
+                                            }
+                                        }
+
+                                        return (
+                                            <div key={item.id} className="space-y-4">
+                                                <Link
+                                                    href={item.href}
+                                                    onClick={() => setIsMenuOpen(false)}
+                                                    className={`block text-3xl font-display italic ${item.href === '/shop?filter=new' ? 'text-[var(--gold)]' : 'text-[var(--brand-navy)]'}`}
+                                                >
+                                                    {item.label}
+                                                </Link>
+                                                {displayChildren.length > 0 && (
+                                                    <div className="flex flex-wrap justify-center gap-4">
+                                                        {displayChildren.map((child: any) => (
+                                                            <Link
+                                                                key={child.id}
+                                                                href={child.href}
+                                                                onClick={() => setIsMenuOpen(false)}
+                                                                className="text-sm font-black uppercase tracking-widest text-[var(--gold)]"
+                                                            >
+                                                                {child.label || child.name}
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <>
+                                        <Link href="/shop?filter=new" onClick={() => setIsMenuOpen(false)} className="block text-3xl font-display italic text-[var(--gold)]">New Arrivals</Link>
+                                        <Link href="/shop?kids=true" onClick={() => setIsMenuOpen(false)} className="block text-3xl font-display italic text-[var(--brand-navy)]">Kids Collection</Link>
+                                        {categories.map(cat => (
+                                            <div key={cat.id} className="space-y-4">
+                                                <Link
+                                                    href={`/shop?category=${cat.id}`}
+                                                    onClick={() => setIsMenuOpen(false)}
+                                                    className="block text-3xl font-display italic text-[var(--brand-navy)]"
+                                                >
+                                                    {cat.name}
+                                                </Link>
+                                                {cat.children?.length > 0 && (
+                                                    <div className="flex flex-wrap justify-center gap-4">
+                                                        {cat.children.map((sub: any) => (
+                                                            <Link
+                                                                key={sub.id}
+                                                                href={`/shop?category=${sub.id}`}
+                                                                onClick={() => setIsMenuOpen(false)}
+                                                                className="text-sm font-black uppercase tracking-widest text-[var(--gold)]"
+                                                            >
+                                                                {sub.name}
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
+                                <Link href="/about" onClick={() => setIsMenuOpen(false)} className="block text-2xl font-display italic text-gray-300">Our Heritage</Link>
+                                <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="block text-2xl font-display italic text-gray-300">Contact Atelier</Link>
                             </div>
                         </div>
 

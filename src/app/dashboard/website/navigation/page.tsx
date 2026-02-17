@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { getNavItems, getAllNavItems, addNavItem, updateNavItem, deleteNavItem } from '@/app/actions/navigation';
-import { X, ChevronDown, ChevronRight, Edit2, Trash2, Plus } from 'lucide-react';
+import { getMainCategories } from '@/app/actions/categories';
+import { X, ChevronDown, ChevronRight, Edit2, Trash2, Plus, Link as LinkIcon, RefreshCw } from 'lucide-react';
 import DashboardPageGuide from '@/components/DashboardPageGuide';
 
 export default function NavigationPage() {
     const [items, setItems] = useState<any[]>([]);
     const [allItems, setAllItems] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null);
@@ -26,12 +28,14 @@ export default function NavigationPage() {
     async function loadData() {
         setLoading(true);
         try {
-            const [tree, flat] = await Promise.all([
+            const [tree, flat, cats] = await Promise.all([
                 getNavItems(),
-                getAllNavItems()
+                getAllNavItems(),
+                getMainCategories()
             ]);
             setItems(tree);
             setAllItems(flat);
+            setCategories(cats);
         } catch (error) {
             console.error('Failed to load navigation:', error);
         } finally {
@@ -60,6 +64,18 @@ export default function NavigationPage() {
             });
         }
         setIsModalOpen(true);
+    };
+
+    const handleCategorySelect = (catId: string) => {
+        if (!catId) return;
+        const cat = categories.find(c => c.id === catId);
+        if (cat) {
+            setFormData({
+                ...formData,
+                label: cat.name,
+                href: `/shop?category=${cat.id}`
+            });
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -128,84 +144,121 @@ export default function NavigationPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-black/[0.02]">
-                                {items.map((item) => (
-                                    <React.Fragment key={item.id}>
-                                        <tr className="hover:bg-[#FAF9F6]/50 transition-colors group">
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-3">
-                                                    {item.children?.length > 0 ? (
-                                                        <ChevronDown size={14} className="text-[var(--gold)]" />
-                                                    ) : (
-                                                        <div className="w-3.5" />
-                                                    )}
-                                                    <span className="text-lg font-display text-[#1a1817]">{item.label}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <code className="text-[11px] text-[var(--gold)] font-mono tracking-wider bg-[#D4AF37]/5 px-2 py-1 rounded">
-                                                    {item.href}
-                                                </code>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                                                    {item.parentId ? 'Sub-item' : 'Main Menu'}
-                                                </span>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <div className="flex justify-end gap-4">
-                                                    <button
-                                                        onClick={() => handleOpenModal(item)}
-                                                        className="p-2 text-black/20 hover:text-[var(--gold)] transition-colors"
-                                                    >
-                                                        <Edit2 size={16} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(item.id)}
-                                                        className="p-2 text-black/20 hover:text-red-500 transition-colors"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {item.children?.map((child: any) => (
-                                            <tr key={child.id} className="bg-[#FAF9F6]/30 hover:bg-[#FAF9F6]/60 transition-colors group border-b border-black/[0.01]">
-                                                <td className="px-8 py-4 pl-16">
+                                {items.map((item) => {
+                                    // Check if this item is a category link with subcategories
+                                    const catIdMatch = item.href.match(/category=([^&]+)/);
+                                    const linkedCat = catIdMatch ? categories.find(c => c.id === catIdMatch[1]) : null;
+                                    const hasAutoSubs = linkedCat && linkedCat.children?.length > 0 && (!item.children || item.children.length === 0);
+
+                                    return (
+                                        <React.Fragment key={item.id}>
+                                            <tr className="hover:bg-[#FAF9F6]/50 transition-colors group">
+                                                <td className="px-8 py-6">
                                                     <div className="flex items-center gap-3">
-                                                        <ChevronRight size={12} className="text-black/20" />
-                                                        <span className="text-sm font-medium text-[#6B645E]">{child.label}</span>
+                                                        {(item.children?.length > 0 || hasAutoSubs) ? (
+                                                            <ChevronDown size={14} className="text-[var(--gold)]" />
+                                                        ) : (
+                                                            <div className="w-3.5" />
+                                                        )}
+                                                        <span className="text-lg font-display text-[#1a1817]">{item.label}</span>
+                                                        {linkedCat && (
+                                                            <span className="bg-[var(--gold)]/10 text-[var(--gold)] text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                                <LinkIcon size={8} /> Category Link
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
-                                                <td className="px-8 py-4">
-                                                    <code className="text-[10px] text-black/40 font-mono tracking-wider">
-                                                        {child.href}
+                                                <td className="px-8 py-6">
+                                                    <code className="text-[11px] text-[var(--gold)] font-mono tracking-wider bg-[#D4AF37]/5 px-2 py-1 rounded">
+                                                        {item.href}
                                                     </code>
                                                 </td>
-                                                <td className="px-8 py-4">
-                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-black/20">
-                                                        Dropdown Item
+                                                <td className="px-8 py-6">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                                                        {item.parentId ? 'Sub-item' : 'Main Menu'}
                                                     </span>
                                                 </td>
-                                                <td className="px-8 py-4 text-right">
-                                                    <div className="flex justify-end gap-3">
+                                                <td className="px-8 py-6 text-right">
+                                                    <div className="flex justify-end gap-4">
                                                         <button
-                                                            onClick={() => handleOpenModal(child)}
-                                                            className="p-1.5 text-black/10 hover:text-[var(--gold)] transition-colors"
+                                                            onClick={() => handleOpenModal(item)}
+                                                            className="p-2 text-black/20 hover:text-[var(--gold)] transition-colors"
                                                         >
-                                                            <Edit2 size={14} />
+                                                            <Edit2 size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDelete(child.id)}
-                                                            className="p-1.5 text-black/10 hover:text-red-400 transition-colors"
+                                                            onClick={() => handleDelete(item.id)}
+                                                            className="p-2 text-black/20 hover:text-red-500 transition-colors"
                                                         >
-                                                            <Trash2 size={14} />
+                                                            <Trash2 size={16} />
                                                         </button>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))}
-                                    </React.Fragment>
-                                ))}
+                                            {/* Explicit Nav Children */}
+                                            {item.children?.map((child: any) => (
+                                                <tr key={child.id} className="bg-[#FAF9F6]/30 hover:bg-[#FAF9F6]/60 transition-colors group border-b border-black/[0.01]">
+                                                    <td className="px-8 py-4 pl-16">
+                                                        <div className="flex items-center gap-3">
+                                                            <ChevronRight size={12} className="text-black/20" />
+                                                            <span className="text-sm font-medium text-[#6B645E]">{child.label}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-4">
+                                                        <code className="text-[10px] text-black/40 font-mono tracking-wider">
+                                                            {child.href}
+                                                        </code>
+                                                    </td>
+                                                    <td className="px-8 py-4">
+                                                        <span className="text-[9px] font-bold uppercase tracking-widest text-black/20">
+                                                            Dropdown Item
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-8 py-4 text-right">
+                                                        <div className="flex justify-end gap-3">
+                                                            <button
+                                                                onClick={() => handleOpenModal(child)}
+                                                                className="p-1.5 text-black/10 hover:text-[var(--gold)] transition-colors"
+                                                            >
+                                                                <Edit2 size={14} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(child.id)}
+                                                                className="p-1.5 text-black/10 hover:text-red-400 transition-colors"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {/* Auto-Synchronized Subcategories Indicator */}
+                                            {hasAutoSubs && linkedCat.children.map((sub: any) => (
+                                                <tr key={`auto-${sub.id}`} className="bg-[var(--gold)]/[0.02] border-b border-[var(--gold)]/[0.05]">
+                                                    <td className="px-8 py-4 pl-16">
+                                                        <div className="flex items-center gap-3">
+                                                            <RefreshCw size={10} className="text-[var(--gold)] opacity-40 animate-spin-slow" />
+                                                            <span className="text-sm font-medium text-[#6B645E] italic">{sub.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-4">
+                                                        <code className="text-[10px] text-[var(--gold)]/40 font-mono tracking-wider">
+                                                            /shop?category={sub.id}
+                                                        </code>
+                                                    </td>
+                                                    <td className="px-8 py-4">
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-[var(--gold)]/40">
+                                                            Auto-Linked Subcategory
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-8 py-4 text-right">
+                                                        <span className="text-[8px] font-bold text-gray-300 italic px-4">Managed via Categories</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </React.Fragment>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -224,7 +277,26 @@ export default function NavigationPage() {
                             </div>
                             <button onClick={() => setIsModalOpen(false)} className="text-black/20 hover:text-black transition-colors"><X size={24} /></button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                        <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+                            {/* Category Link Quick-Picker */}
+                            {!editingItem && (
+                                <div className="p-6 bg-[var(--gold)]/5 rounded-2xl border border-[var(--gold)]/10 space-y-3">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-[var(--gold)] flex items-center gap-2">
+                                        <LinkIcon size={12} /> Quick Link to Category
+                                    </label>
+                                    <select
+                                        onChange={(e) => handleCategorySelect(e.target.value)}
+                                        className="w-full bg-white border-none rounded-xl p-4 text-xs font-bold focus:ring-1 focus:ring-[var(--gold)]/30 outline-none transition-all shadow-sm"
+                                    >
+                                        <option value="">Select a Category...</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[8px] text-[var(--gold)]/60 font-bold uppercase tracking-wider italic">Picking a category automatically sets the label and destination.</p>
+                                </div>
+                            )}
+
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-[#6B645E]">Menu Label</label>
                                 <input
@@ -278,7 +350,6 @@ export default function NavigationPage() {
                     </div>
                 </div>
             )}
-
             <DashboardPageGuide
                 pageName={{ en: "Navigation Editor", ar: "محرر التنقل" }}
                 steps={[

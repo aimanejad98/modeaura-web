@@ -186,14 +186,14 @@ export default function CategoriesPage() {
 
                         {/* Add Subcategory Form */}
                         {showAddSub === cat.id && (
-                            <form onSubmit={(e) => handleAddSub(e, cat.id)} className="p-4 pl-12 bg-blue-50 space-y-3">
-                                <div className="flex gap-4">
+                            <form onSubmit={(e) => handleAddSub(e, cat.id)} className="p-4 pl-6 lg:pl-12 bg-blue-50 space-y-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <input
                                         required
                                         placeholder="Subcategory name"
                                         value={newCat.name}
                                         onChange={(e) => setNewCat({ ...newCat, name: e.target.value })}
-                                        className="flex-1 p-2 rounded-lg border"
+                                        className="w-full p-2 rounded-lg border"
                                     />
                                     <input
                                         required
@@ -201,21 +201,24 @@ export default function CategoriesPage() {
                                         maxLength={3}
                                         value={newCat.code}
                                         onChange={(e) => setNewCat({ ...newCat, code: e.target.value.toUpperCase() })}
-                                        className="w-24 p-2 rounded-lg border"
+                                        className="w-full p-2 rounded-lg border"
                                     />
                                 </div>
-                                <div className="flex gap-4 items-center">
+                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-center">
                                     <span className="text-xs font-bold text-gray-500">Fields:</span>
-                                    {ALL_FIELDS.map(field => (
-                                        <label key={field.id} className="flex items-center gap-1">
-                                            <input
-                                                type="checkbox"
-                                                checked={newCat.fields.includes(field.id)}
-                                                onChange={() => toggleField(field.id)}
-                                            />
-                                            <span className="text-sm">{field.label}</span>
-                                        </label>
-                                    ))}
+                                    <div className="flex flex-wrap gap-3">
+                                        {ALL_FIELDS.map(field => (
+                                            <label key={field.id} className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={newCat.fields.includes(field.id)}
+                                                    onChange={() => toggleField(field.id)}
+                                                    className="w-4 h-4"
+                                                />
+                                                <span className="text-sm font-medium">{field.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
                                 <div className="flex gap-2">
                                     <button type="submit" className="px-4 py-2 bg-[#D4AF37] text-white rounded-lg font-bold">
@@ -239,8 +242,8 @@ export default function CategoriesPage() {
 
             {/* Add Main Category Modal */}
             {showAddMain && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-3xl w-full max-w-md">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-6 lg:p-8 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="text-2xl font-black mb-6">Add Category</h3>
                         <form onSubmit={handleAddMain} className="space-y-4">
                             <input
@@ -261,9 +264,9 @@ export default function CategoriesPage() {
 
                             <div className="bg-gray-50 p-4 rounded-xl">
                                 <p className="text-xs font-bold text-gray-400 uppercase mb-3">Product Fields Required</p>
-                                <div className="flex gap-4">
+                                <div className="flex flex-wrap gap-4">
                                     {ALL_FIELDS.map(field => (
-                                        <label key={field.id} className="flex items-center gap-2">
+                                        <label key={field.id} className="flex items-center gap-2 cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 checked={newCat.fields.includes(field.id)}
@@ -277,11 +280,11 @@ export default function CategoriesPage() {
                             </div>
 
                             <p className="text-sm text-gray-400">Code is used for SKU generation (e.g., MA-ABA-001)</p>
-                            <div className="flex gap-4">
+                            <div className="flex flex-col sm:flex-row gap-4">
                                 <button type="button" onClick={() => setShowAddMain(false)} className="flex-1 p-4 bg-gray-100 rounded-xl font-bold">
                                     Cancel
                                 </button>
-                                <button type="submit" className="flex-1 gold-btn">
+                                <button type="submit" className="flex-1 gold-btn py-4">
                                     Add Category
                                 </button>
                             </div>
@@ -340,24 +343,29 @@ function FieldsEditor({ currentFields, onSave, onCancel }: {
     }
 
     return (
-        <div className="p-4 bg-blue-50 flex items-center gap-4">
+        <div className="p-4 bg-blue-50 flex flex-col sm:flex-row sm:items-center gap-4">
             <span className="text-xs font-bold text-gray-500">Required Fields:</span>
-            {ALL_FIELDS.map(field => (
-                <label key={field.id} className="flex items-center gap-1">
-                    <input
-                        type="checkbox"
-                        checked={fields.includes(field.id)}
-                        onChange={() => toggle(field.id)}
-                    />
-                    <span className="text-sm font-bold">{field.label}</span>
-                </label>
-            ))}
-            <button onClick={() => onSave(fields)} className="px-3 py-1 bg-green-500 text-white rounded-lg text-xs font-bold ml-auto">
-                Save
-            </button>
-            <button onClick={onCancel} className="px-3 py-1 bg-gray-300 rounded-lg text-xs font-bold">
-                Cancel
-            </button>
+            <div className="flex flex-wrap gap-4">
+                {ALL_FIELDS.map(field => (
+                    <label key={field.id} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={fields.includes(field.id)}
+                            onChange={() => toggle(field.id)}
+                            className="w-4 h-4"
+                        />
+                        <span className="text-sm font-bold">{field.label}</span>
+                    </label>
+                ))}
+            </div>
+            <div className="flex gap-2 ml-auto">
+                <button onClick={() => onSave(fields)} className="px-3 py-2 bg-green-500 text-white rounded-lg text-xs font-bold whitespace-nowrap">
+                    Save
+                </button>
+                <button onClick={onCancel} className="px-3 py-2 bg-gray-300 rounded-lg text-xs font-bold whitespace-nowrap">
+                    Cancel
+                </button>
+            </div>
         </div>
     )
 }

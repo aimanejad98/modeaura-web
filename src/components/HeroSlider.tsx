@@ -71,16 +71,16 @@ export default function HeroSlider() {
                                 <div className="h-full max-w-7xl mx-auto px-8 flex items-center justify-center text-center pt-32 md:pt-48">
                                     <div className={`max-w-3xl space-y-8 transition-all duration-1000 delay-300 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                                         <div className="space-y-4">
-                                            <h5 className="font-black uppercase tracking-[0.6em] text-[10px] md:text-[11px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]" style={{ color: slide.subtitleColor || 'var(--gold)' }}>
+                                            <h5 className={`${slide.subtitleFont || 'font-black'} uppercase tracking-[0.6em] text-[10px] md:text-[11px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]`} style={{ color: slide.subtitleColor || 'var(--gold)' }}>
                                                 {slide.subtitle || 'Exclusive Collection'}
                                             </h5>
-                                            <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-medium italic leading-[1.1] drop-shadow-2xl" style={{ color: slide.textColor || 'white' }}>
+                                            <h1 className={`text-4xl md:text-7xl lg:text-8xl ${slide.titleFont || 'font-display font-medium italic'} leading-[1.1] drop-shadow-2xl`} style={{ color: slide.textColor || 'white' }}>
                                                 {slide.title}
                                             </h1>
                                         </div>
                                         <div className="pt-10">
                                             <Link href={slide.link || '/shop'} className="inline-block bg-white text-black font-black text-[10px] md:text-[11px] uppercase tracking-[0.3em] px-14 py-5 hover:bg-[var(--gold)] hover:text-white transition-all shadow-xl">
-                                                Shop Now
+                                                {slide.buttonText || 'Shop Now'}
                                             </Link>
                                         </div>
                                     </div>
@@ -91,15 +91,15 @@ export default function HeroSlider() {
                                 <div className={`flex flex-col md:flex-row h-full ${layout === 'Split-Right' || layout === 'Split-Blur-Right' ? 'md:flex-row-reverse' : ''}`}>
                                     <div className="w-full md:w-1/2 h-full flex items-center justify-center p-12 md:p-24 pb-0 pt-32 md:pt-48 bg-white relative z-10">
                                         <div className={`space-y-6 transition-all duration-1000 delay-300 ${isActive ? 'translate-x-0 opacity-100' : (layout.includes('Left') ? '-translate-x-12' : 'translate-x-12') + ' opacity-0'}`}>
-                                            <h5 className="font-black uppercase tracking-[0.4em] text-[10px] drop-shadow-sm" style={{ color: slide.subtitleColor || 'var(--gold)' }}>
+                                            <h5 className={`${slide.subtitleFont || 'font-black'} uppercase tracking-[0.4em] text-[10px] drop-shadow-sm`} style={{ color: slide.subtitleColor || 'var(--gold)' }}>
                                                 {slide.subtitle}
                                             </h5>
-                                            <h1 className="text-4xl md:text-6xl font-display italic leading-tight" style={{ color: slide.textColor || '#111827' }}>
+                                            <h1 className={`text-4xl md:text-6xl ${slide.titleFont || 'font-display italic'} leading-tight`} style={{ color: slide.textColor || '#111827' }}>
                                                 {slide.title}
                                             </h1>
                                             <div className="pt-4">
                                                 <Link href={slide.link || '/shop'} className="inline-block border-2 font-black text-[10px] uppercase tracking-[0.2em] px-10 py-4 hover:bg-black hover:text-white transition-all" style={{ borderColor: slide.textColor || 'black', color: slide.textColor || 'black' }}>
-                                                    Discover More
+                                                    {slide.buttonText || 'Discover More'}
                                                 </Link>
                                             </div>
                                         </div>
@@ -121,15 +121,15 @@ export default function HeroSlider() {
                             {layout === 'Glass' && (
                                 <div className="h-full flex items-center justify-center p-8">
                                     <div className={`backdrop-blur-md bg-white/10 p-12 md:p-20 rounded-[3rem] border border-white/20 shadow-2xl max-w-xl text-center space-y-6 transition-all duration-1000 delay-300 ${isActive ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`}>
-                                        <h1 className="text-3xl md:text-5xl font-display italic leading-tight" style={{ color: slide.textColor || 'white' }}>
+                                        <h1 className={`text-3xl md:text-5xl ${slide.titleFont || 'font-display italic'} leading-tight`} style={{ color: slide.textColor || 'white' }}>
                                             {slide.title}
                                         </h1>
-                                        <p className="font-medium tracking-wide text-sm md:text-base" style={{ color: slide.subtitleColor || 'white', opacity: 0.8 }}>
+                                        <p className={`${slide.subtitleFont || 'font-medium'} tracking-wide text-sm md:text-base`} style={{ color: slide.subtitleColor || 'white', opacity: 0.8 }}>
                                             {slide.subtitle}
                                         </p>
                                         <div className="pt-4">
                                             <Link href={slide.link || '/shop'} className="inline-block bg-[var(--gold)] text-white font-black text-[10px] uppercase tracking-[0.3em] px-12 py-5 rounded-full hover:scale-105 transition-all">
-                                                View Collection
+                                                {slide.buttonText || 'View Collection'}
                                             </Link>
                                         </div>
                                     </div>
@@ -140,11 +140,11 @@ export default function HeroSlider() {
                                 <div className="h-full flex flex-col justify-end p-12 md:p-24">
                                     <div className={`space-y-4 transition-all duration-1000 delay-300 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                                         <div className="w-12 h-0.5" style={{ backgroundColor: slide.subtitleColor || 'var(--gold)' }} />
-                                        <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tighter" style={{ color: slide.textColor || 'white' }}>
+                                        <h1 className={`text-2xl md:text-4xl font-black uppercase tracking-tighter ${slide.titleFont || ''}`} style={{ color: slide.textColor || 'white' }}>
                                             {slide.title}
                                         </h1>
                                         <Link href={slide.link || '/shop'} className="inline-flex items-center gap-4 text-white hover:text-[var(--gold)] transition-all">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--gold)] drop-shadow-md">Shop</span>
+                                            <span className={`text-[10px] font-black uppercase tracking-widest text-[var(--gold)] drop-shadow-md ${slide.subtitleFont || ''}`}>{slide.buttonText || 'Shop'}</span>
                                             <span className="text-xl">→</span>
                                         </Link>
                                     </div>

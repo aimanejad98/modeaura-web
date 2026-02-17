@@ -22,6 +22,9 @@ export async function addBanner(data: {
     link?: string
     textColor?: string
     subtitleColor?: string
+    titleFont?: string
+    subtitleFont?: string
+    buttonText?: string
     designLayout?: string
     order?: number
     active?: boolean
@@ -43,6 +46,9 @@ export async function updateBanner(id: string, data: {
     link?: string
     textColor?: string
     subtitleColor?: string
+    titleFont?: string
+    subtitleFont?: string
+    buttonText?: string
     designLayout?: string
     order?: number
     active?: boolean

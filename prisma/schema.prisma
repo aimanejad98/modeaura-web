@@ -128,6 +128,9 @@ model Banner {
   updatedAt     DateTime @updatedAt
   textColor     String?  @default("#000000")
   subtitleColor String?  @default("#D4AF37")
+  titleFont     String?  @default("font-display")
+  subtitleFont  String?  @default("font-sans")
+  buttonText    String?  @default("Discover More")
 }
 
 model Order {

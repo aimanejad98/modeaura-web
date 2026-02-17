@@ -37,6 +37,8 @@ export default function InventoryPage() {
     const [userRole, setUserRole] = useState<'Admin' | 'Manager' | 'Cashier'>('Admin')
     const [editingProduct, setEditingProduct] = useState<any>(null)
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+    const [bulkStock, setBulkStock] = useState<Record<string, number>>({})
+    const [syncColorPhotos, setSyncColorPhotos] = useState(false)
 
     // New Features State
     const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set())
@@ -99,28 +101,55 @@ export default function InventoryPage() {
         e.preventDefault()
         setIsSubmitting(true)
         try {
-            await addProduct({
-                name: newProduct.name,
-                categoryId: newProduct.categoryId,
-                price: newProduct.price,
-                costPrice: newProduct.costPrice,
-                stock: newProduct.stock,
-                size: newProduct.size || undefined,
-                color: newProduct.color || undefined,
-                material: newProduct.material || undefined,
-                images: images.join(','),
-                isNewArrival: newProduct.isNewArrival,
-                isKids: newProduct.isKids,
-                discountPrice: newProduct.discountPrice || undefined,
-                saleId: newProduct.saleId || undefined,
-            })
+            const sizesToAdd = Object.entries(bulkStock).filter(([_, qty]) => qty > 0)
+
+            if (sizesToAdd.length > 0) {
+                // Bulk Add Mode
+                for (const [size, qty] of sizesToAdd) {
+                    await addProduct({
+                        name: newProduct.name,
+                        categoryId: newProduct.categoryId,
+                        price: newProduct.price,
+                        costPrice: newProduct.costPrice,
+                        stock: qty,
+                        size: size,
+                        color: newProduct.color || undefined,
+                        material: newProduct.material || undefined,
+                        images: images.join(','),
+                        isNewArrival: newProduct.isNewArrival,
+                        isKids: newProduct.isKids,
+                        discountPrice: newProduct.discountPrice || undefined,
+                        saleId: newProduct.saleId || undefined,
+                    })
+                }
+            } else {
+                // Single Add Mode (Fallback)
+                await addProduct({
+                    name: newProduct.name,
+                    categoryId: newProduct.categoryId,
+                    price: newProduct.price,
+                    costPrice: newProduct.costPrice,
+                    stock: newProduct.stock,
+                    size: newProduct.size || undefined,
+                    color: newProduct.color || undefined,
+                    material: newProduct.material || undefined,
+                    images: images.join(','),
+                    isNewArrival: newProduct.isNewArrival,
+                    isKids: newProduct.isKids,
+                    discountPrice: newProduct.discountPrice || undefined,
+                    saleId: newProduct.saleId || undefined,
+                })
+            }
+
             if (quickMode) {
-                setQuickCount(quickCount + 1)
+                setQuickCount(quickCount + (sizesToAdd.length || 1))
                 setNewProduct({ ...newProduct, name: '', size: '', color: '', material: '', isNewArrival: false, isKids: false, discountPrice: 0, saleId: '' })
+                setBulkStock({})
                 setImages([])
                 await loadData(true)
             } else {
                 setNewProduct({ name: '', categoryId: '', price: 0, costPrice: 0, stock: 0, size: '', color: '', material: '', isNewArrival: false, isKids: false, discountPrice: 0, saleId: '' })
+                setBulkStock({})
                 setSelectedMain(null)
                 setImages([])
                 setShowAdd(false)
@@ -226,6 +255,9 @@ export default function InventoryPage() {
         if (!editingProduct) return
         setIsSubmitting(true)
         try {
+            const imagesStr = images.join(',')
+
+            // 1. Update the primary product
             await updateProduct(editingProduct.id, {
                 name: editingProduct.name,
                 categoryId: editingProduct.categoryId,
@@ -235,16 +267,41 @@ export default function InventoryPage() {
                 size: editingProduct.size || undefined,
                 color: editingProduct.color || undefined,
                 material: editingProduct.material || undefined,
-                images: images.join(','),
+                images: imagesStr,
                 isNewArrival: editingProduct.isNewArrival,
                 isKids: editingProduct.isKids,
                 discountPrice: editingProduct.discountPrice || null,
                 saleId: editingProduct.saleId || null,
             })
+
+            // 2. If sync is enabled, update all variants of the same design and color
+            if (syncColorPhotos && editingProduct.color) {
+                const variantsToSync = products.filter(p =>
+                    p.name === editingProduct.name &&
+                    p.color === editingProduct.color &&
+                    p.id !== editingProduct.id
+                )
+
+                for (const variant of variantsToSync) {
+                    await updateProduct(variant.id, {
+                        ...variant,
+                        images: imagesStr,
+                        // Ensure we pass undefined/null for optional fields if they are missing
+                        size: variant.size || undefined,
+                        color: variant.color || undefined,
+                        material: variant.material || undefined,
+                        discountPrice: variant.discountPrice || null,
+                        saleId: variant.saleId || null,
+                    })
+                }
+            }
+
             setEditingProduct(null)
             setImages([])
+            setSyncColorPhotos(false)
             await loadData(true)
         } catch (error) {
+            console.error('Update failed:', error)
             alert('Failed to update product.')
         } finally {
             setIsSubmitting(false)
@@ -327,7 +384,7 @@ export default function InventoryPage() {
         // Tab Filter
         if (activeTab !== 'All') {
             result = result.filter(p => {
-                const cat = categories.find(c => c.id === p.categoryId)
+                const cat = p.category
                 return cat?.name === activeTab || cat?.parent?.name === activeTab
             })
         }
@@ -442,6 +499,11 @@ export default function InventoryPage() {
     };
 
     const categoryFields = getCategoryFields()
+
+    const getColorHex = (colorName: string) => {
+        if (!colorName) return null;
+        return colors.find(c => c.name.toLowerCase() === colorName.toLowerCase())?.hex;
+    };
 
     return (
         <>
@@ -635,57 +697,91 @@ export default function InventoryPage() {
                                                 <span className={`transition-transform duration-300 inline-block ${expandedGroups.has(group.name) ? 'rotate-180' : ''}`}>▼</span>
                                             </td>
                                         </tr>
-                                        {expandedGroups.has(group.name) && group.variants.map((product: any) => (
-                                            <tr key={product.id} className={`bg-[#FAF9F6] border-l-4 border-[var(--gold)] animate-in slide-in-from-left-2 ${selectedProductIds.has(product.id) ? 'bg-[var(--gold)]/10' : ''}`}>
-                                                <td className="p-2 pl-4">
-                                                    <button onClick={(e) => { e.stopPropagation(); handleSelectProduct(product.id); }} className="text-gray-400 hover:text-[var(--gold)]">
-                                                        {selectedProductIds.has(product.id) ? <CheckSquare size={14} /> : <Square size={14} />}
-                                                    </button>
-                                                </td>
-                                                <td className="p-2 pl-4 pt-4 pb-4">
-                                                    <code className="text-[10px] bg-white border border-gray-200 px-2 py-1 rounded font-mono">{product.sku}</code>
-                                                </td>
-                                                <td className="p-2 pt-4 pb-4">
-                                                    <span className="text-xs font-bold text-gray-600">{product.size || product.color || 'Standard'}</span>
-                                                </td>
-                                                <td className="p-2" colSpan={2}>
-                                                    <span className="text-[10px] text-gray-400 uppercase">{product.material || ''}</span>
-                                                </td>
-                                                <td className="p-2 text-right">
-                                                    <div className="flex flex-col items-end">
-                                                        {product.discountPrice || product.sale ? (
-                                                            <>
-                                                                <span className="text-[9px] text-gray-300 line-through">${product.price}</span>
-                                                                <span className="text-xs font-bold text-red-400">
-                                                                    ${(product.discountPrice || (
-                                                                        product.sale.type === 'Percentage'
-                                                                            ? product.price * (1 - product.sale.value / 100)
-                                                                            : product.price - product.sale.value
-                                                                    )).toFixed(2)}
-                                                                </span>
-                                                            </>
-                                                        ) : (
-                                                            <span className="text-xs font-bold text-gray-500">${product.price}</span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="p-2 text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <button onClick={(e) => { e.stopPropagation(); handleQuickStock(product, -1); }} className="w-5 h-5 flex items-center justify-center rounded bg-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500">-</button>
-                                                        <span className="text-xs font-bold w-8">{product.stock}</span>
-                                                        <button onClick={(e) => { e.stopPropagation(); handleQuickStock(product, 1); }} className="w-5 h-5 flex items-center justify-center rounded bg-gray-200 text-gray-500 hover:bg-green-50 hover:text-green-500">+</button>
-                                                    </div>
-                                                </td>
-                                                <td className="p-2 text-center">
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        {canEdit && <button onClick={(e) => { e.stopPropagation(); startEdit(product); }} className="p-1.5 hover:bg-white rounded-lg" title="Edit">✏️</button>}
-                                                        {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDuplicate(product); }} className="p-1.5 hover:bg-white rounded-lg" title="Duplicate">📋</button>}
-                                                        <button onClick={(e) => { e.stopPropagation(); printBarcode(product.sku, product.name, product.price, product.size, product.color, product.material); }} className="p-1.5 hover:bg-white rounded-lg" title="Barcode">🏷️</button>
-                                                        {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }} className="p-1.5 hover:bg-white rounded-lg text-red-500" title="Delete">🗑️</button>}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {expandedGroups.has(group.name) && group.variants.map((product: any) => {
+                                            const colorHex = getColorHex(product.color);
+                                            return (
+                                                <tr key={product.id} className={`bg-[#FAF9F6]/80 border-l-4 border-[var(--gold)] animate-in slide-in-from-left-2 group/variant ${selectedProductIds.has(product.id) ? 'bg-[var(--gold)]/10' : ''}`}>
+                                                    <td className="p-2 pl-4">
+                                                        <button onClick={(e) => { e.stopPropagation(); handleSelectProduct(product.id); }} className="text-gray-400 hover:text-[var(--gold)]">
+                                                            {selectedProductIds.has(product.id) ? <CheckSquare size={14} /> : <Square size={14} />}
+                                                        </button>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="shrink-0">
+                                                                {product.images && product.images.split(',')[0] ? (
+                                                                    <img src={product.images.split(',')[0]} alt={product.sku} className="w-10 h-10 object-cover rounded-lg border border-gray-100 shadow-sm" />
+                                                                ) : (
+                                                                    <div className="w-10 h-10 bg-white border border-gray-100 rounded-lg flex items-center justify-center text-[10px] text-gray-300">NO IMG</div>
+                                                                )}
+                                                            </div>
+                                                            <code className="text-[10px] bg-white border border-gray-200 px-2 py-1 rounded font-mono text-gray-400">{product.sku}</code>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <div className="flex items-center gap-2">
+                                                            {product.color && (
+                                                                <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-full border border-gray-100 shadow-sm">
+                                                                    {colorHex && (
+                                                                        <div
+                                                                            className="w-2.5 h-2.5 rounded-full border border-black/5"
+                                                                            style={{ backgroundColor: colorHex }}
+                                                                        />
+                                                                    )}
+                                                                    <span className="text-[10px] font-black uppercase tracking-tight text-gray-600">{product.color}</span>
+                                                                </div>
+                                                            )}
+                                                            {product.size && (
+                                                                <span className="text-[10px] font-black bg-gray-900 text-white px-2 py-1 rounded-md min-w-[1.5rem] text-center">{product.size}</span>
+                                                            )}
+                                                            {!product.color && !product.size && <span className="text-[10px] font-bold text-gray-400 italic">Standard</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <span className="text-[10px] text-gray-400 uppercase font-bold">{group.name}</span>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <span className="text-[10px] text-gray-300 uppercase font-black tracking-widest">{group.category?.name}</span>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <span className="text-[10px] text-gray-400 uppercase">{product.material || ''}</span>
+                                                    </td>
+                                                    <td className="p-2 text-right">
+                                                        <div className="flex flex-col items-end">
+                                                            {product.discountPrice || product.sale ? (
+                                                                <>
+                                                                    <span className="text-[9px] text-gray-300 line-through">${product.price}</span>
+                                                                    <span className="text-xs font-bold text-red-500">
+                                                                        ${(product.discountPrice || (
+                                                                            product.sale.type === 'Percentage'
+                                                                                ? product.price * (1 - product.sale.value / 100)
+                                                                                : product.price - product.sale.value
+                                                                        )).toFixed(2)}
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-xs font-bold text-[#D4AF37]">${product.price}</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-2 text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <button onClick={(e) => { e.stopPropagation(); handleQuickStock(product, -1); }} className="w-5 h-5 flex items-center justify-center rounded bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 transition-colors shadow-sm">-</button>
+                                                            <span className={`text-[11px] font-black w-6 text-center ${product.stock <= 5 ? 'text-red-500' : 'text-gray-900'}`}>{product.stock}</span>
+                                                            <button onClick={(e) => { e.stopPropagation(); handleQuickStock(product, 1); }} className="w-5 h-5 flex items-center justify-center rounded bg-white border border-gray-100 text-gray-400 hover:text-green-500 hover:border-green-100 transition-colors shadow-sm">+</button>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-2 text-center">
+                                                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover/variant:opacity-100 transition-opacity">
+                                                            {canEdit && <button onClick={(e) => { e.stopPropagation(); startEdit(product); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Edit">✏️</button>}
+                                                            {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDuplicate(product); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Duplicate">📋</button>}
+                                                            <button onClick={(e) => { e.stopPropagation(); printBarcode(product.sku, product.name, product.price, product.size, product.color, product.material); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Barcode">🏷️</button>
+                                                            {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-red-500" title="Delete">🗑️</button>}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </React.Fragment>
                                 );
                             })}
@@ -851,7 +947,7 @@ export default function InventoryPage() {
                                         </label>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Category</label>
                                         <select required value={selectedMain?.id || ''} onChange={(e) => handleMainCategoryChange(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all">
@@ -891,7 +987,7 @@ export default function InventoryPage() {
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Product Name</label>
                                     <input required placeholder="e.g., Elegant Black Abaya" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Retail Price ($)</label>
                                         <input required type="number" step="0.01" value={newProduct.price || ''} onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
@@ -903,13 +999,47 @@ export default function InventoryPage() {
                                         <input required type="number" step="0.01" value={newProduct.costPrice || ''} onChange={(e) => setNewProduct({ ...newProduct, costPrice: parseFloat(e.target.value) })} className="w-full p-4 bg-gray-50 border-2 border-[var(--gold)]/20 rounded-xl focus:border-[var(--gold)] transition-all" />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <div>
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Stock Qty</label>
-                                        <input required type="number" value={newProduct.stock || ''} onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
+                                {selectedMain?.sizes?.length > 0 ? (
+                                    <div className="space-y-3 p-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Size & Quantity Matrix</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setBulkStock({})}
+                                                className="text-[10px] font-black text-red-400 hover:text-red-500 uppercase tracking-wider"
+                                            >
+                                                Clear Matrix
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                            {selectedMain.sizes.map((size: any) => (
+                                                <div key={size.id} className="space-y-1">
+                                                    <div className="text-[10px] font-black text-gray-500 text-center uppercase">{size.name}</div>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        value={bulkStock[size.name] || ''}
+                                                        onChange={(e) => setBulkStock({ ...bulkStock, [size.name]: parseInt(e.target.value) || 0 })}
+                                                        className="w-full p-2 bg-white rounded-lg border border-gray-200 text-center font-bold text-sm focus:border-[var(--gold)] outline-none transition-all placeholder:text-gray-200"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 italic text-center pt-2">Enter quantities for each size. Left at 0 will not be added.</p>
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 p-4 bg-[#D4AF37]/5 rounded-2xl border border-[#D4AF37]/10">
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Stock Qty</label>
+                                            <input required type="number" value={newProduct.stock || ''} onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
+                                            {selectedMain && (
+                                                <p className="text-[10px] text-gray-400 mt-2 italic">💡 Tip: Define sizes for "{selectedMain.name}" in Filter Management to enable multi-size bulk entry.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[#D4AF37]/5 rounded-2xl border border-[#D4AF37]/10">
                                     <div>
                                         <label className="text-xs font-bold text-[var(--gold)] uppercase tracking-wider mb-2 block">Manual Discount Price ($)</label>
                                         <input type="number" step="0.01" placeholder="Override price..." value={newProduct.discountPrice || ''} onChange={(e) => setNewProduct({ ...newProduct, discountPrice: parseFloat(e.target.value) || 0 })} className="w-full p-3 bg-white rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all text-sm" />
@@ -926,23 +1056,31 @@ export default function InventoryPage() {
                                         <p className="text-[10px] text-gray-400 mt-1 italic">Applied if no manual discount set.</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    {categoryFields.map(field => (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {categoryFields.filter(f => selectedMain?.sizes?.length > 0 ? f !== 'size' : true).map(field => (
                                         <div key={field}>
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">{field}</label>
+                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block text-capitalize">{field}</label>
                                             {field === 'color' ? (
-                                                <select
-                                                    value={(newProduct as any)[field] || ''}
-                                                    onChange={(e) => setNewProduct({ ...newProduct, [field]: e.target.value } as any)}
-                                                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all cursor-pointer"
-                                                >
-                                                    <option value="">Select Color</option>
-                                                    {colors.map(color => (
-                                                        <option key={color.id} value={color.name}>{color.name}</option>
-                                                    ))}
-                                                </select>
+                                                <div className="relative">
+                                                    <select
+                                                        value={(newProduct as any)[field] || ''}
+                                                        onChange={(e) => setNewProduct({ ...newProduct, [field]: e.target.value } as any)}
+                                                        className={`w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all cursor-pointer ${getColorHex((newProduct as any).color) ? 'pl-12' : ''}`}
+                                                    >
+                                                        <option value="">Select Color</option>
+                                                        {colors.map(color => (
+                                                            <option key={color.id} value={color.name}>{color.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    {field === 'color' && getColorHex((newProduct as any).color) && (
+                                                        <div
+                                                            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border border-black/10 shadow-sm"
+                                                            style={{ backgroundColor: getColorHex((newProduct as any).color) || 'transparent' }}
+                                                        />
+                                                    )}
+                                                </div>
                                             ) : (
-                                                <input placeholder={`e.g., ${field === 'size' ? 'M' : ''}`} value={(newProduct as any)[field] || ''} onChange={(e) => setNewProduct({ ...newProduct, [field]: e.target.value } as any)} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
+                                                <input placeholder={`e.g., ${field === 'size' ? 'M' : field === 'material' ? 'Silk' : ''}`} value={(newProduct as any)[field] || ''} onChange={(e) => setNewProduct({ ...newProduct, [field]: e.target.value } as any)} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
                                             )}
                                         </div>
                                     ))}
@@ -1000,8 +1138,22 @@ export default function InventoryPage() {
                                             <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
                                         </label>
                                     </div>
+                                    {editingProduct.color && (
+                                        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-all" onClick={() => setSyncColorPhotos(!syncColorPhotos)}>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-6 rounded-full relative transition-all duration-300 ${syncColorPhotos ? 'bg-[var(--gold)]' : 'bg-gray-300'}`}>
+                                                    <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${syncColorPhotos ? 'translate-x-4' : ''}`} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-gray-900 uppercase">Sync Photos</p>
+                                                    <p className="text-[10px] text-gray-500 font-bold uppercase">Apply to all {editingProduct.color} variants of this design</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-xl">🎨</div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Category</label>
                                         <div className="w-full p-4 bg-gray-100 rounded-xl text-xs font-bold text-gray-500 uppercase">
@@ -1031,7 +1183,7 @@ export default function InventoryPage() {
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Product Name</label>
                                     <input required value={editingProduct.name} onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Retail Price ($)</label>
                                         <input required type="number" step="0.01" value={editingProduct.price} onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
@@ -1049,7 +1201,7 @@ export default function InventoryPage() {
                                         <input required type="number" value={editingProduct.stock || ''} onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 p-4 bg-[#D4AF37]/5 rounded-2xl border border-[#D4AF37]/10">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[#D4AF37]/5 rounded-2xl border border-[#D4AF37]/10">
                                     <div>
                                         <label className="text-xs font-bold text-[var(--gold)] uppercase tracking-wider mb-2 block">Manual Discount Price ($)</label>
                                         <input type="number" step="0.01" placeholder="Override price..." value={editingProduct.discountPrice || ''} onChange={(e) => setEditingProduct({ ...editingProduct, discountPrice: parseFloat(e.target.value) || 0 })} className="w-full p-3 bg-white rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all text-sm" />
@@ -1066,21 +1218,29 @@ export default function InventoryPage() {
                                         <p className="text-[10px] text-gray-400 mt-1 italic">Applied if no manual discount set.</p>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                     {categoryFields.map(field => (
                                         <div key={field}>
                                             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">{field}</label>
                                             {field === 'color' ? (
-                                                <select
-                                                    value={editingProduct[field] || ''}
-                                                    onChange={(e) => setEditingProduct({ ...editingProduct, [field]: e.target.value })}
-                                                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all cursor-pointer"
-                                                >
-                                                    <option value="">Select Color</option>
-                                                    {colors.map(color => (
-                                                        <option key={color.id} value={color.name}>{color.name}</option>
-                                                    ))}
-                                                </select>
+                                                <div className="relative">
+                                                    <select
+                                                        value={editingProduct[field] || ''}
+                                                        onChange={(e) => setEditingProduct({ ...editingProduct, [field]: e.target.value })}
+                                                        className={`w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all cursor-pointer ${getColorHex(editingProduct.color) ? 'pl-12' : ''}`}
+                                                    >
+                                                        <option value="">Select Color</option>
+                                                        {colors.map(color => (
+                                                            <option key={color.id} value={color.name}>{color.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    {field === 'color' && getColorHex(editingProduct.color) && (
+                                                        <div
+                                                            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border border-black/10 shadow-sm"
+                                                            style={{ backgroundColor: getColorHex(editingProduct.color) || 'transparent' }}
+                                                        />
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <input placeholder={`e.g., ${field === 'size' ? 'M' : ''}`} value={editingProduct[field] || ''} onChange={(e) => setEditingProduct({ ...editingProduct, [field]: e.target.value })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
                                             )}

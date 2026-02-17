@@ -225,7 +225,7 @@ export default function FiltersManagement() {
 
                             <form onSubmit={handleAddStyle} className="space-y-4 pt-8 border-t border-gray-50">
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Add New Pattern to {activeMainCat?.name}</p>
-                                <div className="flex gap-4">
+                                <div className="flex flex-col sm:flex-row gap-4">
                                     <input
                                         required
                                         placeholder={currentExample || 'Pattern name...'}
@@ -233,7 +233,7 @@ export default function FiltersManagement() {
                                         onChange={(e) => setNewStyle({ ...newStyle, name: e.target.value })}
                                         className="flex-1 p-4 bg-gray-50 rounded-2xl text-sm border-2 border-transparent focus:border-black transition-all"
                                     />
-                                    <button type="submit" className="px-8 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
+                                    <button type="submit" className="py-4 sm:py-0 px-8 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
                                         Add Pattern
                                     </button>
                                 </div>
@@ -302,7 +302,7 @@ export default function FiltersManagement() {
 
                             <form onSubmit={handleAddMaterial} className="space-y-4 pt-8 border-t border-gray-50">
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Add New Material to {activeMaterialCatName}</p>
-                                <div className="flex gap-4">
+                                <div className="flex flex-col sm:flex-row gap-4">
                                     <input
                                         required
                                         placeholder="e.g., Luxury Korean Nida"
@@ -310,7 +310,7 @@ export default function FiltersManagement() {
                                         onChange={(e) => setNewMaterial(e.target.value)}
                                         className="flex-1 p-4 bg-gray-50 rounded-2xl text-sm border-2 border-transparent focus:border-[var(--gold)] transition-all"
                                     />
-                                    <button type="submit" className="px-8 bg-[var(--gold)] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#B8962F] transition-all">
+                                    <button type="submit" className="py-4 sm:py-0 px-8 bg-[var(--gold)] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#B8962F] transition-all">
                                         Add Material
                                     </button>
                                 </div>
@@ -408,7 +408,7 @@ export default function FiltersManagement() {
 
                             <form onSubmit={handleAddColor} className="space-y-4 pt-8 border-t border-gray-50">
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Add New Color</p>
-                                <div className="flex gap-4">
+                                <div className="flex flex-col sm:flex-row gap-4">
                                     <input
                                         required
                                         placeholder="Color Name (e.g., Midnight Black)"
@@ -416,15 +416,17 @@ export default function FiltersManagement() {
                                         onChange={(e) => setNewColor({ ...newColor, name: e.target.value })}
                                         className="flex-1 p-4 bg-gray-50 rounded-2xl text-sm border-2 border-transparent focus:border-black transition-all"
                                     />
-                                    <input
-                                        type="color"
-                                        value={newColor.hex}
-                                        onChange={(e) => setNewColor({ ...newColor, hex: e.target.value })}
-                                        className="w-16 h-14 rounded-2xl cursor-pointer bg-gray-50 border-2 border-transparent focus:border-black transition-all"
-                                    />
-                                    <button type="submit" className="px-8 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
-                                        Add Color
-                                    </button>
+                                    <div className="flex gap-4">
+                                        <input
+                                            type="color"
+                                            value={newColor.hex}
+                                            onChange={(e) => setNewColor({ ...newColor, hex: e.target.value })}
+                                            className="w-16 sm:w-20 h-14 rounded-2xl cursor-pointer bg-gray-50 border-2 border-transparent focus:border-black transition-all shrink-0"
+                                        />
+                                        <button type="submit" className="flex-1 sm:px-8 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
+                                            Add Color
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -493,7 +495,7 @@ export default function FiltersManagement() {
 
                             <form onSubmit={handleAddSize} className="space-y-4 pt-8 border-t border-gray-50">
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Add New Size to {activeSizeCatName}</p>
-                                <div className="flex gap-4">
+                                <div className="flex flex-col sm:flex-row gap-4">
                                     <input
                                         required
                                         placeholder="Size (e.g., S, M, 52, 54)"
@@ -501,7 +503,7 @@ export default function FiltersManagement() {
                                         onChange={(e) => setNewSize(e.target.value)}
                                         className="flex-1 p-4 bg-gray-50 rounded-2xl text-sm border-2 border-transparent focus:border-blue-600 transition-all"
                                     />
-                                    <button type="submit" className="px-8 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
+                                    <button type="submit" className="py-4 sm:py-0 px-8 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
                                         Add Size
                                     </button>
                                 </div>

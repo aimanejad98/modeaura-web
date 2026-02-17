@@ -317,19 +317,28 @@ export default function ShippingHub() {
                                         <p className="font-black text-[var(--text-primary)] tracking-tight">{order.orderId}</p>
                                         <p className="text-[10px] text-[var(--text-muted)] font-bold mt-0.5">{order.customer.split('|')[0].trim()}</p>
                                     </div>
-                                    <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border
-                                        ${delay.color === 'red' ? 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse' :
-                                            delay.color === 'amber' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                                delay.color === 'emerald' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                                    'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                                        }`}
-                                    >
-                                        <DelayIcon size={10} />
-                                        {delay.label}
-                                        {delay.label === 'Delayed' && ` (${delay.days}d)`}
-                                        {delay.label === 'On Time' && ` (${delay.days}d left)`}
-                                        {delay.label === 'At Risk' && ` (${delay.days}d left)`}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => printInternalLabel(order)}
+                                            className="p-2 bg-white text-[#1B2936] rounded-xl hover:scale-110 active:scale-95 transition-all shadow-md group"
+                                            title="Reprint Label"
+                                        >
+                                            <Printer size={14} className="group-hover:rotate-12 transition-transform" />
+                                        </button>
+                                        <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border
+                                            ${delay.color === 'red' ? 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse' :
+                                                delay.color === 'amber' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                                    delay.color === 'emerald' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                        'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                            }`}
+                                        >
+                                            <DelayIcon size={10} />
+                                            {delay.label}
+                                            {delay.label === 'Delayed' && ` (${delay.days}d)`}
+                                            {delay.label === 'On Time' && ` (${delay.days}d left)`}
+                                            {delay.label === 'At Risk' && ` (${delay.days}d left)`}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {/* Details */}

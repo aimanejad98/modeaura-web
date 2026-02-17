@@ -8,62 +8,7 @@ import { sendResetCode } from '@/lib/mail';
 import { hash } from 'bcryptjs';
 
 export async function register(formData: FormData) {
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const subscribeNewsletter = formData.get('newsletter') === 'on';
-
-    if (!name || !email || !password) {
-        return { error: 'All fields are required' };
-    }
-
-    try {
-        const existing = await db.customer.findUnique({ where: { email } });
-        if (existing) {
-            return { error: 'Email already registered' };
-        }
-
-        const hashedPassword = await hashPassword(password);
-        const verificationCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-        await db.customer.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword,
-                role: 'Customer',
-                isVerified: false,
-                verificationCode,
-            }
-        });
-
-        // Send verification email
-        try {
-            const { sendVerificationLink } = await import('@/lib/mail');
-            await sendVerificationLink(email, verificationCode);
-        } catch (mailErr) {
-            console.error('Failed to send verification email:', mailErr);
-            // We still return success: true because the account was created
-        }
-
-        if (subscribeNewsletter) {
-            try {
-                // @ts-ignore - handled in case client is outdated
-                await db.subscriber.upsert({
-                    where: { email },
-                    update: {},
-                    create: { email }
-                });
-            } catch (err) {
-                console.error('Newsletter subscription error:', err);
-            }
-        }
-
-        return { success: true };
-    } catch (err) {
-        console.error('Registration error:', err);
-        return { error: 'Failed to create account' };
-    }
+    return { error: 'Registration is currently disabled.' };
 }
 
 export async function login(formData: FormData) {

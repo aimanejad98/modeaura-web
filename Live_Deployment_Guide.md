@@ -54,13 +54,15 @@ Your code must be on GitHub so the server can download it.
 ---
 
 ## �🚀 Step 1: Secure Your Foundation
-1.  **Buy Domain**: Go to [namecheap.com](https://www.namecheap.com/) and buy `modeaura.ca` (~$10/yr). (Do NOT buy hosting/email/SSL there).
+1.  **Buy Domain**: Go to [godaddy.com](https://www.godaddy.com/) and buy your domain (e.g., `modeaura.ca`).
 2.  **Set up Cloudflare (Free)**:
     *   Sign up at [cloudflare.com](https://www.cloudflare.com/).
-    *   Click "Add Site" -> Enter `modeaura.ca`.
+    *   Click "Add Site" -> Enter your domain.
     *   Select the **Free Plan**.
     *   Cloudflare will give you two "Nameservers" (e.g., `bob.ns.cloudflare.com`, `alice.ns.cloudflare.com`).
-    *   Go to Namecheap -> Domain List -> Manage -> "Nameservers" -> Custom DNS.
+    *   Go to **GoDaddy** -> **Domain Portfolio**.
+    *   Click on your domain -> **DNS** -> **Nameservers**.
+    *   Click **Change Nameservers** -> **I'll use my own nameservers**.
     *   Paste the two Cloudflare nameservers and save.
     *   *Wait 15-30 mins for it to activate.*
 
@@ -252,15 +254,25 @@ Your site is live!
 ---
 
 ## 🔄 How to Update
-When you make changes locally:
-1.  `git push` changes to GitHub.
-2.  SSH into server: `ssh root@...`
-3.  `cd /var/www/modeaura-web`
-4.  `git pull`
-5.  `npm install` (if new packages)
-6.  `npx prisma migrate deploy` (if DB changes)
-7.  `npm run build`
-8.  `pm2 reload modeaura`
+When you make changes to your code locally:
+
+1.  **Save to GitHub**:
+    Open PowerShell, `cd` to your folder, and run:
+    ```bash
+    git add .
+    git commit -m "Added new winter products" 
+    # (Change the text in quotes to whatever you actually did!)
+    git push
+    ```
+
+2.  **Update Your Server**:
+    (Once you have your VPS set up in Step 2+)
+    *   SSH into server: `ssh root@...`
+    *   `cd /var/www/modeaura-web`
+    *   `git pull`
+    *   `npm install` (if new packages)
+    *   `npm run build`
+    *   `pm2 reload modeaura`
 
 ---
 

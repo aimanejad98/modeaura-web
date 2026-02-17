@@ -179,12 +179,7 @@ const LoginContent = () => {
                                 </button>
                             </form>
 
-                            <div className="pt-8 text-center border-t border-white/5">
-                                <p className="text-white/30 text-[10px] font-bold uppercase tracking-wide">
-                                    Not a member yet? {' '}
-                                    <Link href="/register" className="text-[var(--gold)] hover:text-white transition-colors ml-2">REGISTER</Link>
-                                </p>
-                            </div>
+
                         </div>
                     </div>
                 </div>
