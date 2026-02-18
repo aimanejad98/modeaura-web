@@ -109,11 +109,12 @@ model Sale {
 }
 
 model Pattern {
-  id         String   @id @default(cuid())
-  name       String
-  categoryId String
-  createdAt  DateTime @default(now())
-  category   Category @relation(fields: [categoryId], references: [id])
+  id           String   @id @default(cuid())
+  name         String
+  categoryId   String
+  allowedSizes String?  @default("")
+  createdAt    DateTime @default(now())
+  category     Category @relation(fields: [categoryId], references: [id])
 }
 
 model Banner {

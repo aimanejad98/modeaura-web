@@ -18,10 +18,10 @@ export async function getPatternsByCategory(categoryId: string) {
     })
 }
 
-export async function addPattern(name: string, categoryId: string) {
+export async function addPattern(name: string, categoryId: string, allowedSizes?: string) {
     // 1. Create the pattern
     const pattern = await prisma.pattern.create({
-        data: { name, categoryId }
+        data: { name, categoryId, allowedSizes: allowedSizes || "" }
     })
 
     // 2. Check if a subcategory with this name already exists under this category
@@ -77,6 +77,19 @@ export async function deletePattern(id: string) {
         return JSON.parse(JSON.stringify(result))
     } catch (error) {
         console.error('[Patterns] Delete failed:', error)
+        throw error;
+    }
+}
+export async function updatePattern(id: string, data: { name?: string, categoryId?: string, allowedSizes?: string }) {
+    try {
+        const result = await prisma.pattern.update({
+            where: { id },
+            data
+        })
+        revalidatePath('/dashboard/filters')
+        return JSON.parse(JSON.stringify(result))
+    } catch (error) {
+        console.error('[Patterns] Update failed:', error)
         throw error;
     }
 }

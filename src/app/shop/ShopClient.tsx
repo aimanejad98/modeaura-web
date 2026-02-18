@@ -126,10 +126,21 @@ export default function ShopClient() {
         // Apply pattern filter for size list ONLY if NOT Abayas
         // This satisfies: "iwant sizes in abaya to be all same but for accessories no i need size for every pattern"
         if (selectedStyleNames.length > 0 && !isAbayaActive) {
+            const stylesLower = selectedStyleNames.map(s => s.toLowerCase());
+
+            // Collect allowed sizes from the selected patterns
+            const patternsWithRestrictions = patterns.filter(p => selectedStyleNames.includes(p.name) && p.allowedSizes);
+            const globalAllowedSizes = new Set<string>();
+            patternsWithRestrictions.forEach(p => {
+                p.allowedSizes.split(',').forEach((s: string) => globalAllowedSizes.add(s.trim()));
+            });
+
             productsForSizes = productsForSizes.filter(p => {
-                const styleMatch = selectedStyleNames.includes(p.style || '');
-                const catMatch = selectedStyleNames.includes(categories.find(c => c.id === p.categoryId)?.name || '');
-                return styleMatch || catMatch;
+                const styleName = (p.style || '').toLowerCase();
+                const category = categories.find(c => c.id === p.categoryId);
+                const categoryName = (category?.name || '').toLowerCase();
+
+                return stylesLower.includes(styleName) || stylesLower.includes(categoryName);
             });
         }
 
@@ -138,6 +149,28 @@ export default function ShopClient() {
                 p.size.split(',').forEach((s: string) => sizes.add(s.trim()));
             }
         });
+
+        // Final filtering of sizes if specific patterns are selected
+        if (selectedStyleNames.length > 0 && !isAbayaActive) {
+            const patternsWithRestrictions = patterns.filter(p => selectedStyleNames.includes(p.name) && p.allowedSizes);
+            if (patternsWithRestrictions.length > 0) {
+                const globalAllowedSizes = new Set<string>();
+                patternsWithRestrictions.forEach(p => {
+                    p.allowedSizes.split(',').forEach((s: string) => globalAllowedSizes.add(s.trim()));
+                });
+
+                if (globalAllowedSizes.size > 0) {
+                    const filteredSizes = Array.from(sizes).filter(s => globalAllowedSizes.has(s));
+                    // Return filtered sizes early
+                    return filteredSizes.sort((a, b) => {
+                        const numA = parseFloat(a);
+                        const numB = parseFloat(b);
+                        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                        return a.localeCompare(b);
+                    });
+                }
+            }
+        }
         return Array.from(sizes).sort((a, b) => {
             // Numeric sort for ring sizes, alphabetical for others
             const numA = parseFloat(a);
@@ -267,11 +300,13 @@ export default function ShopClient() {
         }
 
         if (selectedStyleNames.length > 0) {
+            const stylesLower = selectedStyleNames.map(s => s.toLowerCase());
             filtered = filtered.filter(p => {
-                const styleMatch = selectedStyleNames.includes(p.style || '');
-                const catName = categories.find(c => c.id === p.categoryId)?.name || '';
-                const categoryMatch = selectedStyleNames.includes(catName);
-                return styleMatch || categoryMatch;
+                const styleName = (p.style || '').toLowerCase();
+                const category = categories.find(c => c.id === p.categoryId);
+                const categoryName = (category?.name || '').toLowerCase();
+
+                return stylesLower.includes(styleName) || stylesLower.includes(categoryName);
             });
         }
 

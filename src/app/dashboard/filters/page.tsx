@@ -5,7 +5,7 @@ import { getMaterials, addMaterial, deleteMaterial } from '@/app/actions/materia
 import { getColors, addColor, deleteColor, updateColor } from '@/app/actions/colors'
 import { getMainCategories, addCategory, deleteCategory } from '@/app/actions/categories'
 import { getSizes, addSize, deleteSize } from '@/app/actions/sizes'
-import { getPatterns, addPattern, deletePattern } from '@/app/actions/patterns'
+import { getPatterns, addPattern, deletePattern, updatePattern } from '@/app/actions/patterns'
 import { Plus, Trash2, ChevronRight, Settings2, Package } from 'lucide-react'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
 
@@ -207,17 +207,48 @@ export default function FiltersManagement() {
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                                     {categoryPatterns.map((pattern: any) => (
-                                        <div key={pattern.id} className="flex items-center justify-between p-4 bg-[#F9F9F9] rounded-2xl group border border-transparent hover:border-gray-200 transition-all">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-2 h-2 rounded-full bg-[var(--gold)]"></div>
-                                                <span className="text-xs font-bold text-gray-800 uppercase tracking-wider">{pattern.name}</span>
+                                        <div key={pattern.id} className="flex flex-col p-4 bg-[#F9F9F9] rounded-2xl group border border-transparent hover:border-gray-200 transition-all">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-2 h-2 rounded-full bg-[var(--gold)]"></div>
+                                                    <span className="text-xs font-bold text-gray-800 uppercase tracking-wider">{pattern.name}</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeleteStyle(pattern.id)}
+                                                    className="p-2 text-gray-300 hover:text-red-500 transition-all"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => handleDeleteStyle(pattern.id)}
-                                                className="p-2 text-gray-300 hover:text-red-500 transition-all"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+
+                                            {/* Size mapping for pattern */}
+                                            <div className="pt-4 border-t border-gray-100/50">
+                                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-3">Linked Sizes</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {sizes.filter(s => !s.categoryId || s.categoryId === pattern.categoryId).map(size => {
+                                                        const isLinked = pattern.allowedSizes?.split(',').includes(size.name);
+                                                        return (
+                                                            <button
+                                                                key={size.id}
+                                                                onClick={async () => {
+                                                                    const current = pattern.allowedSizes ? pattern.allowedSizes.split(',').filter(Boolean) : [];
+                                                                    const updated = isLinked
+                                                                        ? current.filter((s: string) => s !== size.name)
+                                                                        : [...current, size.name];
+                                                                    await updatePattern(pattern.id, { allowedSizes: updated.join(',') });
+                                                                    loadData();
+                                                                }}
+                                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${isLinked
+                                                                    ? 'bg-black text-white border-black'
+                                                                    : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400'
+                                                                    }`}
+                                                            >
+                                                                {size.name}
+                                                            </button>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
