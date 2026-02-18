@@ -102,13 +102,43 @@ export default function ShopClient() {
 
     const availableSizes = useMemo(() => {
         const sizes = new Set<string>();
-        allProducts.forEach(p => {
+        // Only show sizes relevant to the currently filtered products (by category/pattern)
+        // This ensures if you select "Rings", you only see Ring sizes.
+
+        let productsForSizes = allProducts;
+
+        // Apply category filter for size list
+        if (selectedCategoryIds.length > 0) {
+            const allowedIds = new Set<string>();
+            selectedCategoryIds.forEach(id => {
+                allowedIds.add(id);
+                categories.filter(c => c.parentId === id).forEach(child => allowedIds.add(child.id));
+            });
+            productsForSizes = productsForSizes.filter(p => allowedIds.has(p.categoryId));
+        }
+
+        // Apply pattern filter for size list
+        if (selectedStyleNames.length > 0) {
+            productsForSizes = productsForSizes.filter(p => {
+                const styleMatch = selectedStyleNames.includes(p.style || '');
+                const catMatch = selectedStyleNames.includes(categories.find(c => c.id === p.categoryId)?.name || '');
+                return styleMatch || catMatch;
+            });
+        }
+
+        productsForSizes.forEach(p => {
             if (p.size) {
                 p.size.split(',').forEach((s: string) => sizes.add(s.trim()));
             }
         });
-        return Array.from(sizes).sort();
-    }, [allProducts]);
+        return Array.from(sizes).sort((a, b) => {
+            // Numeric sort for ring sizes, alphabetical for others
+            const numA = parseFloat(a);
+            const numB = parseFloat(b);
+            if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+            return a.localeCompare(b);
+        });
+    }, [allProducts, selectedCategoryIds, selectedStyleNames, categories]);
 
     const activeCategoriesData = useMemo(() => {
         return categories.filter(c => selectedCategoryIds.includes(c.id));
@@ -230,7 +260,12 @@ export default function ShopClient() {
         }
 
         if (selectedStyleNames.length > 0) {
-            filtered = filtered.filter(p => selectedStyleNames.includes(p.style || ''));
+            filtered = filtered.filter(p => {
+                const styleMatch = selectedStyleNames.includes(p.style || '');
+                const catName = categories.find(c => c.id === p.categoryId)?.name || '';
+                const categoryMatch = selectedStyleNames.includes(catName);
+                return styleMatch || categoryMatch;
+            });
         }
 
         if (isKidsOnly) {
@@ -434,6 +469,14 @@ export default function ShopClient() {
                             onApply={setSelectedStyleNames}
                         />
 
+                        <FilterDropdown
+                            label="Size"
+                            variant="sidebar"
+                            options={availableSizes}
+                            selected={selectedSizes}
+                            onApply={setSelectedSizes}
+                        />
+
                         <div className="space-y-4 pt-4 border-t border-gray-100">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">Target</h3>
                             <button
@@ -527,11 +570,13 @@ export default function ShopClient() {
                                     label="Style"
                                     options={availableStyles}
                                     selected={selectedStyleNames}
-                                    onApply={(vals) => {
-                                        const rootIds = selectedCategoryIds.filter(id => !categories.find(c => c.id === id)?.parentId);
-                                        const newStyleIds = categories.filter(c => vals.includes(c.name) && c.parentId && (selectedCollectionIds.length === 0 || selectedCollectionIds.includes(c.parentId))).map(c => c.id);
-                                        setSelectedCategoryIds([...rootIds, ...newStyleIds]);
-                                    }}
+                                    onApply={setSelectedStyleNames}
+                                />
+                                <FilterDropdown
+                                    label="Size"
+                                    options={availableSizes}
+                                    selected={selectedSizes}
+                                    onApply={setSelectedSizes}
                                 />
                                 <div className="space-y-4">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">Department</h3>
