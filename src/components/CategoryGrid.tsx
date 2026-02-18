@@ -22,29 +22,29 @@ export default function CategoryGrid() {
 
                 // Enhance categories with a random sample image from their products if missing
                 const enhancedCats = mainCats.map((cat: any) => {
-                    if (cat.image) return cat;
-
                     // Find all products in this category or its subcategories
                     const subcatIds = allCats.filter((c: any) => c.parentId === cat.id).map((c: any) => c.id);
                     const categoryProducts = allProducts.filter((p: any) =>
-                        p.categoryId === cat.id || subcatIds.includes(p.categoryId)
+                        (p.categoryId === cat.id || subcatIds.includes(p.categoryId)) && p.images
                     );
 
                     if (categoryProducts.length > 0) {
-                        // Pick a random product
+                        // Pick the first image or random product
                         const randomProduct = categoryProducts[Math.floor(Math.random() * categoryProducts.length)];
-                        if (randomProduct.images) {
-                            return { ...cat, image: randomProduct.images.split(',')[0] };
-                        }
+                        return {
+                            ...cat,
+                            image: randomProduct.images.split(',')[0]
+                        };
                     }
                     return cat;
                 });
 
                 // Always add Kids as a virtual category for visibility
+                const kidsProduct = allProducts.find((p: any) => p.isKids && p.images);
                 enhancedCats.push({
                     id: 'kids-virtual',
                     name: 'Kids',
-                    image: allProducts.find((p: any) => p.isKids)?.images?.split(',')[0] || '/images/luxury-gold-vibrance.png',
+                    image: kidsProduct ? kidsProduct.images.split(',')[0] : '/images/luxury-gold-vibrance.png',
                     isKidsVirtual: true
                 });
 

@@ -38,19 +38,61 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             category: {
                 name: { in: ['HIJABS', 'ACCESSORIES', 'SCARFS', 'BAGS'] }
             },
-            NOT: { id: product.id }
+            NOT: [
+                { id: product.id },
+                { name: product.name }
+            ]
         },
         take: 3
     })
 
-    // Fetch similar products (Same Category)
-    const similarProducts = await prisma.product.findMany({
+    // Fetch similar products (Same Category or Parent Category if empty)
+    let similarProducts = await prisma.product.findMany({
         where: {
             categoryId: product.categoryId,
-            NOT: { id: product.id }
+            NOT: [
+                { id: product.id },
+                { name: product.name }
+            ]
         },
         take: 4
     })
+
+    if (similarProducts.length < 2 && product.category.parentId) {
+        // Find other products in the same parent category
+        const siblingProducts = await prisma.product.findMany({
+            where: {
+                category: {
+                    parentId: product.category.parentId
+                },
+                NOT: [
+                    { id: product.id },
+                    { name: product.name }
+                ]
+            },
+            take: 4 - similarProducts.length
+        })
+
+        // Merge without duplicates by name
+        const names = new Set(similarProducts.map(p => p.name));
+        siblingProducts.forEach(p => {
+            if (!names.has(p.name)) {
+                similarProducts.push(p);
+                names.add(p.name);
+            }
+        });
+    }
+
+    // Final deduplication by name just in case
+    const uniqueSimilar = [];
+    const seenNames = new Set();
+    for (const p of similarProducts) {
+        if (!seenNames.has(p.name)) {
+            uniqueSimilar.push(p);
+            seenNames.add(p.name);
+        }
+    }
+    similarProducts = uniqueSimilar.slice(0, 4);
 
     const images = product.images ? product.images.split(',') : []
 

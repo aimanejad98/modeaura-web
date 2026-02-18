@@ -103,7 +103,13 @@ export default function ShopClient() {
     const availableSizes = useMemo(() => {
         const sizes = new Set<string>();
         // Only show sizes relevant to the currently filtered products (by category/pattern)
-        // This ensures if you select "Rings", you only see Ring sizes.
+
+        // Identify if Abayas is the active context (either root or subcategory)
+        const abayaRoot = categories.find(c => c.name.toLowerCase() === 'abayas' && !c.parentId);
+        const isAbayaActive = abayaRoot && selectedCategoryIds.some(id => {
+            const cat = categories.find(c => c.id === id);
+            return id === abayaRoot.id || cat?.parentId === abayaRoot.id;
+        });
 
         let productsForSizes = allProducts;
 
@@ -117,8 +123,9 @@ export default function ShopClient() {
             productsForSizes = productsForSizes.filter(p => allowedIds.has(p.categoryId));
         }
 
-        // Apply pattern filter for size list
-        if (selectedStyleNames.length > 0) {
+        // Apply pattern filter for size list ONLY if NOT Abayas
+        // This satisfies: "iwant sizes in abaya to be all same but for accessories no i need size for every pattern"
+        if (selectedStyleNames.length > 0 && !isAbayaActive) {
             productsForSizes = productsForSizes.filter(p => {
                 const styleMatch = selectedStyleNames.includes(p.style || '');
                 const catMatch = selectedStyleNames.includes(categories.find(c => c.id === p.categoryId)?.name || '');
@@ -522,6 +529,9 @@ export default function ShopClient() {
                                 <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest mr-2">Results for:</span>
                                 {selectedCategoryIds.map(id => (
                                     <button key={id} onClick={() => toggleCategory(id)} className="flex items-center gap-2 bg-[#FAF9F6] px-4 py-2 rounded-xl text-[10px] font-bold text-gray-900 group">{categories.find(c => c.id === id)?.name} <X size={12} className="text-gray-300 group-hover:text-red-500 transition-colors" /></button>
+                                ))}
+                                {selectedStyleNames.map(name => (
+                                    <button key={name} onClick={() => setSelectedStyleNames(prev => prev.filter(s => s !== name))} className="flex items-center gap-2 bg-[#FAF9F6] px-4 py-2 rounded-xl text-[10px] font-bold text-gray-900 group">{name} <X size={12} className="text-gray-300 group-hover:text-red-500 transition-colors" /></button>
                                 ))}
                                 {isKidsOnly && (
                                     <button onClick={() => { setIsKidsOnly(false); const params = new URLSearchParams(searchParams.toString()); params.delete('kids'); router.push(`/shop?${params.toString()}`, { scroll: false }); }} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-[10px] font-bold shadow-lg">Department: Kids <X size={12} /></button>
