@@ -178,7 +178,7 @@ export default function ShopClient() {
             if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
             return a.localeCompare(b);
         });
-    }, [allProducts, selectedCategoryIds, selectedStyleNames, categories]);
+    }, [allProducts, selectedCategoryIds, selectedStyleNames, categories, patterns]);
 
     const activeCategoriesData = useMemo(() => {
         return categories.filter(c => selectedCategoryIds.includes(c.id));
@@ -378,7 +378,7 @@ export default function ShopClient() {
             }
         });
 
-    }, [allProducts, searchQuery, selectedCategoryIds, isKidsOnly, isNewArrivalFilter, selectedSizes, selectedMaterials, selectedColors, stockFilter, priceRange, sortBy, categories]);
+    }, [allProducts, searchQuery, selectedCategoryIds, selectedStyleNames, isKidsOnly, isNewArrivalFilter, selectedSizes, selectedMaterials, selectedColors, stockFilter, priceRange, sortBy, categories]);
 
     const toggleCategory = (catId: string | null) => {
         if (!catId) setSelectedCategoryIds([]);

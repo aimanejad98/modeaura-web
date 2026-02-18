@@ -223,7 +223,31 @@ export default function FiltersManagement() {
 
                                             {/* Size mapping for pattern */}
                                             <div className="pt-4 border-t border-gray-100/50">
-                                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-3">Linked Sizes</p>
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Linked Sizes</p>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={async () => {
+                                                                const allSizes = sizes.filter(s => !s.categoryId || s.categoryId === pattern.categoryId).map(s => s.name);
+                                                                await updatePattern(pattern.id, { allowedSizes: allSizes.join(',') });
+                                                                loadData();
+                                                            }}
+                                                            className="text-[8px] font-black text-[var(--gold)] hover:text-black uppercase tracking-widest"
+                                                        >
+                                                            Select All
+                                                        </button>
+                                                        <span className="text-gray-200 text-[8px]">|</span>
+                                                        <button
+                                                            onClick={async () => {
+                                                                await updatePattern(pattern.id, { allowedSizes: "" });
+                                                                loadData();
+                                                            }}
+                                                            className="text-[8px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest"
+                                                        >
+                                                            Clear
+                                                        </button>
+                                                    </div>
+                                                </div>
                                                 <div className="flex flex-wrap gap-2">
                                                     {sizes.filter(s => !s.categoryId || s.categoryId === pattern.categoryId).map(size => {
                                                         const isLinked = pattern.allowedSizes?.split(',').includes(size.name);
@@ -239,7 +263,7 @@ export default function FiltersManagement() {
                                                                     loadData();
                                                                 }}
                                                                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${isLinked
-                                                                    ? 'bg-black text-white border-black'
+                                                                    ? 'bg-black text-white border-black shadow-sm'
                                                                     : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400'
                                                                     }`}
                                                             >
