@@ -45,6 +45,7 @@ export default function InventoryPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null)
     const [activeTab, setActiveTab] = useState<string>('All')
+    const [showSaleDropdown, setShowSaleDropdown] = useState(false)
 
     const fileRef = useRef<HTMLInputElement>(null)
     const imageRef = useRef<HTMLInputElement>(null)
@@ -790,6 +791,15 @@ export default function InventoryPage() {
 
                     {/* Mobile Card List: Hidden on Desktop */}
                     <div className="lg:hidden divide-y divide-[#F3EDE4]">
+                        <div className="p-4 bg-gray-50 flex justify-between items-center">
+                            <button onClick={handleSelectAll} className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                {selectedProductIds.size > 0 && selectedProductIds.size === filteredProducts.length ? <CheckSquare size={16} className="text-[var(--gold)]" /> : <Square size={16} />}
+                                <span>Select All ({products.length})</span>
+                            </button>
+                            {selectedProductIds.size > 0 && (
+                                <span className="text-[var(--gold)] font-bold text-xs">{selectedProductIds.size} Selected</span>
+                            )}
+                        </div>
                         {groupedProducts.map((group: any) => (
                             <div key={group.name} className="p-6 space-y-4">
                                 <div className="flex gap-4 items-start">
@@ -824,39 +834,51 @@ export default function InventoryPage() {
                                         </div>
                                     </div>
                                 </div>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); toggleGroup(group.name); }}
+                                    className="p-2 -mr-2 text-gray-400 hover:text-[var(--gold)] transition-colors"
+                                >
+                                    <div className={`transform transition-transform duration-300 ${expandedGroups.has(group.name) ? 'rotate-180' : ''}`}>
+                                        ▼
+                                    </div>
+                                </button>
 
-                                <div className="bg-gray-50/50 rounded-2xl p-4 space-y-3">
-                                    {group.variants.map((variant: any) => (
-                                        <div key={variant.id} className="flex items-center justify-between group">
-                                            <div>
-                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
-                                                    {variant.size || variant.color || 'Standard Variant'}
-                                                </p>
-                                                <code className="text-[8px] text-gray-300">{variant.sku}</code>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-2 bg-white border border-gray-100 px-2 py-1 rounded-lg">
-                                                    <button onClick={() => handleQuickStock(variant, -1)} className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-red-500">-</button>
-                                                    <span className="text-xs font-bold min-w-[1.5rem] text-center">{variant.stock}</span>
-                                                    <button onClick={() => handleQuickStock(variant, 1)} className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-green-500">+</button>
+                                {
+                                    expandedGroups.has(group.name) && (
+                                        <div className="bg-gray-50/50 rounded-2xl p-4 space-y-3 animate-in slide-in-from-top-2">
+                                            {group.variants.map((variant: any) => (
+                                                <div key={variant.id} className="flex items-center justify-between group">
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
+                                                            {variant.size || variant.color || 'Standard Variant'}
+                                                        </p>
+                                                        <code className="text-[8px] text-gray-300">{variant.sku}</code>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-2 bg-white border border-gray-100 px-2 py-1 rounded-lg">
+                                                            <button onClick={() => handleQuickStock(variant, -1)} className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-red-500">-</button>
+                                                            <span className="text-xs font-bold min-w-[1.5rem] text-center">{variant.stock}</span>
+                                                            <button onClick={() => handleQuickStock(variant, 1)} className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-green-500">+</button>
+                                                        </div>
+                                                        <div className="flex items-center">
+                                                            {canEdit && <button onClick={() => startEdit(variant)} className="p-1 mr-2 opacity-40 hover:opacity-100">✏️</button>}
+                                                            <button onClick={() => printBarcode(variant.sku, variant.name, variant.price, variant.size, variant.color, variant.material)} className="p-1 opacity-40 hover:opacity-100">🏷️</button>
+                                                            {canEdit && <button onClick={() => handleDelete(variant.id)} className="p-1 ml-2 opacity-40 hover:opacity-100 text-red-500">🗑️</button>}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center">
-                                                    {canEdit && <button onClick={() => startEdit(variant)} className="p-1 mr-2 opacity-40 hover:opacity-100">✏️</button>}
-                                                    <button onClick={() => printBarcode(variant.sku, variant.name, variant.price, variant.size, variant.color, variant.material)} className="p-1 opacity-40 hover:opacity-100">🏷️</button>
-                                                    {canEdit && <button onClick={() => handleDelete(variant.id)} className="p-1 ml-2 opacity-40 hover:opacity-100 text-red-500">🗑️</button>}
-                                                </div>
-                                            </div>
+                                            ))}
+                                            {canEdit && (
+                                                <button
+                                                    onClick={() => handleAddVariant(group)}
+                                                    className="w-full py-2 border border-dashed border-gray-200 rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 hover:border-[var(--gold)] hover:text-[var(--gold)] transition-all"
+                                                >
+                                                    + Add Color or Size
+                                                </button>
+                                            )}
                                         </div>
-                                    ))}
-                                    {canEdit && (
-                                        <button
-                                            onClick={() => handleAddVariant(group)}
-                                            className="w-full py-2 border border-dashed border-gray-200 rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 hover:border-[var(--gold)] hover:text-[var(--gold)] transition-all"
-                                        >
-                                            + Add Color or Size
-                                        </button>
-                                    )}
-                                </div>
+                                    )
+                                }
                             </div>
                         ))}
                         {groupedProducts.length === 0 && (
@@ -867,7 +889,7 @@ export default function InventoryPage() {
                         )}
                     </div>
                 </div>
-            </div>
+            </div >
 
 
             {/* Floating Bulk Support Bar */}
@@ -880,23 +902,28 @@ export default function InventoryPage() {
                             <button onClick={() => executeBulkAction('delete')} className="flex items-center gap-2 hover:text-red-400 transition-colors">
                                 <Trash2 size={16} /> <span className="text-xs font-bold">Delete</span>
                             </button>
-                            <div className="relative group">
-                                <button className="flex items-center gap-2 hover:text-[var(--gold)] transition-colors py-2">
+                            <div className="relative">
+                                <button onClick={() => setShowSaleDropdown(!showSaleDropdown)} className={`flex items-center gap-2 hover:text-[var(--gold)] transition-colors py-2 ${showSaleDropdown ? 'text-[var(--gold)]' : ''}`}>
                                     <Tag size={16} /> <span className="text-xs font-bold">Apply Sale</span>
                                 </button>
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-48 pb-4 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all">
-                                    <div className="bg-white text-black p-2 rounded-xl shadow-xl">
-                                        {sales.map(sale => (
-                                            <button key={sale.id} onClick={() => executeBulkAction('sale', sale.id)} className="w-full text-left p-2 hover:bg-gray-100 rounded-lg text-xs font-bold">
-                                                {sale.name}
-                                            </button>
-                                        ))}
-                                        <div className="h-px bg-gray-100 my-1"></div>
-                                        <button onClick={() => executeBulkAction('removeSale')} className="w-full text-left p-2 hover:bg-gray-100 rounded-lg text-xs font-bold text-red-500">
-                                            Remove Sale
-                                        </button>
-                                    </div>
-                                </div>
+                                {showSaleDropdown && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setShowSaleDropdown(false)}></div>
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-48 pb-4 z-50 animate-in fade-in slide-in-from-bottom-2">
+                                            <div className="bg-white text-black p-2 rounded-xl shadow-xl">
+                                                {sales.map(sale => (
+                                                    <button key={sale.id} onClick={() => { executeBulkAction('sale', sale.id); setShowSaleDropdown(false); }} className="w-full text-left p-2 hover:bg-gray-100 rounded-lg text-xs font-bold">
+                                                        {sale.name}
+                                                    </button>
+                                                ))}
+                                                <div className="h-px bg-gray-100 my-1"></div>
+                                                <button onClick={() => { executeBulkAction('removeSale'); setShowSaleDropdown(false); }} className="w-full text-left p-2 hover:bg-gray-100 rounded-lg text-xs font-bold text-red-500">
+                                                    Remove Sale
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -996,7 +1023,7 @@ export default function InventoryPage() {
                                         <label className="text-xs font-bold text-[var(--gold)] uppercase tracking-wider mb-2 block flex items-center gap-1">
                                             Cost Price ($) <span className="text-[9px] lowercase font-normal text-gray-400 font-sans">(internal - your cost)</span>
                                         </label>
-                                        <input required type="number" step="0.01" value={newProduct.costPrice || ''} onChange={(e) => setNewProduct({ ...newProduct, costPrice: parseFloat(e.target.value) })} className="w-full p-4 bg-gray-50 border-2 border-[var(--gold)]/20 rounded-xl focus:border-[var(--gold)] transition-all" />
+                                        <input type="number" step="0.01" value={newProduct.costPrice || ''} onChange={(e) => setNewProduct({ ...newProduct, costPrice: parseFloat(e.target.value) })} className="w-full p-4 bg-gray-50 border-2 border-[var(--gold)]/20 rounded-xl focus:border-[var(--gold)] transition-all" />
                                     </div>
                                 </div>
                                 {selectedMain?.sizes?.length > 0 ? (
@@ -1098,9 +1125,9 @@ export default function InventoryPage() {
             {/* Edit Product Modal */}
             {
                 editingProduct && (
-                    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-24 px-4 pb-4">
+                    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-4 md:pt-24 px-4 pb-4">
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setEditingProduct(null); setImages([]); }}></div>
-                        <div className="relative bg-white p-8 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl animate-fade-in text-left border border-white/20">
+                        <div className="relative bg-white p-6 md:p-8 rounded-3xl w-full max-w-2xl h-[calc(100dvh-2rem)] md:h-auto md:max-h-[85vh] overflow-y-auto shadow-2xl animate-fade-in text-left border border-white/20 pb-24">
                             <div className="flex justify-between items-center mb-8">
                                 <div>
                                     <h3 className="text-2xl font-black text-gray-900">Edit Product</h3>
@@ -1192,7 +1219,7 @@ export default function InventoryPage() {
                                         <label className="text-xs font-bold text-[var(--gold)] uppercase tracking-wider mb-2 block flex items-center gap-1">
                                             Cost Price ($) <span className="text-[9px] lowercase font-normal text-gray-400 font-sans">(internal - your cost)</span>
                                         </label>
-                                        <input required type="number" step="0.01" value={editingProduct.costPrice || 0} onChange={(e) => setEditingProduct({ ...editingProduct, costPrice: parseFloat(e.target.value) })} className="w-full p-4 bg-gray-50 border-2 border-[var(--gold)]/20 rounded-xl focus:border-[var(--gold)] transition-all" />
+                                        <input type="number" step="0.01" value={editingProduct.costPrice || 0} onChange={(e) => setEditingProduct({ ...editingProduct, costPrice: parseFloat(e.target.value) })} className="w-full p-4 bg-gray-50 border-2 border-[var(--gold)]/20 rounded-xl focus:border-[var(--gold)] transition-all" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 gap-4">

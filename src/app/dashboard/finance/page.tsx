@@ -56,6 +56,26 @@ export default function FinancePage() {
         loadData()
     }
 
+    const [filter, setFilter] = useState<'All' | 'Daily' | 'Weekly' | 'Monthly'>('All')
+
+    const filteredExpenses = expenses.filter(exp => {
+        if (filter === 'All') return true
+        const date = new Date(exp.date)
+        const now = new Date()
+        if (filter === 'Daily') {
+            return date.toDateString() === now.toDateString()
+        }
+        if (filter === 'Weekly') {
+            const oneWeekAgo = new Date()
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+            return date >= oneWeekAgo
+        }
+        if (filter === 'Monthly') {
+            return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
+        }
+        return true
+    })
+
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0)
     const totalCosts = totalExpenses + stats.totalSalaries
     const profit = stats.totalRevenue - totalCosts
@@ -107,8 +127,24 @@ export default function FinancePage() {
                 <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="text-xl font-black">Expense History</h3>
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Recent Transactions</span>
+                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                            {['All', 'Daily', 'Weekly', 'Monthly'].map(f => (
+                                <button
+                                    key={f}
+                                    onClick={() => setFilter(f as any)}
+                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === f ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    {f}
+                                </button>
+                            ))}
+                        </div>
                     </div>
+                    {filter !== 'All' && (
+                        <div className="bg-gray-50 border-b border-gray-100 p-4 flex justify-between items-center">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{filter} Total</span>
+                            <span className="font-black text-gray-900">${filteredExpenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}</span>
+                        </div>
+                    )}
 
                     {/* Desktop Table: Hidden on Mobile */}
                     <table className="w-full hidden lg:table">
@@ -121,7 +157,7 @@ export default function FinancePage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {expenses.map((expense) => (
+                            {filteredExpenses.map((expense) => (
                                 <tr key={expense.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="p-5 font-bold text-gray-700">
                                         {expense.description}
@@ -143,7 +179,7 @@ export default function FinancePage() {
 
                     {/* Mobile Cards: Hidden on Desktop */}
                     <div className="lg:hidden divide-y divide-gray-100">
-                        {expenses.map((expense) => (
+                        {filteredExpenses.map((expense) => (
                             <div key={expense.id} className="p-6 space-y-3">
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-1">
@@ -164,7 +200,7 @@ export default function FinancePage() {
                         ))}
                     </div>
 
-                    {expenses.length === 0 && (
+                    {filteredExpenses.length === 0 && (
                         <div className="p-12 text-center text-gray-400">
                             No expenses recorded yet.
                         </div>
@@ -314,6 +350,7 @@ export default function FinancePage() {
                                                 onChange={(e) => setNewRecurring({ ...newRecurring, frequency: e.target.value })}
                                                 className="w-full p-4 bg-gray-50 rounded-xl outline-none"
                                             >
+                                                <option value="Daily">Daily</option>
                                                 <option value="Monthly">Monthly</option>
                                                 <option value="Weekly">Weekly</option>
                                                 <option value="Yearly">Yearly</option>

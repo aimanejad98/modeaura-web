@@ -43,13 +43,10 @@ export default function DashboardPageGuide({ pageName, steps }: DashboardPageGui
             {/* Floating Compass Button */}
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-8 right-8 z-[60] w-14 h-14 bg-[#1B2936] text-[var(--gold)] rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all group"
+                className="fixed bottom-4 right-4 z-[40] w-10 h-10 bg-white/80 backdrop-blur-sm text-[#1B2936]/50 hover:text-[var(--gold)] hover:bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all group border border-gray-200"
                 title={language === 'en' ? 'Atelier Guide' : 'دليل المشغل'}
             >
-                <Compass className="group-hover:rotate-180 transition-transform duration-500" size={24} />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--gold)] rounded-full flex items-center justify-center text-[8px] font-black text-white border-2 border-white">
-                    !
-                </div>
+                <Compass className="group-hover:rotate-180 transition-transform duration-500" size={18} />
             </button>
 
             {/* Guide Overlay */}

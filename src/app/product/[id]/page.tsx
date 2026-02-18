@@ -170,12 +170,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                                                 <Link
                                                     key={size}
                                                     href={`/product/${variant.id}`}
-                                                    className={`px-6 py-3 border-2 rounded-xl text-[10px] font-black transition-all ${isActive
+                                                    className={`px-6 py-3 border-2 rounded-xl text-[10px] font-black transition-all relative ${isActive
                                                         ? 'border-[var(--gold)] text-gray-900 shadow-sm bg-white'
                                                         : 'border-gray-200 hover:border-gray-400 text-gray-500 hover:bg-white'
                                                         }`}
                                                 >
                                                     {size}
+                                                    {variant.stock <= 5 && (
+                                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" title={`Only ${variant.stock} left`} />
+                                                    )}
                                                 </Link>
                                             )
                                         })}

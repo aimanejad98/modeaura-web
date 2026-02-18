@@ -214,7 +214,7 @@ export default function FiltersManagement() {
                                             </div>
                                             <button
                                                 onClick={() => handleDeleteStyle(pattern.id)}
-                                                className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 transition-all"
+                                                className="p-2 text-gray-300 hover:text-red-500 transition-all"
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -289,7 +289,7 @@ export default function FiltersManagement() {
                                         <span className="text-xs font-bold text-gray-800 uppercase tracking-wider">{mat.name}</span>
                                         <button
                                             onClick={() => handleDeleteMaterial(mat.id)}
-                                            className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 transition-all"
+                                            className="p-2 text-gray-300 hover:text-red-500 transition-all"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -394,7 +394,7 @@ export default function FiltersManagement() {
                                             </select>
                                             <button
                                                 onClick={() => handleDeleteColor(color.id)}
-                                                className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 transition-all"
+                                                className="p-2 text-gray-300 hover:text-red-500 transition-all"
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -482,7 +482,7 @@ export default function FiltersManagement() {
                                         <span className="text-sm font-black text-gray-800 uppercase">{size.name}</span>
                                         <button
                                             onClick={() => handleDeleteSize(size.id)}
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 transition-all"
+                                            className="p-1.5 text-gray-300 hover:text-red-500 transition-all"
                                         >
                                             <Trash2 size={14} />
                                         </button>

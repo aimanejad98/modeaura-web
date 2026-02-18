@@ -2,13 +2,26 @@
 
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Heart } from 'lucide-react';
 import Price from '@/components/Price';
 
 export default function BagPage() {
     const { cart, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
+    const { addToWishlist } = useWishlist();
+
+    const handleMoveToWishlist = (item: any) => {
+        addToWishlist({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            category: 'Saved from Bag'
+        });
+        removeFromCart(item.id, item.variant);
+    };
 
     return (
         <main className="min-h-screen bg-[#FAF9F6]">
@@ -59,25 +72,35 @@ export default function BagPage() {
                                                         <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">Variant: {item.variant}</p>
                                                     )}
                                                 </div>
-                                                <button
-                                                    onClick={() => removeFromCart(item.id)}
-                                                    className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                                                >
-                                                    <Trash2 size={18} strokeWidth={1.5} />
-                                                </button>
+                                                <div className="flex items-center">
+                                                    <button
+                                                        onClick={() => handleMoveToWishlist(item)}
+                                                        className="p-2 text-gray-300 hover:text-[var(--gold)] transition-colors mr-2"
+                                                        title="Move to Wishlist"
+                                                    >
+                                                        <Heart size={18} strokeWidth={1.5} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => removeFromCart(item.id, item.variant)}
+                                                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                                        title="Remove from Bag"
+                                                    >
+                                                        <Trash2 size={18} strokeWidth={1.5} />
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className="flex justify-between items-end">
                                                 <div className="flex items-center gap-6 bg-[#FAF9F6] p-2 rounded-xl">
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                        onClick={() => updateQuantity(item.id, item.variant, item.quantity - 1)}
                                                         className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#1B2936] transition-colors"
                                                     >
                                                         <Minus size={14} />
                                                     </button>
                                                     <span className="text-xs font-black text-[#1B2936] w-4 text-center">{item.quantity}</span>
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                        onClick={() => updateQuantity(item.id, item.variant, item.quantity + 1)}
                                                         className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#1B2936] transition-colors"
                                                     >
                                                         <Plus size={14} />

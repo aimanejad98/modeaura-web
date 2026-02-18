@@ -13,6 +13,7 @@ interface BagControlsProps {
         color?: string;
         size?: string;
         material?: string;
+        stock: number;
     };
     effectivePrice?: number; // discounted price if applicable
 }
@@ -32,7 +33,8 @@ export default function BagControls({ product, effectivePrice }: BagControlsProp
             image: product.images.split(',')[0],
             quantity: quantity,
             sku: (product as any).sku,
-            variant: product.color && product.size ? `${product.color} / ${product.size}` : product.color || product.size
+            variant: product.color && product.size ? `${product.color} / ${product.size}` : product.color || product.size,
+            stock: product.stock
         });
 
         setTimeout(() => setIsAdding(false), 1000);
@@ -41,27 +43,35 @@ export default function BagControls({ product, effectivePrice }: BagControlsProp
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
-                <div className="flex-1 bg-white border-2 border-gray-100 rounded-2xl h-16 flex items-center justify-between px-6">
+                <div className="flex-1 bg-white border-2 border-gray-100 rounded-2xl h-16 flex items-center justify-between px-6 relative group">
                     <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                         className="text-xl font-bold text-gray-400 hover:text-gray-900 flex-shrink-0"
                     >
                         <Minus size={18} />
                     </button>
-                    <span className="font-bold text-gray-900">{quantity}</span>
+                    <div className="flex flex-col items-center">
+                        <span className="font-bold text-gray-900">{quantity}</span>
+                        {product.stock <= 5 && product.stock > 0 && (
+                            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap border border-red-200 uppercase tracking-wide">
+                                Only {product.stock} Left!
+                            </span>
+                        )}
+                    </div>
                     <button
-                        onClick={() => setQuantity(quantity + 1)}
-                        className="text-xl font-bold text-gray-400 hover:text-gray-900 flex-shrink-0"
+                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                        className="text-xl font-bold text-gray-400 hover:text-gray-900 flex-shrink-0 disabled:opacity-50"
+                        disabled={quantity >= product.stock}
                     >
                         <Plus size={18} />
                     </button>
                 </div>
                 <button
                     onClick={handleAdd}
-                    disabled={isAdding}
+                    disabled={isAdding || product.stock === 0}
                     className={`flex-[2] h-16 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-3 ${isAdding
                         ? 'bg-[var(--gold)] text-white shadow-[#D4AF37]/20'
-                        : 'bg-gray-900 text-white hover:bg-black shadow-gray-200'
+                        : product.stock === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-gray-900 text-white hover:bg-black shadow-gray-200'
                         }`}
                 >
                     {isAdding ? (

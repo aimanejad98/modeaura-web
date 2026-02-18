@@ -43,12 +43,14 @@ export async function addCategory(data: {
     parentId?: string;
     fields?: string;
     image?: string;
+    addToNav?: boolean;
 }) {
     try {
+        const categoryCode = data.code.toUpperCase().slice(0, 3);
         const category = await (prisma.category as any).create({
             data: {
                 name: data.name,
-                code: data.code.toUpperCase().slice(0, 3),
+                code: categoryCode,
                 type: 'Product',
                 ...(data.parentId && {
                     parent: {
@@ -60,6 +62,24 @@ export async function addCategory(data: {
                 // image: data.image || null,
             }
         });
+
+        // If addToNav is true, create a navigation item
+        if (data.addToNav) {
+            // Find max order to append to end
+            const lastItem = await prisma.navItem.findFirst({
+                orderBy: { order: 'desc' }
+            });
+            const newOrder = (lastItem?.order || 0) + 1;
+
+            await prisma.navItem.create({
+                data: {
+                    label: data.name,
+                    href: `/shop?category=${categoryCode}`,
+                    order: newOrder,
+                    active: true
+                }
+            });
+        }
 
         // If this is a subcategory, create a matching Pattern for the parent category
         if (data.parentId) {

@@ -10,6 +10,7 @@ interface CartItem {
     quantity: number;
     sku?: string;
     variant?: string;
+    stock: number;
 }
 
 interface AppliedDiscount {
@@ -22,8 +23,8 @@ interface AppliedDiscount {
 interface CartContextType {
     cart: CartItem[];
     addToCart: (item: CartItem) => void;
-    removeFromCart: (id: string) => void;
-    updateQuantity: (id: string, quantity: number) => void;
+    removeFromCart: (id: string, variant?: string) => void;
+    updateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
     clearCart: () => void;
     cartTotal: number;
     cartCount: number;
@@ -77,23 +78,45 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setCart(prev => {
             const existing = prev.find(i => i.id === item.id && i.variant === item.variant);
             if (existing) {
+                const currentQty = Number(existing.quantity);
+                const addQty = Number(item.quantity);
+                const maxStock = Number(item.stock);
+
+                if (currentQty + addQty > maxStock) {
+                    alert(`Sorry, you can only add up to ${maxStock} of this item.`);
+                    return prev;
+                }
                 return prev.map(i =>
                     (i.id === item.id && i.variant === item.variant)
-                        ? { ...i, quantity: i.quantity + item.quantity }
+                        ? { ...i, quantity: currentQty + addQty, stock: maxStock }
                         : i
                 );
+            }
+            if (Number(item.quantity) > Number(item.stock)) {
+                alert(`Sorry, you can only add up to ${item.stock} of this item.`);
+                return prev;
             }
             return [...prev, item];
         });
     };
 
-    const removeFromCart = (id: string) => {
-        setCart(prev => prev.filter(i => i.id !== id));
+    const removeFromCart = (id: string, variant?: string) => {
+        setCart(prev => prev.filter(i => !(i.id === id && i.variant === variant)));
     };
 
-    const updateQuantity = (id: string, quantity: number) => {
+    const updateQuantity = (id: string, variant: string | undefined, quantity: number) => {
         if (quantity < 1) return;
-        setCart(prev => prev.map(i => i.id === id ? { ...i, quantity } : i));
+        setCart(prev => prev.map(i => {
+            if (i.id === id && i.variant === variant) {
+                const maxStock = Number(i.stock);
+                if (quantity > maxStock) {
+                    alert(`Sorry, only ${maxStock} available.`);
+                    return i;
+                }
+                return { ...i, quantity };
+            }
+            return i;
+        }));
     };
 
     const clearCart = () => setCart([]);

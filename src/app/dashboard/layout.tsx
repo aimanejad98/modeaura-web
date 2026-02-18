@@ -194,7 +194,7 @@ export default function DashboardLayout({
                         </p>
 
                         <div className="space-y-6">
-                            <Link href="/" className="inline-block editorial-meta text-[var(--gold)]/60 hover:text-[var(--gold)] transition-colors border-b border-[var(--gold)]/20 pb-1">
+                            <Link href="/" target="_blank" className="inline-block editorial-meta text-[var(--gold)]/60 hover:text-[var(--gold)] transition-colors border-b border-[var(--gold)]/20 pb-1">
                                 Return to Storefront
                             </Link>
                         </div>
@@ -327,7 +327,7 @@ export default function DashboardLayout({
                                 POS TERMINAL
                             </Link>
                             <div className="h-10 w-px bg-[#E8E2D9] hidden sm:block" />
-                            <Link href="/" className="editorial-meta text-black/30 hover:text-black transition-colors">Storefront</Link>
+                            <Link href="/" target="_blank" className="editorial-meta text-black/30 hover:text-black transition-colors">Storefront</Link>
                         </div>
                     </header>
                 )}

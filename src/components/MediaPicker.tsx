@@ -52,7 +52,7 @@ export default function MediaPicker({ onSelect, onClose, title = "Atelier Librar
     )
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:p-8">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 lg:p-8">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-[#0a0a0a]/90 backdrop-blur-xl animate-in fade-in duration-500" onClick={onClose} />
 

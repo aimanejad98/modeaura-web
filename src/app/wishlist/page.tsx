@@ -18,7 +18,8 @@ export default function WishlistPage() {
             name: item.name,
             price: item.price,
             image: item.image,
-            quantity: 1
+            quantity: 1,
+            stock: item.stock || 0
         });
         removeFromWishlist(item.id);
     };

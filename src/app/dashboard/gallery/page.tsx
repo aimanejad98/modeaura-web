@@ -29,16 +29,28 @@ export default function GalleryPage() {
         if (!files || files.length === 0) return
 
         setUploading(true)
+        const uploadPromises = Array.from(files).map(file => {
+            const formData = new FormData()
+            formData.append('file', file)
+            return uploadToGallery(formData)
+        })
+
         try {
-            for (const file of Array.from(files)) {
-                const formData = new FormData()
-                formData.append('file', file)
-                await uploadToGallery(formData)
+            const results = await Promise.allSettled(uploadPromises)
+            const successful = results.filter(r => r.status === 'fulfilled').length
+            const failed = results.filter(r => r.status === 'rejected').length
+
+            if (failed > 0) {
+                console.error('Some uploads failed', results.filter(r => r.status === 'rejected'))
+                alert(`Upload complete: ${successful} successful, ${failed} failed.`)
             }
-            await loadAssets()
+
+            if (successful > 0) {
+                await loadAssets()
+            }
         } catch (error) {
-            console.error('Upload failed:', error)
-            alert('Some uploads failed.')
+            console.error('Critical upload error:', error)
+            alert('Upload process encountered an error.')
         } finally {
             setUploading(false)
             if (fileInputRef.current) fileInputRef.current.value = ''
@@ -136,7 +148,7 @@ export default function GalleryPage() {
                                 />
 
                                 {/* Overlay Controls */}
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-4">
+                                <div className="absolute inset-0 bg-black/40 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-4">
                                     <div className="flex justify-end">
                                         <button
                                             onClick={() => handleDelete(asset.id)}

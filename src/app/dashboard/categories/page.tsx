@@ -16,7 +16,8 @@ export default function CategoriesPage() {
     const [showAddMain, setShowAddMain] = useState(false)
     const [showAddSub, setShowAddSub] = useState<string | null>(null)
     const [editingFields, setEditingFields] = useState<string | null>(null)
-    const [newCat, setNewCat] = useState({ name: '', code: '', fields: ['size', 'color', 'material'] })
+    const [editingCategory, setEditingCategory] = useState<any>(null)
+    const [newCat, setNewCat] = useState({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false })
 
     useEffect(() => {
         loadCategories()
@@ -34,9 +35,10 @@ export default function CategoriesPage() {
         await addCategory({
             name: newCat.name,
             code: newCat.code,
-            fields: newCat.fields.join(',')
+            fields: newCat.fields.join(','),
+            addToNav: newCat.addToNav
         })
-        setNewCat({ name: '', code: '', fields: ['size', 'color', 'material'] })
+        setNewCat({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false })
         setShowAddMain(false)
         loadCategories()
     }
@@ -47,10 +49,22 @@ export default function CategoriesPage() {
             name: newCat.name,
             code: newCat.code,
             parentId,
-            fields: newCat.fields.join(',')
+            fields: newCat.fields.join(','),
+            addToNav: false // Subcategories don't usually go to main nav directly, or maybe user wants it? User request implied "when i add category", didn't specify main/sub. Let's keep it simple for now or adding to sub form too? The request was "add category". I'll add to main for now.
         })
-        setNewCat({ name: '', code: '', fields: ['size', 'color', 'material'] })
+        setNewCat({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false })
         setShowAddSub(null)
+        loadCategories()
+    }
+
+    async function handleUpdateCategory(e: React.FormEvent) {
+        e.preventDefault()
+        if (!editingCategory) return
+        await updateCategory(editingCategory.id, {
+            name: editingCategory.name,
+            code: editingCategory.code,
+        })
+        setEditingCategory(null)
         loadCategories()
     }
 
@@ -111,6 +125,12 @@ export default function CategoriesPage() {
                             </div>
                             <div className="flex gap-2 shrink-0">
                                 <button
+                                    onClick={() => setEditingCategory(cat)}
+                                    className="flex-1 sm:flex-none px-3 lg:px-4 py-2 text-[10px] lg:text-xs font-bold bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all"
+                                >
+                                    ✏️ Edit
+                                </button>
+                                <button
                                     onClick={() => setEditingFields(editingFields === cat.id ? null : cat.id)}
                                     className={`flex-1 sm:flex-none px-3 lg:px-4 py-2 text-[10px] lg:text-xs font-bold rounded-xl transition-all ${editingFields === cat.id ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-600'
                                         }`}
@@ -156,6 +176,12 @@ export default function CategoriesPage() {
                                                 </span>
                                             </div>
                                             <div className="flex gap-2 shrink-0">
+                                                <button
+                                                    onClick={() => setEditingCategory(sub)}
+                                                    className="p-2 text-gray-500 hover:text-black transition-all"
+                                                >
+                                                    ✏️
+                                                </button>
                                                 <button
                                                     onClick={() => setEditingFields(editingFields === sub.id ? null : sub.id)}
                                                     className="p-2 text-blue-500 hover:text-blue-700 transition-all"
@@ -262,6 +288,16 @@ export default function CategoriesPage() {
                                 className="w-full p-4 bg-gray-50 rounded-xl"
                             />
 
+                            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={newCat.addToNav}
+                                    onChange={(e) => setNewCat({ ...newCat, addToNav: e.target.checked })}
+                                    className="w-5 h-5 accent-[var(--gold)]"
+                                />
+                                <span className="font-bold text-gray-700">Add to Navigation Menu</span>
+                            </label>
+
                             <div className="bg-gray-50 p-4 rounded-xl">
                                 <p className="text-xs font-bold text-gray-400 uppercase mb-3">Product Fields Required</p>
                                 <div className="flex flex-wrap gap-4">
@@ -286,6 +322,45 @@ export default function CategoriesPage() {
                                 </button>
                                 <button type="submit" className="flex-1 gold-btn py-4">
                                     Add Category
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Category Modal */}
+            {editingCategory && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-6 lg:p-8 rounded-3xl w-full max-w-md">
+                        <h3 className="text-2xl font-black mb-6">Edit Category</h3>
+                        <form onSubmit={handleUpdateCategory} className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase">Category Name</label>
+                                <input
+                                    required
+                                    value={editingCategory.name}
+                                    onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                                    className="w-full p-4 bg-gray-50 rounded-xl mt-1"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase">Code</label>
+                                <input
+                                    required
+                                    maxLength={3}
+                                    value={editingCategory.code}
+                                    onChange={(e) => setEditingCategory({ ...editingCategory, code: e.target.value.toUpperCase() })}
+                                    className="w-full p-4 bg-gray-50 rounded-xl mt-1"
+                                />
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                                <button type="button" onClick={() => setEditingCategory(null)} className="flex-1 p-4 bg-gray-100 rounded-xl font-bold">
+                                    Cancel
+                                </button>
+                                <button type="submit" className="flex-1 gold-btn py-4">
+                                    Save Changes
                                 </button>
                             </div>
                         </form>

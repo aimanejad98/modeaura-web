@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+require('dotenv').config();
 const prisma = new PrismaClient();
 const bcrypt = require('bcryptjs');
 
@@ -77,7 +78,7 @@ async function main() {
     const hashedPassword = await bcrypt.hash('admin123', 12);
 
     await prisma.customer.upsert({
-        where: { email: 'admin@modeaura.ca' },
+        where: { email: 'modeaura1@gmail.com' },
         update: {
             password: hashedPassword,
             role: 'Admin',
@@ -85,7 +86,7 @@ async function main() {
         },
         create: {
             name: 'Mode Aura Admin',
-            email: 'admin@modeaura.ca',
+            email: 'modeaura1@gmail.com',
             password: hashedPassword,
             role: 'Admin',
             isVerified: true
@@ -94,7 +95,7 @@ async function main() {
 
     // 6. Create Admin STAFF (for dashboard access)
     await prisma.staff.upsert({
-        where: { email: 'admin@modeaura.ca' },
+        where: { email: 'modeaura1@gmail.com' },
         update: {
             password: hashedPassword, // Uses same hash
             role: 'Admin',
@@ -102,7 +103,7 @@ async function main() {
         },
         create: {
             name: 'Mode Aura Administrator',
-            email: 'admin@modeaura.ca',
+            email: 'modeaura1@gmail.com',
             password: hashedPassword,
             role: 'Admin',
             phone: '555-0123',
@@ -111,7 +112,7 @@ async function main() {
         }
     });
 
-    console.log('✅ Admin Customer & Staff accounts ready: admin@modeaura.ca / admin123');
+    console.log('✅ Admin Customer & Staff accounts ready: modeaura1@gmail.com / admin123');
     console.log('✅ Database reset to Clean Slate (Categories + Nav + Admin only). Ready for manual entry.');
 
 }
