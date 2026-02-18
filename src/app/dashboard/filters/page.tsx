@@ -22,7 +22,7 @@ export default function FiltersManagement() {
 
     // Style management
     const [selectedMainCat, setSelectedMainCat] = useState<string | null>(null)
-    const [newStyle, setNewStyle] = useState({ name: '', code: '' })
+    const [newStyle, setNewStyle] = useState({ name: '', code: '', selectedSizes: [] as string[] })
 
     // Material management
     const [selectedMaterialCat, setSelectedMaterialCat] = useState<string | 'uncategorized' | null>(null)
@@ -73,8 +73,8 @@ export default function FiltersManagement() {
     async function handleAddStyle(e: React.FormEvent) {
         e.preventDefault()
         if (!selectedMainCat || !newStyle.name.trim()) return
-        await addPattern(newStyle.name.trim(), selectedMainCat)
-        setNewStyle({ name: '', code: '' })
+        await addPattern(newStyle.name.trim(), selectedMainCat, newStyle.selectedSizes.join(','))
+        setNewStyle({ name: '', code: '', selectedSizes: [] })
         loadData()
     }
 
@@ -278,18 +278,51 @@ export default function FiltersManagement() {
                                 </div>
                             )}
 
-                            <form onSubmit={handleAddStyle} className="space-y-4 pt-8 border-t border-gray-50">
+                            <form onSubmit={handleAddStyle} className="space-y-6 pt-8 border-t border-gray-50">
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Add New Pattern to {activeMainCat?.name}</p>
-                                <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="space-y-4">
                                     <input
                                         required
                                         placeholder={currentExample || 'Pattern name...'}
                                         value={newStyle.name}
                                         onChange={(e) => setNewStyle({ ...newStyle, name: e.target.value })}
-                                        className="flex-1 p-4 bg-gray-50 rounded-2xl text-sm border-2 border-transparent focus:border-black transition-all"
+                                        className="w-full p-4 bg-gray-50 rounded-2xl text-sm border-2 border-transparent focus:border-black transition-all"
                                     />
-                                    <button type="submit" className="py-4 sm:py-0 px-8 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
-                                        Add Pattern
+
+                                    <div className="space-y-3">
+                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Pre-select Sizes for this Pattern (Optional)</p>
+                                        <div className="flex flex-wrap gap-2 p-4 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                                            {sizes.filter(s => !s.categoryId || s.categoryId === selectedMainCat).map(size => {
+                                                const isSelected = newStyle.selectedSizes.includes(size.name);
+                                                return (
+                                                    <button
+                                                        key={size.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setNewStyle(prev => ({
+                                                                ...prev,
+                                                                selectedSizes: isSelected
+                                                                    ? prev.selectedSizes.filter(s => s !== size.name)
+                                                                    : [...prev.selectedSizes, size.name]
+                                                            }))
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${isSelected
+                                                            ? 'bg-black text-white border-black'
+                                                            : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400'
+                                                            }`}
+                                                    >
+                                                        {size.name}
+                                                    </button>
+                                                )
+                                            })}
+                                            {sizes.filter(s => !s.categoryId || s.categoryId === selectedMainCat).length === 0 && (
+                                                <p className="text-[10px] text-gray-400 italic">No sizes available for this category yet.</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" className="w-full py-4 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg">
+                                        Create Pattern with Linked Sizes
                                     </button>
                                 </div>
                             </form>
