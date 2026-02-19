@@ -27,7 +27,7 @@ export default function BagPage() {
         <main className="min-h-screen bg-[#FAF9F6]">
             <Navbar />
 
-            <div className="max-w-7xl mx-auto px-6 pt-64 pb-24">
+            <div className="max-w-7xl mx-auto px-6 pt-32 md:pt-64 pb-24">
                 <div className="space-y-12">
                     {/* Header */}
                     <div className="space-y-6">
@@ -36,7 +36,7 @@ export default function BagPage() {
                             <span className="text-[#B45309]/40">/</span>
                             <span className="text-[#B45309]">The Bag</span>
                         </nav>
-                        <h1 className="text-5xl md:text-6xl font-display font-medium italic text-[#1B2936]">Your Selection</h1>
+                        <h1 className="text-4xl md:text-6xl font-display font-medium italic text-[#1B2936]">Your Selection</h1>
                     </div>
 
                     {cart.length === 0 ? (
@@ -59,54 +59,54 @@ export default function BagPage() {
                             {/* Items List */}
                             <div className="lg:col-span-8 space-y-8">
                                 {cart.map((item) => (
-                                    <div key={`${item.id}-${item.variant}`} className="flex gap-8 p-8 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm group">
-                                        <div className="w-32 h-40 bg-[#FAF9F6] rounded-2xl overflow-hidden shrink-0">
+                                    <div key={`${item.id}-${item.variant}`} className="flex gap-4 md:gap-8 p-4 md:p-8 bg-white rounded-[2rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm group">
+                                        <div className="w-24 h-32 md:w-32 md:h-40 bg-[#FAF9F6] rounded-xl md:rounded-2xl overflow-hidden shrink-0">
                                             <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                                         </div>
 
                                         <div className="flex-1 flex flex-col justify-between py-2">
                                             <div className="flex justify-between items-start">
                                                 <div className="space-y-2">
-                                                    <h3 className="text-xl font-display italic text-[#1B2936]">{item.name}</h3>
+                                                    <h3 className="text-lg md:text-xl font-display italic text-[#1B2936]">{item.name}</h3>
                                                     {item.variant && (
-                                                        <p className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">Variant: {item.variant}</p>
+                                                        <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">Variant: {item.variant}</p>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center">
                                                     <button
                                                         onClick={() => handleMoveToWishlist(item)}
-                                                        className="p-2 text-gray-300 hover:text-[var(--gold)] transition-colors mr-2"
+                                                        className="p-2 text-gray-400 hover:text-[var(--gold)] transition-colors mr-1"
                                                         title="Move to Wishlist"
                                                     >
-                                                        <Heart size={18} strokeWidth={1.5} />
+                                                        <Heart size={16} strokeWidth={2} />
                                                     </button>
                                                     <button
                                                         onClick={() => removeFromCart(item.id, item.variant)}
-                                                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                                                         title="Remove from Bag"
                                                     >
-                                                        <Trash2 size={18} strokeWidth={1.5} />
+                                                        <Trash2 size={16} strokeWidth={2} />
                                                     </button>
                                                 </div>
                                             </div>
 
                                             <div className="flex justify-between items-end">
-                                                <div className="flex items-center gap-6 bg-[#FAF9F6] p-2 rounded-xl">
+                                                <div className="flex items-center gap-4 md:gap-6 bg-[#FAF9F6] p-1.5 md:p-2 rounded-xl">
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.variant, item.quantity - 1)}
-                                                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#1B2936] transition-colors"
+                                                        className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-gray-400 hover:text-[#1B2936] transition-colors"
                                                     >
-                                                        <Minus size={14} />
+                                                        <Minus size={12} />
                                                     </button>
-                                                    <span className="text-xs font-black text-[#1B2936] w-4 text-center">{item.quantity}</span>
+                                                    <span className="text-[10px] md:text-xs font-black text-[#1B2936] w-3 md:w-4 text-center">{item.quantity}</span>
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.variant, item.quantity + 1)}
-                                                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#1B2936] transition-colors"
+                                                        className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-gray-400 hover:text-[#1B2936] transition-colors"
                                                     >
-                                                        <Plus size={14} />
+                                                        <Plus size={12} />
                                                     </button>
                                                 </div>
-                                                <Price amount={item.price * item.quantity} className="text-lg font-bold text-[#1B2936]" />
+                                                <Price amount={item.price * item.quantity} className="text-base md:text-lg font-bold text-[#1B2936]" />
                                             </div>
                                         </div>
                                     </div>
@@ -115,7 +115,7 @@ export default function BagPage() {
 
                             {/* Summary Card */}
                             <div className="lg:col-span-4">
-                                <div className="bg-[#1B2936] text-white p-10 rounded-[3rem] space-y-10 sticky top-48 shadow-2xl">
+                                <div className="bg-[#1B2936] text-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] space-y-8 md:space-y-10 sticky top-48 shadow-2xl">
                                     <div className="space-y-4">
                                         <h2 className="text-2xl font-display italic">Atelier Summary</h2>
                                         <p className="text-xs text-white/40 leading-relaxed font-medium">
