@@ -56,7 +56,7 @@ export function printOnlineReceipt(order: any) {
     <body>
       <div class="header">
         <img src="/logo_v3_flat.png" class="logo-img" alt="MODE AURA" />
-        <div class="tagline">Luxury Abayas • Windsor, Ontario</div>
+        <div class="tagline">Fashion and Accessories • Windsor, Ontario</div>
       </div>
 
       <div class="order-title italic">Order Confirmation</div>
