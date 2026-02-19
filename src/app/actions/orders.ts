@@ -7,9 +7,6 @@ export async function getOrders() {
     try {
         console.log('📜 [Orders] Fetching orders...');
         const orders = await prisma.order.findMany({
-            include: {
-                payment: true
-            },
             orderBy: {
                 date: 'desc'
             }

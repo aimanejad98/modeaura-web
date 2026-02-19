@@ -37,7 +37,7 @@ export async function getProducts() {
     try {
         console.log('🧥 [Inventory] Fetching products...');
         const products = await prisma.product.findMany({
-            include: { category: true, variants: true },
+            include: { category: true },
             orderBy: { createdAt: 'desc' }
         });
         console.log(`✅ [Inventory] Found ${products.length} products`);
