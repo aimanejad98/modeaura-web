@@ -34,7 +34,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [lastOrder, setLastOrder] = useState<any>(null)
 
     // Login State
-    const [lastActivity, setLastActivity] = useState<number>(Date.now())
+    const [lastActivity, setLastActivity] = useState<number>(0)
     const IDLE_TIMEOUT = 5 * 60 * 1000 // 5 minutes
     const [attemptingUser, setAttemptingUser] = useState<any>(null)
     const [password, setPassword] = useState('')
@@ -69,11 +69,14 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     })
     const [customerSearch, setCustomerSearch] = useState('')
     const [transactionId, setTransactionId] = useState('')
+    const [mounted, setMounted] = useState(false)
 
     const generateId = () => `ID #${Date.now().toString().slice(-4)}`
 
     // Initial Load: Run exactly once
     useEffect(() => {
+        setMounted(true)
+        setLastActivity(Date.now())
         loadData()
         initializeTerminal()
         setTransactionId(generateId())
@@ -484,6 +487,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         </div>
     )
 
+    if (!mounted) return null // Prevent hydration mismatches
+
     if (!selectedStaff) {
         // ... (Same Login UI as before - abbreviated for brevity in thought, but full in file)
         return (
@@ -551,7 +556,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         <>
             <div className="flex flex-col md:flex-row h-[100dvh] gap-1 lg:gap-1.5 bg-[#F8F9FB] p-1 lg:p-1.5 overflow-hidden font-sans print:hidden">
                 {/* LEFT Side (Product Browser) */}
-                <div className="flex-1 flex flex-col gap-1.5 lg:overflow-hidden min-h-[300px]">
+                <div className="h-[55dvh] md:h-full flex-1 flex flex-col gap-1.5 lg:overflow-hidden min-h-0">
                     {/* Header */}
                     <div className="bg-white p-2 lg:p-2.5 rounded-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2">
                         <div className="text-center sm:text-left">
@@ -577,7 +582,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                     </div>
 
                     {/* Grid */}
-                    <div className="lg:flex-1 lg:overflow-y-auto lg:pr-1">
+                    <div className="flex-1 overflow-y-auto lg:pr-1">
                         <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-1 lg:gap-1.5">
                             {filteredProducts.map((product) => (
                                 <button key={product.id} onClick={() => openVariantLookup(product)} className="bg-white p-1 rounded-lg hover:shadow-xl transition-all border border-gray-100 group flex flex-col items-center text-center relative">
@@ -600,7 +605,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 </div>
 
                 {/* RIGHT Side (Cart) */}
-                <div className="w-full md:w-[220px] lg:w-[260px] xl:w-[280px] 2xl:w-[320px] bg-white rounded-lg shadow-xl border border-gray-50 flex flex-col h-[35dvh] md:h-full overflow-hidden shrink-0 relative transition-all duration-500">
+                <div className="w-full md:w-[220px] lg:w-[260px] xl:w-[280px] 2xl:w-[320px] bg-white rounded-lg shadow-xl border border-gray-50 flex flex-col h-[45dvh] md:h-full overflow-hidden shrink-0 relative transition-all duration-500">
                     <div className="p-2 lg:p-2.5 border-b border-gray-50 bg-gray-50/20">
                         <div className="flex justify-between items-end mb-2">
                             <div>
