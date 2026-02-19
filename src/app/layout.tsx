@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
         metadataBase: new URL('https://www.modeaura.ca'),
         title: settings?.seoTitle || settings?.storeName || 'Mode AURA - Luxury Modest Fashion',
-        description: settings?.seoDescription || settings?.tagline || 'Boutique collection of premium abayas and modest attire.',
+        description: settings?.seoDescription || `Elevate your aura with Mode AURA. ${settings?.tagline || 'A sanctuary of modern elegance where architecture meets the art of modest fashion.'} Explore our Heritage and Bespoke Collection of premium abayas and luxury modest attire.`,
         icons: {
             icon: settings?.favicon || '/favicon.ico',
             apple: settings?.favicon || '/favicon.ico',
