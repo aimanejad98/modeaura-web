@@ -17,11 +17,12 @@ import { getStoreSettings } from '@/app/actions/settings'
 export async function generateMetadata(): Promise<Metadata> {
     const settings = await getStoreSettings()
     return {
-        metadataBase: new URL('https://modeaura.ca'),
+        metadataBase: new URL('https://www.modeaura.ca'),
         title: settings?.seoTitle || settings?.storeName || 'Mode AURA - Luxury Modest Fashion',
         description: settings?.seoDescription || settings?.tagline || 'Boutique collection of premium abayas and modest attire.',
         icons: {
             icon: settings?.favicon || '/favicon.ico',
+            apple: settings?.favicon || '/favicon.ico',
         },
         openGraph: {
             title: settings?.seoTitle || settings?.storeName || 'Mode AURA',
