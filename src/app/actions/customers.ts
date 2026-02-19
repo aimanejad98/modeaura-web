@@ -20,6 +20,10 @@ export async function addCustomer(data: {
     phone?: string;
     email?: string;
     tags?: string;
+    address?: string;
+    city?: string;
+    province?: string;
+    postalCode?: string;
     password?: string | null;
 }) {
     try {
@@ -29,6 +33,10 @@ export async function addCustomer(data: {
                 email: data.email || `pos_${Date.now()}@gmail.com`,
                 phone: data.phone,
                 tags: data.tags,
+                address: data.address,
+                city: data.city,
+                province: data.province,
+                postalCode: data.postalCode,
                 isVerified: true,
                 password: null as any
             }
@@ -73,7 +81,16 @@ export async function resetCustomerPassword(customerId: string, newPassword: str
     }
 }
 
-export async function updateCustomer(id: string, data: { name: string; email?: string; phone?: string; tags?: string }) {
+export async function updateCustomer(id: string, data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    tags?: string;
+    address?: string;
+    city?: string;
+    province?: string;
+    postalCode?: string;
+}) {
     try {
         const customer = await prisma.customer.update({
             where: { id },
@@ -81,7 +98,11 @@ export async function updateCustomer(id: string, data: { name: string; email?: s
                 name: data.name,
                 email: data.email,
                 phone: data.phone,
-                tags: data.tags
+                tags: data.tags,
+                address: data.address,
+                city: data.city,
+                province: data.province,
+                postalCode: data.postalCode
             }
         });
         revalidatePath('/dashboard/customers');
