@@ -272,7 +272,7 @@ export default function Navbar() {
                             >
                                 <Search size={20} strokeWidth={1.2} />
                             </button>
-                            <Link href="/wishlist" className="hidden sm:flex relative text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors group">
+                            <Link href="/wishlist" className="relative text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors group">
                                 <Heart size={20} strokeWidth={1.2} className="group-hover:scale-110 transition-transform" />
                                 {wishlist.length > 0 && (
                                     <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-1 bg-[#1B2936] text-white text-[8px] font-bold rounded-full flex items-center justify-center shadow-md ring-2 ring-white animate-in scale-in duration-300">
@@ -505,6 +505,7 @@ export default function Navbar() {
                                         ))}
                                     </>
                                 )}
+                                <Link href="/wishlist" onClick={() => setIsMenuOpen(false)} className="block text-2xl font-display italic text-gray-300">My Wishlist</Link>
                                 <Link href="/about" onClick={() => setIsMenuOpen(false)} className="block text-2xl font-display italic text-gray-300">Our Heritage</Link>
                                 <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="block text-2xl font-display italic text-gray-300">Contact Atelier</Link>
                             </div>
