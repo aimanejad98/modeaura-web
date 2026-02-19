@@ -5,7 +5,7 @@ import { getInventory, getStaffList, verifyAccess, getProductBySku, getProductVa
 import { getCategories } from '@/app/actions/categories'
 import { createOrder } from '@/app/actions/orders'
 import { getCustomers, addCustomer, updateCustomer } from '@/app/actions/customers'
-import { X, RefreshCw, Wifi, WifiOff, CreditCard, UserPlus, Search, User } from 'lucide-react'
+import { X, RefreshCw, Wifi, WifiOff, CreditCard, UserPlus, Search, User, ChevronRight, Boxes, Scan, Package, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { loadStripeTerminal } from '@stripe/terminal-js';
 import { createTerminalPaymentIntent, captureTerminalPayment } from '@/app/actions/stripe-terminal'
@@ -24,6 +24,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [scannedProduct, setScannedProduct] = useState<any>(null)
     const [variants, setVariants] = useState<any[]>([])
     const [showVariants, setShowVariants] = useState(false)
+    const [finalizing, setFinalizing] = useState(false)
     const scanInputRef = useRef<HTMLInputElement>(null)
 
     // Payment Modal State
@@ -67,11 +68,15 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         name: '', email: '', phone: '', address: '', city: '', province: '', postalCode: ''
     })
     const [customerSearch, setCustomerSearch] = useState('')
+    const [transactionId, setTransactionId] = useState('')
+
+    const generateId = () => `ID #${Date.now().toString().slice(-4)}`
 
     // Initial Load: Run exactly once
     useEffect(() => {
         loadData()
         initializeTerminal()
+        setTransactionId(generateId())
     }, [])
 
     // AFK Lock: Track activity separately
@@ -405,6 +410,20 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         setShowPaymentModal(true)
     }
 
+    // Finalize Handle
+    function handleFinalizeTransaction() {
+        if (cart.length === 0) return
+        handleCheckout()
+    }
+
+    function clearCart() {
+        if (confirm('Discard this draft?')) {
+            setCart([])
+            setAppliedDiscount(null)
+            setTransactionId(`#${Math.floor(1000 + Math.random() * 9000)}`)
+        }
+    }
+
     // Finalize
     async function processPayment(methodOverride?: string) {
         try {
@@ -452,6 +471,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             setCart([])
             setAppliedDiscount(null)
             setShowPaymentModal(false)
+            setTransactionId(generateId())
         } catch (error) {
             console.error('Checkout failed:', error)
             alert('Failed to process transaction. Please try again.')
@@ -529,50 +549,50 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
     return (
         <>
-            <div className="flex flex-col lg:flex-row h-[100dvh] gap-3 lg:gap-4 bg-[#F8F9FB] p-2 lg:p-4 overflow-hidden font-sans print:hidden">
+            <div className="flex flex-col md:flex-row h-[100dvh] gap-1 lg:gap-1.5 bg-[#F8F9FB] p-1 lg:p-1.5 overflow-hidden font-sans print:hidden">
                 {/* LEFT Side (Product Browser) */}
-                <div className="flex-1 flex flex-col gap-6 lg:overflow-hidden min-h-[500px]">
+                <div className="flex-1 flex flex-col gap-1.5 lg:overflow-hidden min-h-[300px]">
                     {/* Header */}
-                    <div className="bg-white p-4 lg:p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="bg-white p-2 lg:p-2.5 rounded-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2">
                         <div className="text-center sm:text-left">
-                            <h2 className="text-xl font-black text-gray-900">Product Browser</h2>
-                            <p className="text-[10px] font-bold text-[var(--gold)] uppercase tracking-widest">Logged in as {selectedStaff.name}</p>
+                            <h2 className="text-sm lg:text-base font-black text-gray-900 leading-tight">Product Browser</h2>
+                            <p className="text-[8px] font-bold text-[var(--gold)] uppercase tracking-widest">Operator: {selectedStaff.name}</p>
                         </div>
-                        <form onSubmit={handleScan} className="flex-1 w-full max-w-md relative group">
-                            <input ref={scanInputRef} autoFocus type="text" placeholder="Scan or search name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-6 pr-12 py-4 bg-gray-50 rounded-2xl border border-gray-200 focus:border-[var(--gold)] focus:ring-4 focus:ring-[var(--gold)]/10 outline-none transition-all text-sm font-bold" />
-                            <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--gold)]">🔍</span>
+                        <form onSubmit={handleScan} className="flex-1 w-full max-w-sm relative group">
+                            <input ref={scanInputRef} autoFocus type="text" placeholder="Scan or search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-5 pr-10 py-2.5 bg-gray-50 rounded-xl border border-gray-100 focus:border-[var(--gold)] focus:ring-4 focus:ring-[var(--gold)]/5 outline-none transition-all text-[11px] font-bold" />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs group-focus-within:text-[var(--gold)]">🔍</span>
                         </form>
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => setSelectedStaff(null)} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors whitespace-nowrap">Switch User</button>
-                            <div className="w-px h-4 bg-gray-200" />
-                            <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors whitespace-nowrap">Exit</Link>
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setSelectedStaff(null)} className="text-[8px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors whitespace-nowrap">Switch Staff</button>
+                            <div className="w-px h-3 bg-gray-200" />
+                            <Link href="/dashboard" className="text-[8px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors whitespace-nowrap">Admin Exit</Link>
                         </div>
                     </div>
 
                     {/* Categories */}
-                    <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+                    <div className="flex gap-1.5 overflow-x-auto pb-2 no-scrollbar">
                         {['All Items', ...categories.filter(c => !c.parentId).map(c => c.name), 'Kids'].map(cat => (
-                            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategory === cat ? 'bg-gray-900 text-white shadow-xl shadow-black/20' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}>{cat}</button>
+                            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${selectedCategory === cat ? 'bg-gray-900 text-white shadow-lg shadow-black/20' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}>{cat}</button>
                         ))}
                     </div>
 
                     {/* Grid */}
-                    <div className="lg:flex-1 lg:overflow-y-auto lg:pr-2">
-                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                    <div className="lg:flex-1 lg:overflow-y-auto lg:pr-1">
+                        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-1 lg:gap-1.5">
                             {filteredProducts.map((product) => (
-                                <button key={product.id} onClick={() => openVariantLookup(product)} className="bg-white p-4 rounded-2xl hover:shadow-2xl transition-all border border-gray-100 group flex flex-col items-center text-center relative">
+                                <button key={product.id} onClick={() => openVariantLookup(product)} className="bg-white p-1 rounded-lg hover:shadow-xl transition-all border border-gray-100 group flex flex-col items-center text-center relative">
                                     {product.stock <= 3 && (
-                                        <span className="absolute top-4 right-4 flex h-2.5 w-2.5 z-10">
+                                        <span className="absolute top-1 right-1 flex h-1 w-1 z-10">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                            <span className="relative inline-flex rounded-full h-1 w-1 bg-red-500"></span>
                                         </span>
                                     )}
-                                    <div className="w-full aspect-[3/4] bg-gray-50 rounded-xl mb-4 overflow-hidden relative border border-gray-50">
-                                        {product.images ? <img src={product.images.split(',')[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" /> : <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">🛍️</div>}
-                                        <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur text-[11px] font-black px-3 py-1.5 rounded-lg shadow-xl border border-gray-100">${product.price}</div>
+                                    <div className="w-full aspect-[1/1.1] bg-gray-50 rounded mb-1 overflow-hidden relative border border-gray-50">
+                                        {product.images ? <img src={product.images.split(',')[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" /> : <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px]">🛍️</div>}
+                                        <div className="absolute bottom-0.5 right-0.5 bg-white/95 backdrop-blur text-[7px] font-black px-1 py-0.5 rounded shadow border border-gray-50 text-[#1E1E1E] tracking-tighter">${product.price}</div>
                                     </div>
-                                    <p className="font-bold text-gray-900 text-sm line-clamp-1 mb-1 group-hover:text-[var(--gold)] transition-colors">{product.name}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-auto">{product.category?.name}</p>
+                                    <p className="font-bold text-gray-900 text-[8px] line-clamp-1 mb-0.5 group-hover:text-[var(--gold)] transition-colors leading-tight">{product.name}</p>
+                                    <p className="text-[6px] font-black uppercase tracking-widest text-gray-400 mt-auto opacity-70">{product.category?.name}</p>
                                 </button>
                             ))}
                         </div>
@@ -580,29 +600,26 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 </div>
 
                 {/* RIGHT Side (Cart) */}
-                <div className="w-full lg:w-[400px] bg-white rounded-[2rem] shadow-2xl border border-gray-100 flex flex-col h-[50dvh] lg:h-full overflow-hidden shrink-0 relative transition-all duration-500">
-                    <div className="p-8 border-b border-gray-100 bg-gray-50/30">
-                        <div className="flex justify-between items-end mb-6">
+                <div className="w-full md:w-[220px] lg:w-[260px] xl:w-[280px] 2xl:w-[320px] bg-white rounded-lg shadow-xl border border-gray-50 flex flex-col h-[35dvh] md:h-full overflow-hidden shrink-0 relative transition-all duration-500">
+                    <div className="p-2 lg:p-2.5 border-b border-gray-50 bg-gray-50/20">
+                        <div className="flex justify-between items-end mb-2">
                             <div>
-                                <h3 className="text-2xl font-black text-gray-900">Current Order</h3>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Transaction Node</p>
+                                <h3 className="text-sm font-black text-gray-900 leading-none">Order Basket</h3>
+                                <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Stream ID</p>
                             </div>
-                            <span className="bg-[var(--gold)]/10 text-[var(--gold)] px-3 py-1 rounded-full text-[10px] font-black tracking-widest">ID #{Date.now().toString().slice(-4)}</span>
+                            <span className="bg-[var(--gold)]/10 text-[var(--gold)] px-1.5 py-0.5 rounded text-[7px] font-black tracking-widest">{transactionId}</span>
                         </div>
                         {/* Selected Client Dropdown */}
                         <div className="relative">
-                            <div className="flex gap-2">
-                                <button onClick={() => setCustomerDropdownOpen(!customerDropdownOpen)} className={`flex-1 bg-white border ${customerDropdownOpen ? 'border-[var(--gold)]' : 'border-gray-200'} rounded-2xl p-3 flex items-center gap-3 cursor-pointer hover:border-[var(--gold)] transition-all shadow-sm`}>
-                                    <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 text-lg">
-                                        <User size={18} />
-                                    </div>
-                                    <div className="flex-1 text-left">
-                                        <p className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Client</p>
-                                        <p className="text-xs font-bold text-gray-900 truncate">
+                            <div className="flex gap-1">
+                                <button onClick={() => setCustomerDropdownOpen(!customerDropdownOpen)} className={`flex-1 bg-white border ${customerDropdownOpen ? 'border-[var(--gold)]' : 'border-gray-50'} rounded-lg p-1.5 flex items-center gap-1.5 cursor-pointer hover:border-[var(--gold)] transition-all shadow-sm`}>
+                                    <User size={10} className="text-gray-400" />
+                                    <div className="text-left min-w-0">
+                                        <p className="text-[7px] font-black text-gray-900 truncate tracking-tight uppercase">
                                             {selectedCustomer?.name || selectedCustomerType}
                                         </p>
                                     </div>
-                                    <span className="text-gray-400 text-[10px]">▼</span>
+                                    <ChevronRight size={10} className={`ml-auto text-gray-300 transition-transform ${customerDropdownOpen ? 'rotate-90' : ''}`} />
                                 </button>
                                 <button
                                     onClick={() => {
@@ -621,10 +638,10 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                         }
                                         setShowCustomerModal(true)
                                     }}
-                                    className="p-3 bg-gray-900 text-white rounded-2xl hover:bg-[var(--gold)] transition-all shadow-lg"
-                                    title="Add/Edit Customer Details"
+                                    className="p-2 bg-gray-900 text-white rounded-lg hover:bg-black transition-all flex items-center justify-center shrink-0"
+                                    title="Add/Edit Customer"
                                 >
-                                    <UserPlus size={18} />
+                                    <UserPlus size={14} />
                                 </button>
                             </div>
 
@@ -671,31 +688,31 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-3 bg-white custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-2 lg:p-2.5 space-y-1.5 bg-white custom-scrollbar">
                         {cart.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-6 py-12">
-                                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-4xl">🛒</div>
-                                <p className="font-bold text-sm uppercase tracking-widest opacity-50">Empty Boutique Basket</p>
+                            <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-2 py-4">
+                                <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-xl">🛒</div>
+                                <p className="font-bold text-[7px] uppercase tracking-widest opacity-50 text-center">Empty Basket</p>
                             </div>
                         ) : cart.map((item: any) => (
-                            <div key={item.id} className="flex gap-4 p-3 rounded-2xl border border-gray-50 hover:bg-gray-50 hover:border-gray-200 transition-all group">
-                                <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
-                                    {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" /> : <div className="w-full h-full flex items-center justify-center text-xl">👕</div>}
+                            <div key={item.id} className="flex gap-1.5 p-1.5 rounded-lg border border-gray-50 hover:bg-gray-50 hover:border-gray-200 transition-all group">
+                                <div className="w-9 h-9 bg-gray-50 rounded flex-shrink-0 border border-gray-50 overflow-hidden">
+                                    {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" /> : <div className="w-full h-full flex items-center justify-center text-[10px]">👕</div>}
                                 </div>
-                                <div className="flex-1 flex flex-col justify-between py-1">
+                                <div className="flex-1 flex flex-col justify-between py-0 min-w-0">
                                     <div>
-                                        <div className="flex justify-between items-start">
-                                            <p className="font-bold text-gray-900 line-clamp-1">{item.name}</p>
-                                            <button onClick={() => removeFromCart(item.id, item.variant)} className="text-gray-300 hover:text-red-500 transition-all hover:rotate-90"><X size={18} /></button>
+                                        <div className="flex justify-between items-start gap-1">
+                                            <p className="font-bold text-gray-900 text-[9px] line-clamp-1 leading-tight">{item.name}</p>
+                                            <button onClick={() => removeFromCart(item.id, item.variant)} className="text-gray-300 hover:text-red-500 transition-all shrink-0"><X size={12} /></button>
                                         </div>
-                                        <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mt-1">{item.size || 'OS'} • {item.color || 'Standard'}</p>
+                                        <p className="text-[7px] font-bold text-gray-400 tracking-tight uppercase truncate">{item.size || 'OS'} • {item.color || 'ST'}</p>
                                     </div>
-                                    <div className="flex justify-between items-end">
-                                        <p className="font-black text-base text-gray-900">${(item.price * item.qty).toFixed(2)}</p>
-                                        <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-3 py-1.5 shadow-sm">
-                                            <button className="text-gray-400 hover:text-black font-black" onClick={() => setCart(cart.map(c => (c.id === item.id && c.variant === item.variant) ? { ...c, qty: Math.max(1, c.qty - 1) } : c))}>-</button>
-                                            <span className="text-xs font-black min-w-4 text-center">{item.qty}</span>
-                                            <button className="text-gray-400 hover:text-black font-black" onClick={() => {
+                                    <div className="flex justify-between items-end gap-1.5">
+                                        <p className="font-black text-[10px] text-gray-900 leading-none">${(item.price * item.qty).toFixed(2)}</p>
+                                        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded px-1.5 py-0.5 shadow-sm shrink-0">
+                                            <button className="text-gray-400 hover:text-black font-black text-[8px]" onClick={() => setCart(cart.map(c => (c.id === item.id && c.variant === item.variant) ? { ...c, qty: Math.max(1, c.qty - 1) } : c))}>-</button>
+                                            <span className="text-[8px] font-black min-w-2 text-center">{item.qty}</span>
+                                            <button className="text-gray-400 hover:text-black font-black text-[8px]" onClick={() => {
                                                 const currentQty = Number(item.qty);
                                                 const maxStock = Number(item.stock);
                                                 if (currentQty + 1 > maxStock) {
@@ -711,50 +728,52 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                         ))}
                     </div>
 
-                    <div className="p-4 lg:p-8 bg-gray-50/50 border-t border-gray-100 z-10 glass-effect">
+                    <div className="p-3 lg:p-4 bg-gray-50/50 border-t border-gray-100 z-10 glass-effect">
                         {/* Discount Input */}
-                        <div className="mb-4">
+                        <div className="mb-3">
                             {appliedDiscount ? (
-                                <div className="flex justify-between items-center p-3 bg-green-50 rounded-xl border border-green-100">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-green-600 font-bold text-xs uppercase tracking-wider">🏷️ {appliedDiscount.code}</span>
-                                        <span className="text-[10px] font-bold text-green-500">(-{appliedDiscount.type === 'Percentage' ? `${appliedDiscount.value}%` : `$${appliedDiscount.value}`})</span>
+                                <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg border border-green-100">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-green-600 font-bold text-[9px] uppercase tracking-wider">🏷️ {appliedDiscount.code}</span>
+                                        <span className="text-[8px] font-bold text-green-500">(-{appliedDiscount.type === 'Percentage' ? `${appliedDiscount.value}%` : `$${appliedDiscount.value}`})</span>
                                     </div>
-                                    <button onClick={removeDiscount} className="text-gray-400 hover:text-red-500 font-bold p-1">×</button>
+                                    <button onClick={removeDiscount} className="text-gray-400 hover:text-red-500 font-bold p-1 text-xs">×</button>
                                 </div>
                             ) : (
-                                <div className="flex gap-2">
+                                <div className="flex gap-1.5">
                                     <div className="relative flex-1">
-                                        <input type="text" placeholder="Promo Code" value={discountCode} onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(''); }} className={`w-full p-3 bg-white border ${discountError ? 'border-red-300' : 'border-gray-200'} rounded-xl text-xs font-bold uppercase tracking-wider outline-none focus:border-[var(--gold)]`} />
-                                        {discountError && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-red-500 font-bold">{discountError}</span>}
+                                        <input type="text" placeholder="Promo" value={discountCode} onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(''); }} className={`w-full p-1.5 bg-white border ${discountError ? 'border-red-300' : 'border-gray-100'} rounded-lg text-[9px] font-bold uppercase tracking-wider outline-none focus:border-[var(--gold)]`} />
+                                        {discountError && <span className="absolute right-1 text-[7px] text-red-500 font-bold">{discountError}</span>}
                                     </div>
-                                    <button onClick={handleApplyDiscount} disabled={!discountCode} className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[var(--gold)] disabled:opacity-50 disabled:hover:bg-gray-900 transition-colors">Apply</button>
+                                    <button onClick={handleApplyDiscount} disabled={!discountCode} className="px-2 py-1 bg-gray-900 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-[var(--gold)] disabled:opacity-50 transition-colors">Apply</button>
                                 </div>
                             )}
                         </div>
 
-                        <div className="space-y-3 mb-8">
-                            <div className="flex justify-between text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                        <div className="space-y-1 mb-3">
+                            <div className="flex justify-between text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-none">
                                 <span>Subtotal</span>
                                 <span>${subtotal.toFixed(2)}</span>
                             </div>
                             {appliedDiscount && (
-                                <div className="flex justify-between text-[11px] font-bold text-green-600 uppercase tracking-widest">
+                                <div className="flex justify-between text-[9px] font-bold text-green-600 uppercase tracking-widest">
                                     <span>Discount</span>
                                     <span>-${discountAmount.toFixed(2)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                                <span>HST (Windsor/Ontario 13%)</span>
+                            <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                                <span>HST (13%)</span>
                                 <span>${tax.toFixed(2)}</span>
                             </div>
-                            <div className="border-t border-gray-200 my-3 pt-3 flex justify-between text-2xl font-black text-gray-900">
-                                <span className="font-display italic text-xl font-normal">Total</span>
+                            <div className="border-t border-gray-200 my-1 pt-1 flex justify-between text-sm font-black text-gray-900">
+                                <span className="font-display italic text-xs font-normal">Total Due</span>
                                 <span>${total.toFixed(2)}</span>
                             </div>
                         </div>
-                        <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full py-4 gold-btn rounded-xl text-[11px] shadow-xl disabled:opacity-50 disabled:filter-none transition-all">Finalize Transaction</button>
-                        {cart.length > 0 && <button onClick={() => setCart([])} className="w-full mt-2 lg:mt-4 py-2 lg:py-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-red-500 transition-colors">Discard Draft Order</button>}
+                        <button disabled={cart.length === 0 || finalizing} onClick={handleFinalizeTransaction} className="w-full py-2 gold-btn rounded-lg text-[9px] shadow-lg disabled:opacity-50 disabled:filter-none transition-all uppercase font-black tracking-widest leading-none">
+                            {finalizing ? '...' : 'Finalize Sale'}
+                        </button>
+                        <button onClick={clearCart} className="w-full mt-1 py-1 text-[6px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-red-500 transition-colors">Discard</button>
                     </div>
                 </div>
 

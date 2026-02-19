@@ -158,136 +158,138 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Flow Progress Steps */}
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
                     <button
                         onClick={() => setFilter('Pending')}
-                        className={`stat-card p-6 border-b-4 transition-all ${filter === 'Pending' ? 'border-[var(--gold)] bg-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        className={`stat-card p-4 lg:p-6 border-b-4 transition-all ${filter === 'Pending' ? 'border-[var(--gold)] bg-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
                     >
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="p-2 bg-rose-50 text-rose-500 rounded-xl"><Boxes size={20} /></div>
-                            <span className="text-xl font-display italic text-rose-500">{stats.pending}</span>
+                        <div className="flex justify-between items-start mb-3 lg:mb-4">
+                            <div className="p-1.5 lg:p-2 bg-rose-50 text-rose-500 rounded-lg lg:rounded-xl"><Boxes size={18} /></div>
+                            <span className="text-lg lg:text-xl font-display italic text-rose-500">{stats.pending}</span>
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">1. Receipt</p>
-                        <p className="text-xs font-bold text-gray-900">Pending Review</p>
+                        <p className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">1. Receipt</p>
+                        <p className="text-[10px] lg:text-xs font-bold text-gray-900">Pending Review</p>
                     </button>
 
                     <button
                         onClick={() => setFilter('Fetching')}
-                        className={`stat-card p-6 border-b-4 transition-all ${filter === 'Fetching' ? 'border-sky-500 bg-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        className={`stat-card p-4 lg:p-6 border-b-4 transition-all ${filter === 'Fetching' ? 'border-sky-500 bg-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
                     >
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="p-2 bg-sky-50 text-sky-500 rounded-xl"><Scan size={20} /></div>
-                            <span className="text-xl font-display italic text-sky-500">{stats.fetching}</span>
+                        <div className="flex justify-between items-start mb-3 lg:mb-4">
+                            <div className="p-1.5 lg:p-2 bg-sky-50 text-sky-500 rounded-lg lg:rounded-xl"><Scan size={18} /></div>
+                            <span className="text-lg lg:text-xl font-display italic text-sky-500">{stats.fetching}</span>
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">2. Fetching</p>
-                        <p className="text-xs font-bold text-gray-900">Picking & Verification</p>
+                        <p className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">2. Fetching</p>
+                        <p className="text-[10px] lg:text-xs font-bold text-gray-900">Picking Area</p>
                     </button>
 
                     <button
                         onClick={() => setFilter('Packaging')}
-                        className={`stat-card p-6 border-b-4 transition-all ${filter === 'Packaging' ? 'border-amber-500 bg-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        className={`stat-card p-4 lg:p-6 border-b-4 transition-all ${filter === 'Packaging' ? 'border-amber-500 bg-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
                     >
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="p-2 bg-amber-50 text-amber-500 rounded-xl"><Package size={20} /></div>
-                            <span className="text-xl font-display italic text-amber-500">{stats.packaging}</span>
+                        <div className="flex justify-between items-start mb-3 lg:mb-4">
+                            <div className="p-1.5 lg:p-2 bg-amber-50 text-amber-500 rounded-lg lg:rounded-xl"><Package size={18} /></div>
+                            <span className="text-lg lg:text-xl font-display italic text-amber-500">{stats.packaging}</span>
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">3. Packaging</p>
-                        <p className="text-xs font-bold text-gray-900">Quality Check</p>
+                        <p className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">3. Packaging</p>
+                        <p className="text-[10px] lg:text-xs font-bold text-gray-900">Quality Check</p>
                     </button>
 
                     <button
                         onClick={() => setFilter('Shipped')}
-                        className={`stat-card p-6 border-b-4 transition-all ${filter === 'Shipped' ? 'border-blue-500 bg-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        className={`stat-card p-4 lg:p-6 border-b-4 transition-all ${filter === 'Shipped' ? 'border-blue-500 bg-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
                     >
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="p-2 bg-blue-50 text-blue-500 rounded-xl"><ChevronRight size={20} /></div>
-                            <span className="text-xl font-display italic text-blue-500">{stats.shipped}</span>
+                        <div className="flex justify-between items-start mb-3 lg:mb-4">
+                            <div className="p-1.5 lg:p-2 bg-blue-50 text-blue-500 rounded-lg lg:rounded-xl"><ChevronRight size={18} /></div>
+                            <span className="text-lg lg:text-xl font-display italic text-blue-500">{stats.shipped}</span>
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">4. Dispatched</p>
-                        <p className="text-xs font-bold text-gray-900">Tracked Logistics</p>
+                        <p className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">4. Dispatched</p>
+                        <p className="text-[10px] lg:text-xs font-bold text-gray-900">Logistics</p>
                     </button>
                 </div>
 
                 {/* Orders Table */}
                 <div className="card overflow-hidden">
-                    <table className="w-full hidden lg:table">
-                        <thead className="bg-gray-50/80">
-                            <tr className="text-xs font-bold uppercase text-gray-400 tracking-wider">
-                                <th className="p-5 text-left">Internal ID</th>
-                                <th className="p-5 text-left">Consignee</th>
-                                <th className="p-5 text-left">Artisanal Units</th>
-                                <th className="p-5 text-left">Stream Date</th>
-                                <th className="p-5 text-right">Value</th>
-                                <th className="p-5 text-center">Status</th>
-                                <th className="p-5 text-right">Workflow</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {filteredOrders.map((order) => (
-                                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                                    <td className="p-5">
-                                        <code className="text-xs font-mono bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600">{order.orderId}</code>
-                                    </td>
-                                    <td className="p-5">
-                                        <div className="font-bold text-gray-900">{order.customer.split('|')[0].trim()}</div>
-                                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{order.city || 'Windsor'}</div>
-                                    </td>
-                                    <td className="p-5">
-                                        <div className="flex items-center gap-2">
-                                            <span className="px-2 py-1 bg-gray-100 rounded text-[10px] font-black text-gray-500">{order.items?.length || 0} PCS</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-5 text-gray-500 text-xs font-medium">{new Date(order.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                                    <td className="p-5 text-right font-black text-[var(--gold)] italic">CAD ${(parseFloat(order.total) || 0).toFixed(2)}</td>
-                                    <td className="p-5 text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <span className={`badge px-4 py-1.5 text-[9px] font-black uppercase tracking-widest ${(order.status === 'Pending' || order.status === 'Paid') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
-                                                order.status === 'Fetching' ? 'bg-sky-50 text-sky-600 border border-sky-100 animate-pulse' :
-                                                    order.status === 'Packaging' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                                                        order.status === 'Shipped' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                                                            'bg-gray-50 text-gray-500 border border-gray-100'
-                                                }`}>
-                                                {order.status}
-                                            </span>
-                                            {order.status === 'Shipped' && order.estimatedDeliveryDate && new Date(order.estimatedDeliveryDate) < new Date() && (
-                                                <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" title="Delivery delayed" />
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="p-5 text-right">
-                                        <div className="flex items-center justify-end gap-3 transition-all duration-300">
-                                            {(order.status === 'Pending' || order.status === 'Paid') && (
-                                                <button
-                                                    onClick={() => startFetching(order)}
-                                                    className="px-4 py-2 bg-[#1B2936] text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black flex items-center gap-2 shadow-lg"
-                                                >
-                                                    <Scan size={14} /> Start Picking
-                                                </button>
-                                            )}
-                                            {order.status === 'Fetching' && (
-                                                <button
-                                                    onClick={() => setFetchingOrder(order)}
-                                                    className="px-4 py-2 bg-sky-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-sky-600 flex items-center gap-2 shadow-lg"
-                                                >
-                                                    <Scan size={14} /> Resume Scan
-                                                </button>
-                                            )}
-                                            {order.status === 'Packaging' && (
-                                                <button
-                                                    onClick={() => handleStatusUpdate(order.id, 'Ready for Shipping')}
-                                                    className="px-4 py-2 bg-amber-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-600 flex items-center gap-2 shadow-lg"
-                                                >
-                                                    <Package size={14} /> Finalize Pack
-                                                </button>
-                                            )}
-                                            <button onClick={() => printOnlineReceipt(order)} className="p-2 text-gray-400 hover:text-[var(--gold)]">🖨️</button>
-                                            <button onClick={() => handleDelete(order.id)} className="p-2 text-gray-300 hover:text-rose-500">🗑️</button>
-                                        </div>
-                                    </td>
+                    <div className="overflow-x-auto custom-scrollbar">
+                        <table className="w-full hidden lg:table min-w-[900px]">
+                            <thead className="bg-gray-50/80">
+                                <tr className="text-xs font-bold uppercase text-gray-400 tracking-wider">
+                                    <th className="p-5 text-left">Internal ID</th>
+                                    <th className="p-5 text-left">Consignee</th>
+                                    <th className="p-5 text-left">Artisanal Units</th>
+                                    <th className="p-5 text-left">Stream Date</th>
+                                    <th className="p-5 text-right">Value</th>
+                                    <th className="p-5 text-center">Status</th>
+                                    <th className="p-5 text-right">Workflow</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {filteredOrders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
+                                        <td className="p-5">
+                                            <code className="text-xs font-mono bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600">{order.orderId}</code>
+                                        </td>
+                                        <td className="p-5">
+                                            <div className="font-bold text-gray-900">{order.customer.split('|')[0].trim()}</div>
+                                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{order.city || 'Windsor'}</div>
+                                        </td>
+                                        <td className="p-5">
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-1 bg-gray-100 rounded text-[10px] font-black text-gray-500">{order.items?.length || 0} PCS</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-5 text-gray-500 text-xs font-medium">{new Date(order.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                        <td className="p-5 text-right font-black text-[var(--gold)] italic">CAD ${(parseFloat(order.total) || 0).toFixed(2)}</td>
+                                        <td className="p-5 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span className={`badge px-4 py-1.5 text-[9px] font-black uppercase tracking-widest ${(order.status === 'Pending' || order.status === 'Paid') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                    order.status === 'Fetching' ? 'bg-sky-50 text-sky-600 border border-sky-100 animate-pulse' :
+                                                        order.status === 'Packaging' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                                            order.status === 'Shipped' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                                                                'bg-gray-50 text-gray-500 border border-gray-100'
+                                                    }`}>
+                                                    {order.status}
+                                                </span>
+                                                {order.status === 'Shipped' && order.estimatedDeliveryDate && new Date(order.estimatedDeliveryDate) < new Date() && (
+                                                    <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" title="Delivery delayed" />
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="p-5 text-right">
+                                            <div className="flex items-center justify-end gap-3 transition-all duration-300">
+                                                {(order.status === 'Pending' || order.status === 'Paid') && (
+                                                    <button
+                                                        onClick={() => startFetching(order)}
+                                                        className="px-4 py-2 bg-[#1B2936] text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black flex items-center gap-2 shadow-lg"
+                                                    >
+                                                        <Scan size={14} /> Start Picking
+                                                    </button>
+                                                )}
+                                                {order.status === 'Fetching' && (
+                                                    <button
+                                                        onClick={() => setFetchingOrder(order)}
+                                                        className="px-4 py-2 bg-sky-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-sky-600 flex items-center gap-2 shadow-lg"
+                                                    >
+                                                        <Scan size={14} /> Resume Scan
+                                                    </button>
+                                                )}
+                                                {order.status === 'Packaging' && (
+                                                    <button
+                                                        onClick={() => handleStatusUpdate(order.id, 'Ready for Shipping')}
+                                                        className="px-4 py-2 bg-amber-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-600 flex items-center gap-2 shadow-lg"
+                                                    >
+                                                        <Package size={14} /> Finalize Pack
+                                                    </button>
+                                                )}
+                                                <button onClick={() => printOnlineReceipt(order)} className="p-2 text-gray-400 hover:text-[var(--gold)]">🖨️</button>
+                                                <button onClick={() => handleDelete(order.id)} className="p-2 text-gray-300 hover:text-rose-500">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
                     {/* Mobile/Tablet Card View */}
                     <div className="lg:hidden divide-y divide-gray-100">

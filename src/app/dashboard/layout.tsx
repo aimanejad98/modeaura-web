@@ -284,8 +284,8 @@ export default function DashboardLayout({
             )}
 
             {!isPosPage && (
-                <aside className={`print:hidden fixed inset-y-0 left-0 ${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-[#1B2936] text-white flex flex-col z-50 transition-all duration-500 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-                    <div className={`p-8 ${isSidebarCollapsed ? 'px-2' : ''} shrink-0 text-center border-b border-white/[0.05]`}>
+                <aside className={`print:hidden fixed inset-y-0 left-0 ${isSidebarCollapsed ? 'w-16' : 'w-60'} bg-[#1B2936] text-white flex flex-col z-50 transition-all duration-500 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+                    <div className={`p-6 ${isSidebarCollapsed ? 'px-1' : ''} shrink-0 text-center border-b border-white/[0.05]`}>
                         <Link href="/dashboard" className="flex flex-col items-center group">
                             {settings?.logo ? (
                                 <img
@@ -310,7 +310,7 @@ export default function DashboardLayout({
                         </Link>
                     </div>
 
-                    <nav className={`flex-1 overflow-y-auto ${isSidebarCollapsed ? 'px-2' : 'px-6'} py-8 space-y-4 custom-scrollbar`}>
+                    <nav className={`flex-1 overflow-y-auto ${isSidebarCollapsed ? 'px-1' : 'px-4'} py-6 space-y-3 custom-scrollbar`}>
                         {navSections.map((section, idx) => {
                             const sectionItems = section.items.filter(item => item.roles.includes(currentUser.role))
                             if (sectionItems.length === 0) return null
@@ -319,9 +319,9 @@ export default function DashboardLayout({
                             return (
                                 <div key={idx} className="space-y-1">
                                     {section.title && !isSidebarCollapsed && (
-                                        <button onClick={() => toggleSection(section.title!)} className="w-full flex items-center justify-between px-4 py-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors group">
+                                        <button onClick={() => toggleSection(section.title!)} className="w-full flex items-center justify-between px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-white transition-colors group">
                                             <span>{section.title}</span>
-                                            <span className={`text-[10px] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
+                                            <span className={`text-[8px] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
                                         </button>
                                     )}
                                     <div className={`space-y-1 overflow-hidden transition-all duration-500 ease-in-out ${isExpanded || isSidebarCollapsed ? 'max-h-[800px] opacity-100 py-1' : 'max-h-0 opacity-0 py-0'}`}>
@@ -332,12 +332,12 @@ export default function DashboardLayout({
                                                     key={item.href}
                                                     href={item.href}
                                                     title={isSidebarCollapsed ? item.name : undefined}
-                                                    className={`group flex items-center ${isSidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-2.5'} rounded-xl text-[10px] font-black tracking-widest uppercase transition-all duration-300 ${isActive
+                                                    className={`group flex items-center ${isSidebarCollapsed ? 'justify-center p-2' : 'gap-2 px-3 py-1.5'} rounded-lg text-[9px] font-black tracking-widest uppercase transition-all duration-300 ${isActive
                                                         ? 'bg-[var(--gold)] text-white shadow-lg shadow-[var(--gold)]/20'
                                                         : 'text-white/60 hover:bg-white/[0.05] hover:text-white'
                                                         }`}
                                                 >
-                                                    <span className={`text-lg transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                                    <span className={`text-base transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
                                                         {item.icon}
                                                     </span>
                                                     {!isSidebarCollapsed && item.name}
@@ -350,9 +350,9 @@ export default function DashboardLayout({
                         })}
                     </nav>
 
-                    <div className={`${isSidebarCollapsed ? 'p-2' : 'p-6'} border-t border-white/[0.05]`}>
-                        <div className={`bg-white/5 rounded-3xl ${isSidebarCollapsed ? 'p-2 justify-center' : 'p-4'} flex items-center gap-3 group`}>
-                            <div className="w-10 h-10 rounded-full bg-[var(--gold)]/10 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20 group-hover:scale-105 transition-transform shrink-0">
+                    <div className={`${isSidebarCollapsed ? 'p-1' : 'p-4'} border-t border-white/[0.05]`}>
+                        <div className={`bg-white/5 rounded-2xl ${isSidebarCollapsed ? 'p-1 justify-center' : 'p-3'} flex items-center gap-2 group`}>
+                            <div className="w-8 h-8 rounded-full bg-[var(--gold)]/10 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20 group-hover:scale-105 transition-transform shrink-0 text-xs">
                                 {currentUser.name[0]}
                             </div>
                             {!isSidebarCollapsed && (
@@ -378,22 +378,21 @@ export default function DashboardLayout({
                 </aside>
             )}
 
-            <main className={`flex-1 flex flex-col min-w-0 bg-[#FAF9F6] relative transition-all duration-500 ${!isPosPage ? (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72') : ''}`}>
+            <main className={`flex-1 flex flex-col min-w-0 bg-[#FAF9F6] relative transition-all duration-500 ${!isPosPage ? (isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60') : ''}`}>
                 {!isPosPage && (
-                    <header className={`print:hidden sticky top-0 z-40 bg-white/60 backdrop-blur-2xl border-b border-[#E8E2D9] px-6 lg:px-12 h-24 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-xl shadow-black/[0.03]' : ''}`}>
-                        <div className="flex items-center gap-6">
+                    <header className={`print:hidden sticky top-0 z-40 bg-white/60 backdrop-blur-2xl border-b border-[#E8E2D9] px-4 lg:px-8 h-12 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-xl shadow-black/[0.03]' : ''}`}>
+                        <div className="flex items-center gap-4">
                             <button
                                 onClick={() => {
                                     if (window.innerWidth < 1024) setIsSidebarOpen(true)
                                     else setIsSidebarCollapsed(!isSidebarCollapsed)
                                 }}
-                                className="p-3 rounded-2xl bg-white border border-[#E8E2D9] shadow-sm hover:bg-gray-50 transition-colors"
+                                className="p-1.5 rounded-lg bg-white border border-[#E8E2D9] shadow-sm hover:bg-gray-50 transition-colors"
                             >
-                                <Menu size={20} />
+                                <Menu size={14} />
                             </button>
                             <div className="hidden sm:block">
-                                <p className="editorial-meta text-[var(--gold)]">ATELIER CORE</p>
-                                <h2 className="text-2xl font-display italic text-[#1B2936] mt-0.5 tracking-tight">
+                                <h2 className="text-sm font-display italic text-[#1B2936] tracking-tight">
                                     {allNavItems.find(i => i.href === pathname)?.name || 'Atelier Overview'}
                                 </h2>
                             </div>
@@ -403,17 +402,17 @@ export default function DashboardLayout({
                             <GlobalSearch />
                         </div>
 
-                        <div className="flex items-center gap-8">
-                            <Link href="/dashboard/pos" className="gold-btn px-8 py-3 rounded-full text-[10px] gap-3 shadow-2xl shadow-[var(--gold)]/20 animate-in fade-in slide-in-from-right-4 duration-1000">
-                                POS TERMINAL
+                        <div className="flex items-center gap-4">
+                            <Link href="/dashboard/pos" className="gold-btn px-4 py-1.5 rounded-full text-[8px] gap-2 shadow-lg shadow-[var(--gold)]/10 animate-in fade-in slide-in-from-right-4 duration-1000">
+                                POS REGISTER
                             </Link>
-                            <div className="h-10 w-px bg-[#E8E2D9] hidden sm:block" />
-                            <Link href="/" target="_blank" className="editorial-meta text-black/30 hover:text-black transition-colors">Storefront</Link>
+                            <div className="h-6 w-px bg-[#E8E2D9] hidden sm:block" />
+                            <Link href="/" target="_blank" className="text-[9px] font-black uppercase tracking-widest text-black/30 hover:text-black transition-colors">VIST STORE</Link>
                         </div>
                     </header>
                 )}
 
-                <div className={`${isPosPage ? 'p-0' : 'p-8 lg:p-12'} flex-1 overflow-y-auto custom-scrollbar`}>
+                <div className={`${isPosPage ? 'p-0' : 'p-4 lg:p-6'} flex-1 overflow-y-auto custom-scrollbar`}>
                     {showAccessDenied ? (
                         <div className="p-20 text-center max-w-xl mx-auto rounded-[4rem] bg-white border border-[#E8E2D9] shadow-2xl mt-10 animate-in zoom-in-95 duration-700">
                             <div className="text-7xl mb-10">🔐</div>
