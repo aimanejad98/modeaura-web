@@ -102,8 +102,8 @@ export default function WeatherWidget() {
 
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-50%] left-[-20%] w-[80%] h-[150%] bg-gradient-to-br from-white/10 to-transparent transform rotate-12 blur-3xl opacity-30"></div>
-                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[120%] bg-gradient-to-tl from-black/20 to-transparent transform -rotate-12 blur-3xl opacity-20"></div>
+                <div className="absolute top-[-50%] left-[-20%] w-[80%] h-[150%] bg-gradient-to-br from-white/20 to-transparent transform rotate-12 blur-3xl opacity-40"></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[120%] bg-gradient-to-tl from-black/30 to-transparent transform -rotate-12 blur-3xl opacity-30"></div>
             </div>
 
             <div className="relative z-10 h-full flex flex-col md:flex-row items-center justify-between p-8 md:p-10 gap-8">

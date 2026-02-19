@@ -304,7 +304,7 @@ export default function BrandingPage() {
                                 </select>
                             </div>
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Tax Rate (%)</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">HST Rate (%)</label>
                                 <input
                                     type="number"
                                     step="0.01"
