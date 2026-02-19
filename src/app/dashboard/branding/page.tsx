@@ -244,6 +244,30 @@ export default function BrandingPage() {
                             />
                         </div>
                     </div>
+
+                    {/* Google Search Preview */}
+                    <div className="mt-10 pt-10 border-t border-[var(--mocha-border)]/50">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Globe size={14} className="text-blue-500" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Live Search Preview</span>
+                        </div>
+                        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm max-w-2xl">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold text-gray-400">M</div>
+                                <div>
+                                    <div className="text-[14px] text-[#202124] leading-tight">modeaura.ca</div>
+                                    <div className="text-[12px] text-[#4d5156] leading-tight">https://modeaura.ca</div>
+                                </div>
+                            </div>
+                            <h3 className="text-[20px] text-[#1a0dab] font-medium hover:underline cursor-pointer mb-1 leading-tight">
+                                {settings?.seoTitle || settings?.storeName || 'Mode AURA - Luxury Modest Fashion'}
+                            </h3>
+                            <p className="text-[14px] text-[#4d5156] leading-relaxed">
+                                {settings?.seoDescription || settings?.tagline || 'Boutique collection of premium abayas and modest attire.'}
+                            </p>
+                        </div>
+                        <p className="text-[9px] text-gray-400 mt-4 font-medium italic">* This is an approximation of how your site appears on Google search results.</p>
+                    </div>
                 </div>
 
                 {/* Visual Identity Section */}
