@@ -51,6 +51,7 @@ export async function updateStoreSettings(data: {
     seoTitle?: string
     seoDescription?: string
     ogImage?: string
+    receiptNote?: string
 }) {
     try {
         const existing = await prisma.storeSetting.findFirst()

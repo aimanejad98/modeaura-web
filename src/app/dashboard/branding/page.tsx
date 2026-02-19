@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getStoreSettings, updateStoreSettings } from '@/app/actions/settings';
 import { uploadImage } from '@/app/actions/upload';
-import { Palette, Megaphone, Globe, Check, Save, Loader2, Upload, Image as ImageIcon, X, Plus } from 'lucide-react';
+import { Palette, Megaphone, Globe, Check, Save, Loader2, Upload, Image as ImageIcon, X, Plus, Phone, Mail } from 'lucide-react';
 import DashboardPageGuide from '@/components/DashboardPageGuide';
 
 export default function BrandingPage() {
@@ -48,7 +48,14 @@ export default function BrandingPage() {
             seoDescription: settings.seoDescription,
             instagram: settings.instagram,
             facebook: settings.facebook,
-            ogImage: settings.ogImage
+            ogImage: settings.ogImage,
+            phone: settings.phone,
+            email: settings.email,
+            address: settings.address,
+            website: settings.website,
+            taxRate: settings.taxRate,
+            currency: settings.currency,
+            receiptNote: settings.receiptNote
         });
 
         if (result.success) {
@@ -209,6 +216,113 @@ export default function BrandingPage() {
                                     className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
                                 />
                             </div>
+                            <div className="space-y-3 md:col-span-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Official Website</label>
+                                <input
+                                    type="text"
+                                    value={settings?.website || ''}
+                                    onChange={(e) => setSettings({ ...settings, website: e.target.value })}
+                                    placeholder="https://www.modeaura.ca"
+                                    className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Business Contact Section */}
+                <div className="card p-10 space-y-8">
+                    <div className="flex items-center gap-4 border-b border-[var(--mocha-border)] pb-6">
+                        <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
+                            <Phone size={24} strokeWidth={1.5} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-display italic text-[var(--text-primary)]">Business Contact</h2>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Communications</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Public Phone</label>
+                                <input
+                                    type="text"
+                                    value={settings?.phone || ''}
+                                    onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                                    className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Public Email</label>
+                                <input
+                                    type="email"
+                                    value={settings?.email || ''}
+                                    onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+                                    className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Business Address</label>
+                            <input
+                                type="text"
+                                value={settings?.address || ''}
+                                onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                                className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Regional & Financial Hub */}
+                <div className="card p-10 space-y-8">
+                    <div className="flex items-center gap-4 border-b border-[var(--mocha-border)] pb-6">
+                        <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-500/5">
+                            <Plus size={24} strokeWidth={1.5} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-display italic text-[var(--text-primary)]">Regional & Financial</h2>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Localization & Receipts</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Default Currency</label>
+                                <select
+                                    value={settings?.currency || 'CAD'}
+                                    onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                                    className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                                >
+                                    <option value="CAD">CAD - Canadian Dollar</option>
+                                    <option value="USD">USD - US Dollar</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                    <option value="GBP">GBP - British Pound</option>
+                                    <option value="AED">AED - UAE Dirham</option>
+                                </select>
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Tax Rate (%)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={settings?.taxRate || 0}
+                                    onChange={(e) => setSettings({ ...settings, taxRate: parseFloat(e.target.value) })}
+                                    className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Receipt Note</label>
+                            <textarea
+                                value={settings?.receiptNote || ''}
+                                onChange={(e) => setSettings({ ...settings, receiptNote: e.target.value })}
+                                rows={2}
+                                placeholder="Thank you for shopping at Mode AURA!"
+                                className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium resize-none shadow-inner"
+                            />
                         </div>
                     </div>
                 </div>
