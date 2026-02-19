@@ -30,6 +30,7 @@ export default function Navbar() {
     const [currentAnnIndex, setCurrentAnnIndex] = useState(0);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [parsedAnnouncements, setParsedAnnouncements] = useState<string[]>([]);
+    const [expandedMobileCat, setExpandedMobileCat] = useState<string | null>(null);
 
     const { theme } = useTheme();
 
@@ -448,23 +449,39 @@ export default function Navbar() {
                                             }
                                         }
 
+                                        const isExpanded = expandedMobileCat === item.id;
+
                                         return (
                                             <div key={item.id} className="space-y-4">
-                                                <Link
-                                                    href={item.href}
-                                                    onClick={() => setIsMenuOpen(false)}
-                                                    className={`block text-3xl font-display italic ${item.href === '/shop?filter=new' ? 'text-[var(--gold)]' : 'text-[var(--brand-navy)]'}`}
-                                                >
-                                                    {item.label}
-                                                </Link>
-                                                {displayChildren.length > 0 && (
-                                                    <div className="flex flex-wrap justify-center gap-4">
+                                                <div className="flex items-center justify-center gap-4">
+                                                    <Link
+                                                        href={item.href}
+                                                        onClick={() => setIsMenuOpen(false)}
+                                                        className={`text-3xl font-display italic ${item.href === '/shop?filter=new' ? 'text-[var(--gold)]' : 'text-[var(--brand-navy)]'}`}
+                                                    >
+                                                        {item.label}
+                                                    </Link>
+                                                    {displayChildren.length > 0 && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setExpandedMobileCat(isExpanded ? null : item.id);
+                                                            }}
+                                                            className="p-2 text-[var(--gold)]"
+                                                        >
+                                                            <ChevronDown size={20} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {displayChildren.length > 0 && isExpanded && (
+                                                    <div className="flex flex-col items-center gap-4 py-2 border-y border-[var(--mocha-border)]/50 animate-in slide-in-from-top-2 duration-300">
                                                         {displayChildren.map((child: any) => (
                                                             <Link
                                                                 key={child.id}
                                                                 href={child.href}
                                                                 onClick={() => setIsMenuOpen(false)}
-                                                                className="text-sm font-black uppercase tracking-widest text-[var(--gold)]"
+                                                                className="text-sm font-black uppercase tracking-widest text-[var(--gold)] hover:text-[var(--brand-navy)] transition-colors"
                                                             >
                                                                 {child.label || child.name}
                                                             </Link>
@@ -478,31 +495,48 @@ export default function Navbar() {
                                     <>
                                         <Link href="/shop?filter=new" onClick={() => setIsMenuOpen(false)} className="block text-3xl font-display italic text-[var(--gold)]">New Arrivals</Link>
                                         <Link href="/shop?kids=true" onClick={() => setIsMenuOpen(false)} className="block text-3xl font-display italic text-[var(--brand-navy)]">Kids Collection</Link>
-                                        {categories.map(cat => (
-                                            <div key={cat.id} className="space-y-4">
-                                                <Link
-                                                    href={`/shop?category=${cat.id}`}
-                                                    onClick={() => setIsMenuOpen(false)}
-                                                    className="block text-3xl font-display italic text-[var(--brand-navy)]"
-                                                >
-                                                    {cat.name}
-                                                </Link>
-                                                {cat.children?.length > 0 && (
-                                                    <div className="flex flex-wrap justify-center gap-4">
-                                                        {cat.children.map((sub: any) => (
-                                                            <Link
-                                                                key={sub.id}
-                                                                href={`/shop?category=${sub.id}`}
-                                                                onClick={() => setIsMenuOpen(false)}
-                                                                className="text-sm font-black uppercase tracking-widest text-[var(--gold)]"
+                                        {categories.map(cat => {
+                                            const isExpanded = expandedMobileCat === cat.id;
+                                            return (
+                                                <div key={cat.id} className="space-y-4">
+                                                    <div className="flex items-center justify-center gap-4">
+                                                        <Link
+                                                            href={`/shop?category=${cat.id}`}
+                                                            onClick={() => setIsMenuOpen(false)}
+                                                            className="text-3xl font-display italic text-[var(--brand-navy)]"
+                                                        >
+                                                            {cat.name}
+                                                        </Link>
+                                                        {cat.children?.length > 0 && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    setExpandedMobileCat(isExpanded ? null : cat.id);
+                                                                }}
+                                                                className="p-2 text-[var(--gold)]"
                                                             >
-                                                                {sub.name}
-                                                            </Link>
-                                                        ))}
+                                                                <ChevronDown size={20} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                            </button>
+                                                        )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        ))}
+
+                                                    {cat.children?.length > 0 && isExpanded && (
+                                                        <div className="flex flex-col items-center gap-4 py-2 border-y border-[var(--mocha-border)]/50 animate-in slide-in-from-top-2 duration-300">
+                                                            {cat.children.map((sub: any) => (
+                                                                <Link
+                                                                    key={sub.id}
+                                                                    href={`/shop?category=${sub.id}`}
+                                                                    onClick={() => setIsMenuOpen(false)}
+                                                                    className="text-sm font-black uppercase tracking-widest text-[var(--gold)] hover:text-[var(--brand-navy)] transition-colors"
+                                                                >
+                                                                    {sub.name}
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </>
                                 )}
                                 <Link href="/wishlist" onClick={() => setIsMenuOpen(false)} className="block text-2xl font-display italic text-gray-300">My Wishlist</Link>
@@ -521,7 +555,7 @@ export default function Navbar() {
                         </div>
                     </div>
                 </div>
-            </div >
+            </div>
 
             {/* Search Overlay */}
             <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
