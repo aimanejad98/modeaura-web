@@ -8,6 +8,7 @@ import GlobalSearch from '@/components/GlobalSearch'
 import { Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import { getStoreSettings } from '@/app/actions/settings'
+import { verifyAccess } from '@/app/actions/pos'
 import DashboardTour from '@/components/DashboardTour'
 
 // Elite Concierge Navigation
@@ -102,6 +103,14 @@ export default function DashboardLayout({
     const [scrolled, setScrolled] = useState(false)
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
 
+    // Security: AFK Lock
+    const [isLocked, setIsLocked] = useState(false)
+    const [lastActivity, setLastActivity] = useState(Date.now())
+    const IDLE_TIMEOUT = 5 * 60 * 1000 // 5 minutes
+    const [unlockPin, setUnlockPin] = useState('')
+    const [unlockError, setUnlockError] = useState('')
+    const [isUnlocking, setIsUnlocking] = useState(false)
+
     const hapticEase = 'var(--haptic-ease)'
 
     useEffect(() => {
@@ -109,10 +118,35 @@ export default function DashboardLayout({
         if (savedUser) setCurrentUser(JSON.parse(savedUser))
         loadStaff()
 
-        const handleScroll = () => setScrolled(window.scrollY > 10)
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 10)
+            setLastActivity(Date.now()) // Track scroll as activity
+        }
+
+        // AFK Lock: Track activity
+        const trackActivity = () => setLastActivity(Date.now())
+        window.addEventListener('mousemove', trackActivity)
+        window.addEventListener('mousedown', trackActivity)
+        window.addEventListener('keypress', trackActivity)
+        window.addEventListener('touchstart', trackActivity)
         window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
+
+        // AFK Lock: Periodic check
+        const idleCheck = setInterval(() => {
+            if (currentUser && !isLocked && Date.now() - lastActivity > IDLE_TIMEOUT) {
+                setIsLocked(true)
+            }
+        }, 30000) // Check every 30 seconds
+
+        return () => {
+            window.removeEventListener('mousemove', trackActivity)
+            window.removeEventListener('mousedown', trackActivity)
+            window.removeEventListener('keypress', trackActivity)
+            window.removeEventListener('touchstart', trackActivity)
+            window.removeEventListener('scroll', handleScroll)
+            clearInterval(idleCheck)
+        }
+    }, [currentUser, isLocked, lastActivity])
 
     useEffect(() => {
         setIsSidebarOpen(false)
@@ -146,9 +180,34 @@ export default function DashboardLayout({
 
     function handleLogout() {
         setCurrentUser(null)
+        setIsLocked(false)
         localStorage.removeItem('dashboard_user')
         logout()
         window.location.href = '/atelier-portal-v7'
+    }
+
+    async function handleUnlock(e?: React.FormEvent) {
+        if (e) e.preventDefault()
+        if (!currentUser || !unlockPin) return
+
+        setIsUnlocking(true)
+        setUnlockError('')
+
+        try {
+            const result = await verifyAccess(currentUser.id, unlockPin)
+            if (result.success) {
+                setIsLocked(false)
+                setUnlockPin('')
+                setLastActivity(Date.now())
+            } else {
+                setUnlockError('Invalid PIN or Password')
+                setUnlockPin('')
+            }
+        } catch (error) {
+            setUnlockError('Verification failed. Please try again.')
+        } finally {
+            setIsUnlocking(false)
+        }
     }
 
     const toggleSection = (title: string) => {
@@ -349,6 +408,65 @@ export default function DashboardLayout({
                     )}
                 </div>
             </main>
+
+            {/* AFK Lock Overlay */}
+            {isLocked && (
+                <div className="fixed inset-0 z-[100] bg-[#0F1216] flex items-center justify-center p-8 phygital-light silk-overlay overflow-hidden animate-in fade-in duration-500">
+                    <div className="max-w-md w-full space-y-12 text-center animate-in zoom-in-95 duration-700">
+                        <div className="space-y-4">
+                            <h1 className="editorial-display text-white italic text-5xl">Mode Aura</h1>
+                            <div className="inline-block bg-[var(--gold)]/10 px-6 py-2 rounded-full border border-[var(--gold)]/20">
+                                <span className="text-[9px] font-black uppercase text-[var(--gold)] tracking-[0.5em]">
+                                    SESSION LOCKED
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="p-12 rounded-[3.5rem] bg-white/5 border border-white/10 backdrop-blur-3xl shadow-2xl relative">
+                            <div className="mb-8">
+                                <div className="w-16 h-16 rounded-full bg-[var(--gold)]/10 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20 mx-auto text-2xl font-black mb-4">
+                                    {currentUser.name[0]}
+                                </div>
+                                <h3 className="editorial-display text-2xl text-white italic">{currentUser.name}</h3>
+                                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 mt-2">Security Verification Required</p>
+                            </div>
+
+                            <form onSubmit={handleUnlock} className="space-y-6">
+                                <div className="relative group">
+                                    <input
+                                        type="password"
+                                        placeholder="Enter PIN or Password"
+                                        value={unlockPin}
+                                        onChange={(e) => setUnlockPin(e.target.value)}
+                                        className="w-full bg-white/5 border-2 border-white/10 rounded-2xl p-5 text-center text-white font-black tracking-[0.5em] focus:border-[var(--gold)] focus:bg-white/[0.08] transition-all outline-none"
+                                        autoFocus
+                                    />
+                                    {unlockError && (
+                                        <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest mt-3 animate-bounce">
+                                            {unlockError}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isUnlocking || !unlockPin}
+                                    className="w-full gold-btn py-5 rounded-2xl font-black tracking-[0.2em] shadow-2xl shadow-[var(--gold)]/20 disabled:opacity-50"
+                                >
+                                    {isUnlocking ? 'AUTHENTICATING...' : 'RESUME SESSION'}
+                                </button>
+                            </form>
+
+                            <button
+                                onClick={handleLogout}
+                                className="mt-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-red-400 transition-colors"
+                            >
+                                Switch Account / Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
