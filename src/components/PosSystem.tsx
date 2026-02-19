@@ -70,6 +70,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [customerSearch, setCustomerSearch] = useState('')
     const [transactionId, setTransactionId] = useState('')
     const [mounted, setMounted] = useState(false)
+    const [taxRate, setTaxRate] = useState(0.13) // Default to 13%
 
     const generateId = () => `ID #${Date.now().toString().slice(-4)}`
 
@@ -113,16 +114,24 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     async function loadData() {
         setLoading(true)
         try {
-            const [staffData, productData, categoriesData, customerData] = await Promise.all([
+            // Dynamically import settings action
+            const { getStoreSettings } = await import('@/app/actions/settings')
+
+            const [staffData, productData, categoriesData, customerData, settingsData] = await Promise.all([
                 getStaffList(),
                 getInventory(),
                 getCategories(),
-                getCustomers()
+                getCustomers(),
+                getStoreSettings()
             ])
             setStaff(staffData)
             setProducts(productData)
             setCategories(categoriesData)
             setAllCustomers(customerData)
+
+            if (settingsData && settingsData.taxRate) {
+                setTaxRate(settingsData.taxRate / 100)
+            }
         } catch (e) {
             console.error("Load failed", e);
         }
@@ -376,7 +385,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         return Math.min(appliedDiscount.value, subtotal)
     }, [subtotal, appliedDiscount])
     const taxableAmount = Math.max(0, subtotal - discountAmount)
-    const tax = taxableAmount * 0.13
+    const tax = taxableAmount * taxRate
     const total = taxableAmount + tax
 
     // Discounts
@@ -767,7 +776,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 </div>
                             )}
                             <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                                <span>HST (13%)</span>
+                                <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
                                 <span>${tax.toFixed(2)}</span>
                             </div>
                             <div className="border-t border-gray-200 my-1 pt-1 flex justify-between text-sm font-black text-gray-900">
@@ -1118,11 +1127,11 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                     <div className="space-y-1 text-right">
                         <div className="flex justify-between">
                             <span>Subtotal</span>
-                            <span>${(lastOrder.total / 1.13).toFixed(2)}</span>
+                            <span>${(lastOrder.subtotal).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span>HST (13%)</span>
-                            <span>${(lastOrder.total - (lastOrder.total / 1.13)).toFixed(2)}</span>
+                            <span>Tax ({Math.round((lastOrder.tax / lastOrder.subtotal) * 100) || 13}%)</span>
+                            <span>${(lastOrder.tax).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-black text-lg mt-2">
                             <span>TOTAL</span>

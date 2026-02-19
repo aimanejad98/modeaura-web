@@ -272,6 +272,43 @@ export default function BrandingPage() {
                                 className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
                             />
                         </div>
+
+                        {/* Auto-Tax Province Selector */}
+                        <div className="space-y-3 pt-4 border-t border-[var(--mocha-border)]/50">
+                            <div className="flex justify-between items-end">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Store Province (Auto-Set Tax)</label>
+                                <span className="text-[9px] font-bold text-[var(--gold)] cursor-pointer hover:underline" onClick={() => {
+                                    // Reset to Ontario default if needed
+                                    setSettings({ ...settings, taxRate: 13 })
+                                }}>Reset to Ontario (13%)</span>
+                            </div>
+                            <select
+                                className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium cursor-pointer"
+                                onChange={(e) => {
+                                    const rate = parseFloat(e.target.value);
+                                    if (!isNaN(rate)) {
+                                        setSettings({ ...settings, taxRate: rate });
+                                    }
+                                }}
+                                defaultValue=""
+                            >
+                                <option value="" disabled>Select Province to Auto-Set Rates...</option>
+                                <option value="5">Alberta (5% GST)</option>
+                                <option value="12">British Columbia (5% GST + 7% PST = 12%)</option>
+                                <option value="12">Manitoba (5% GST + 7% PST = 12%)</option>
+                                <option value="15">New Brunswick (15% HST)</option>
+                                <option value="15">Newfoundland and Labrador (15% HST)</option>
+                                <option value="5">Northwest Territories (5% GST)</option>
+                                <option value="15">Nova Scotia (15% HST)</option>
+                                <option value="5">Nunavut (5% GST)</option>
+                                <option value="13">Ontario (13% HST)</option>
+                                <option value="15">Prince Edward Island (15% HST)</option>
+                                <option value="14.975">Quebec (5% GST + 9.975% QST ≈ 14.975%)</option>
+                                <option value="11">Saskatchewan (5% GST + 6% PST = 11%)</option>
+                                <option value="5">Yukon (5% GST)</option>
+                            </select>
+                            <p className="text-[9px] text-gray-400 font-medium ml-1">Selecting a province will automatically update your HST Rate below.</p>
+                        </div>
                     </div>
                 </div>
 
