@@ -115,7 +115,7 @@ export function printOnlineReceipt(order: any) {
           <span>$${subtotal.toFixed(2)}</span>
         </div>
         <div class="total-row text-gray-400">
-          <span>Logistics & Handling</span>
+          <span>Shipping</span>
           <span>$${shipping.toFixed(2)}</span>
         </div>
         <div class="total-row text-gray-400">

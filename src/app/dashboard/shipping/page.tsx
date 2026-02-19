@@ -109,7 +109,7 @@ export default function ShippingHub() {
         <div className="space-y-8 animate-in fade-in duration-700">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h2 className="text-4xl font-display font-medium text-[var(--text-primary)] italic">Logistics Hub</h2>
+                    <h2 className="text-4xl font-display font-medium text-[var(--text-primary)] italic">Shipping Hub</h2>
                     <p className="text-[var(--text-secondary)] font-medium mt-1 uppercase text-[10px] tracking-[0.2em]">Manual Fulfillment, Tracking & Delay Monitoring</p>
                 </div>
 
@@ -183,7 +183,7 @@ export default function ShippingHub() {
                             <div className="p-12 text-center border-2 border-dashed border-[var(--mocha-border)] rounded-3xl opacity-50">
                                 <Package className="mx-auto text-[var(--text-muted)] mb-4" size={40} />
                                 <p className="font-display italic text-lg text-[var(--text-primary)]">All Clear</p>
-                                <p className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mt-1">No orders pending logistics</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] mt-1">No orders pending shipping</p>
                             </div>
                         )}
                     </div>
@@ -239,7 +239,7 @@ export default function ShippingHub() {
                             <div className="w-24 h-24 bg-[var(--mocha-bg)] rounded-full flex items-center justify-center text-4xl mb-8 border border-[var(--mocha-border)]">
                                 🚚
                             </div>
-                            <h3 className="text-2xl font-display font-medium text-[var(--text-primary)] italic">Logistics Hub</h3>
+                            <h3 className="text-2xl font-display font-medium text-[var(--text-primary)] italic">Shipping Hub</h3>
                             <p className="text-sm text-[var(--text-secondary)] mt-3 max-w-xs font-medium">Select a pending shipment to generate internal branding or update status.</p>
                             <div className="mt-8 flex gap-2">
                                 <div className="w-2 h-2 rounded-full bg-[var(--gold)] animate-bounce"></div>

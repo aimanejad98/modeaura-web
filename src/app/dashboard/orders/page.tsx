@@ -432,7 +432,7 @@ export default function OrdersPage() {
             )}
 
             <DashboardPageGuide
-                pageName={{ en: "Logistics Hub", ar: "مركز اللوجستيات" }}
+                pageName={{ en: "Shipping Hub", ar: "مركز الشحن" }}
                 steps={[
                     {
                         title: { en: "Operations Stream", ar: "خط العمليات" },
