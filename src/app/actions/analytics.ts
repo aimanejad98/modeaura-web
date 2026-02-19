@@ -4,11 +4,13 @@ import prisma from "@/lib/db";
 
 export async function getSalesAnalytics() {
     try {
+        console.log('📈 [Analytics] Generating sales analytics...');
         // Fetch last 14 days of orders
         const orders = await prisma.order.findMany({
-            orderBy: { createdAt: 'desc' },
+            orderBy: { date: 'asc' },
             take: 100 // Adjust as needed
         });
+        console.log(`✅ [Analytics] Processing ${orders.length} orders for charts`);
 
         // Group by date
         const groupedData: Record<string, { date: string, cash: number, card: number, total: number }> = {};

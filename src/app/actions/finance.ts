@@ -171,11 +171,17 @@ export async function checkAndRenewExpenses() {
 
 export async function getDashboardStats() {
     try {
+        console.log('📊 [Finance] Fetching dashboard stats...');
         const orders = await prisma.order.findMany();
+        console.log(`✅ [Finance] Found ${orders.length} orders`);
+
         const staffMembers = await prisma.staff.findMany({
             include: { shifts: true }
         });
+        console.log(`✅ [Finance] Found ${staffMembers.length} staff members`);
+
         const customers = await prisma.customer.count();
+        console.log(`✅ [Finance] Counted ${customers} customers`);
 
         const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.total, 0);
         const totalSales = orders.length;

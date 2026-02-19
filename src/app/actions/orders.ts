@@ -5,10 +5,16 @@ import { revalidatePath } from "next/cache";
 
 export async function getOrders() {
     try {
+        console.log('📜 [Orders] Fetching orders...');
         const orders = await prisma.order.findMany({
-            orderBy: { createdAt: 'desc' },
-            include: { customerRef: true }
+            include: {
+                payment: true
+            },
+            orderBy: {
+                date: 'desc'
+            }
         });
+        console.log(`✅ [Orders] Found ${orders.length} orders`);
         return JSON.parse(JSON.stringify(orders));
     } catch (error) {
         console.error('[Orders] Fetch failed:', error);

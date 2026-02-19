@@ -35,16 +35,12 @@ async function generateSku(categoryId: string): Promise<string> {
 
 export async function getProducts() {
     try {
+        console.log('🧥 [Inventory] Fetching products...');
         const products = await prisma.product.findMany({
-            include: {
-                category: { include: { parent: true } },
-                sale: true
-            },
-            orderBy: { createdAt: 'desc' },
-            where: {
-                showOnWebsite: true
-            }
+            include: { category: true, variants: true },
+            orderBy: { createdAt: 'desc' }
         });
+        console.log(`✅ [Inventory] Found ${products.length} products`);
 
         // Ensure data is serializable for server components
         return JSON.parse(JSON.stringify(products));
