@@ -100,6 +100,7 @@ export default function DashboardLayout({
     const [password, setPassword] = useState('')
     const [loginError, setLoginError] = useState('')
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
 
@@ -283,31 +284,33 @@ export default function DashboardLayout({
             )}
 
             {!isPosPage && (
-                <aside className={`print:hidden fixed inset-y-0 left-0 w-72 bg-[#1B2936] text-white flex flex-col z-50 transition-transform duration-500 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-                    <div className="p-8 shrink-0 text-center border-b border-white/[0.05]">
+                <aside className={`print:hidden fixed inset-y-0 left-0 ${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-[#1B2936] text-white flex flex-col z-50 transition-all duration-500 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+                    <div className={`p-8 ${isSidebarCollapsed ? 'px-2' : ''} shrink-0 text-center border-b border-white/[0.05]`}>
                         <Link href="/dashboard" className="flex flex-col items-center group">
                             {settings?.logo ? (
                                 <img
                                     src={settings.logo}
                                     alt={settings?.storeName || 'Atelier'}
-                                    className="h-16 w-auto object-contain transition-opacity duration-300 group-hover:opacity-90"
+                                    className={`${isSidebarCollapsed ? 'h-8' : 'h-16'} w-auto object-contain transition-all duration-300 group-hover:opacity-90`}
                                 />
                             ) : (
                                 <img
                                     src="/logo_v3_flat.png"
                                     alt="Mode Aura"
-                                    className="h-12 w-auto object-contain brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity"
+                                    className={`${isSidebarCollapsed ? 'h-6' : 'h-12'} w-auto object-contain brightness-0 invert opacity-90 group-hover:opacity-100 transition-all`}
                                 />
                             )}
-                            <div className="bg-[var(--gold)]/10 px-3 py-1 rounded-full border border-[var(--gold)]/20 mt-3">
-                                <span className="text-[7px] font-black uppercase text-[var(--gold)] tracking-[0.4em]">
-                                    ATELIER CONTROL
-                                </span>
-                            </div>
+                            {!isSidebarCollapsed && (
+                                <div className="bg-[var(--gold)]/10 px-3 py-1 rounded-full border border-[var(--gold)]/20 mt-3">
+                                    <span className="text-[7px] font-black uppercase text-[var(--gold)] tracking-[0.4em]">
+                                        ATELIER CONTROL
+                                    </span>
+                                </div>
+                            )}
                         </Link>
                     </div>
 
-                    <nav className="flex-1 overflow-y-auto px-6 py-8 space-y-4 custom-scrollbar">
+                    <nav className={`flex-1 overflow-y-auto ${isSidebarCollapsed ? 'px-2' : 'px-6'} py-8 space-y-4 custom-scrollbar`}>
                         {navSections.map((section, idx) => {
                             const sectionItems = section.items.filter(item => item.roles.includes(currentUser.role))
                             if (sectionItems.length === 0) return null
@@ -315,20 +318,21 @@ export default function DashboardLayout({
 
                             return (
                                 <div key={idx} className="space-y-1">
-                                    {section.title && (
+                                    {section.title && !isSidebarCollapsed && (
                                         <button onClick={() => toggleSection(section.title!)} className="w-full flex items-center justify-between px-4 py-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors group">
                                             <span>{section.title}</span>
                                             <span className={`text-[10px] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
                                         </button>
                                     )}
-                                    <div className={`space-y-1 overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100 py-1' : 'max-h-0 opacity-0 py-0'}`}>
+                                    <div className={`space-y-1 overflow-hidden transition-all duration-500 ease-in-out ${isExpanded || isSidebarCollapsed ? 'max-h-[800px] opacity-100 py-1' : 'max-h-0 opacity-0 py-0'}`}>
                                         {sectionItems.filter(i => !i.hidden).map((item) => {
                                             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
                                             return (
                                                 <Link
                                                     key={item.href}
                                                     href={item.href}
-                                                    className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all duration-300 ${isActive
+                                                    title={isSidebarCollapsed ? item.name : undefined}
+                                                    className={`group flex items-center ${isSidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-2.5'} rounded-xl text-[10px] font-black tracking-widest uppercase transition-all duration-300 ${isActive
                                                         ? 'bg-[var(--gold)] text-white shadow-lg shadow-[var(--gold)]/20'
                                                         : 'text-white/60 hover:bg-white/[0.05] hover:text-white'
                                                         }`}
@@ -336,7 +340,7 @@ export default function DashboardLayout({
                                                     <span className={`text-lg transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
                                                         {item.icon}
                                                     </span>
-                                                    {item.name}
+                                                    {!isSidebarCollapsed && item.name}
                                                 </Link>
                                             )
                                         })}
@@ -346,35 +350,45 @@ export default function DashboardLayout({
                         })}
                     </nav>
 
-                    <div className="p-6 border-t border-white/[0.05]">
-                        <div className="bg-white/5 rounded-3xl p-4 flex items-center gap-3 group">
+                    <div className={`${isSidebarCollapsed ? 'p-2' : 'p-6'} border-t border-white/[0.05]`}>
+                        <div className={`bg-white/5 rounded-3xl ${isSidebarCollapsed ? 'p-2 justify-center' : 'p-4'} flex items-center gap-3 group`}>
                             <div className="w-10 h-10 rounded-full bg-[var(--gold)]/10 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20 group-hover:scale-105 transition-transform shrink-0">
                                 {currentUser.name[0]}
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[9px] font-black uppercase tracking-widest truncate">{currentUser.name}</p>
-                                <p className="text-[7px] font-bold uppercase tracking-widest text-[var(--gold)] truncate">{currentUser.role}</p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                {currentUser.role === 'Admin' && (
-                                    <Link href="/dashboard/settings" title="Settings" className="p-2 text-white/20 hover:text-[var(--gold)] transition-colors">
-                                        <span className="text-base">⚙️</span>
-                                    </Link>
-                                )}
-                                <button onClick={handleLogout} title="Logout" className="p-2 text-white/20 hover:text-red-400 transition-colors">
-                                    <span className="text-base">🚪</span>
-                                </button>
-                            </div>
+                            {!isSidebarCollapsed && (
+                                <>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[9px] font-black uppercase tracking-widest truncate">{currentUser.name}</p>
+                                        <p className="text-[7px] font-bold uppercase tracking-widest text-[var(--gold)] truncate">{currentUser.role}</p>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        {currentUser.role === 'Admin' && (
+                                            <Link href="/dashboard/settings" title="Settings" className="p-2 text-white/20 hover:text-[var(--gold)] transition-colors">
+                                                <span className="text-base">⚙️</span>
+                                            </Link>
+                                        )}
+                                        <button onClick={handleLogout} title="Logout" className="p-2 text-white/20 hover:text-red-400 transition-colors">
+                                            <span className="text-base">🚪</span>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </aside>
             )}
 
-            <main className={`flex-1 flex flex-col min-w-0 bg-[#FAF9F6] relative ${!isPosPage ? 'lg:ml-72' : ''}`}>
+            <main className={`flex-1 flex flex-col min-w-0 bg-[#FAF9F6] relative transition-all duration-500 ${!isPosPage ? (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72') : ''}`}>
                 {!isPosPage && (
                     <header className={`print:hidden sticky top-0 z-40 bg-white/60 backdrop-blur-2xl border-b border-[#E8E2D9] px-6 lg:px-12 h-24 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-xl shadow-black/[0.03]' : ''}`}>
                         <div className="flex items-center gap-6">
-                            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-3 rounded-2xl bg-white border border-[#E8E2D9] shadow-sm">
+                            <button
+                                onClick={() => {
+                                    if (window.innerWidth < 1024) setIsSidebarOpen(true)
+                                    else setIsSidebarCollapsed(!isSidebarCollapsed)
+                                }}
+                                className="p-3 rounded-2xl bg-white border border-[#E8E2D9] shadow-sm hover:bg-gray-50 transition-colors"
+                            >
                                 <Menu size={20} />
                             </button>
                             <div className="hidden sm:block">

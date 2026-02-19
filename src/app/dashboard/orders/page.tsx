@@ -255,7 +255,7 @@ export default function OrdersPage() {
                                         </div>
                                     </td>
                                     <td className="p-5 text-right">
-                                        <div className="flex items-center justify-end gap-3 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+                                        <div className="flex items-center justify-end gap-3 transition-all duration-300">
                                             {(order.status === 'Pending' || order.status === 'Paid') && (
                                                 <button
                                                     onClick={() => startFetching(order)}
@@ -288,6 +288,64 @@ export default function OrdersPage() {
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Mobile/Tablet Card View */}
+                    <div className="lg:hidden divide-y divide-gray-100">
+                        {filteredOrders.map((order) => (
+                            <div key={order.id} className="p-6 space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-1">
+                                        <code className="text-[10px] font-mono bg-gray-100 px-2 py-1 rounded text-gray-500 font-bold">{order.orderId}</code>
+                                        <div className="font-bold text-gray-900">{order.customer.split('|')[0].trim()}</div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{order.city || 'Windsor'} • {new Date(order.date).toLocaleDateString()}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-black text-[var(--gold)] italic">CAD ${(parseFloat(order.total) || 0).toFixed(2)}</div>
+                                        <span className={`inline-block mt-2 badge px-3 py-1 text-[8px] font-black uppercase tracking-widest ${(order.status === 'Pending' || order.status === 'Paid') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                            order.status === 'Fetching' ? 'bg-sky-50 text-sky-600 border border-sky-100 animate-pulse' :
+                                                order.status === 'Packaging' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                                    order.status === 'Shipped' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                                                        'bg-gray-50 text-gray-500 border border-gray-100'
+                                            }`}>
+                                            {order.status}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-2">
+                                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded">
+                                        {order.items?.length || 0} ITEMS
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => printOnlineReceipt(order)} className="p-2 text-gray-400">🖨️</button>
+                                        {(order.status === 'Pending' || order.status === 'Paid') && (
+                                            <button
+                                                onClick={() => startFetching(order)}
+                                                className="px-4 py-2 bg-[#1B2936] text-white rounded-xl text-[9px] font-black uppercase tracking-widest"
+                                            >
+                                                Start Picking
+                                            </button>
+                                        )}
+                                        {order.status === 'Fetching' && (
+                                            <button
+                                                onClick={() => setFetchingOrder(order)}
+                                                className="px-4 py-2 bg-sky-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest"
+                                            >
+                                                Resume
+                                            </button>
+                                        )}
+                                        {order.status === 'Packaging' && (
+                                            <button
+                                                onClick={() => handleStatusUpdate(order.id, 'Ready for Shipping')}
+                                                className="px-4 py-2 bg-amber-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest"
+                                            >
+                                                Finalize
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
 
                     {/* Empty State */}
                     {filteredOrders.length === 0 && (

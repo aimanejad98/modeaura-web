@@ -508,7 +508,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
     return (
         <>
-            <div className="flex flex-col lg:flex-row h-[100dvh] gap-6 bg-[#F8F9FB] p-4 lg:p-8 overflow-y-auto lg:overflow-hidden font-sans print:hidden">
+            <div className="flex flex-col lg:flex-row h-[100dvh] gap-4 lg:gap-6 bg-[#F8F9FB] p-4 lg:p-8 overflow-hidden font-sans print:hidden">
                 {/* LEFT Side (Product Browser) */}
                 <div className="flex-1 flex flex-col gap-6 lg:overflow-hidden min-h-[500px]">
                     {/* Header */}
@@ -559,7 +559,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 </div>
 
                 {/* RIGHT Side (Cart) */}
-                <div className="w-full lg:w-[450px] bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 flex flex-col lg:h-full lg:sticky lg:top-0 overflow-hidden shrink-0 pb-32 lg:pb-0">
+                <div className="w-full lg:w-[450px] bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 flex flex-col h-[50dvh] lg:h-full overflow-hidden shrink-0 relative transition-all duration-500">
                     <div className="p-8 border-b border-gray-100 bg-gray-50/30">
                         <div className="flex justify-between items-end mb-6">
                             <div>
@@ -588,7 +588,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-8 space-y-4 bg-white min-h-[300px]">
+                    <div className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-4 bg-white custom-scrollbar">
                         {cart.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-6 py-12">
                                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-4xl">🛒</div>
@@ -628,7 +628,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                         ))}
                     </div>
 
-                    <div className="p-8 bg-gray-50/50 border-t border-gray-100 mt-auto sticky bottom-0 lg:static z-10 glass-effect lg:glass-none">
+                    <div className="p-4 lg:p-8 bg-gray-50/50 border-t border-gray-100 z-10 glass-effect">
                         {/* Discount Input */}
                         <div className="mb-4">
                             {appliedDiscount ? (
@@ -670,8 +670,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 <span>${total.toFixed(2)}</span>
                             </div>
                         </div>
-                        <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full py-5 gold-btn rounded-2xl text-[12px] shadow-xl disabled:opacity-50 disabled:filter-none transition-all">Finalize Transaction</button>
-                        {cart.length > 0 && <button onClick={() => setCart([])} className="w-full mt-4 py-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-red-500 transition-colors">Discard Draft Order</button>}
+                        <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full py-4 lg:py-5 gold-btn rounded-2xl text-[12px] shadow-xl disabled:opacity-50 disabled:filter-none transition-all">Finalize Transaction</button>
+                        {cart.length > 0 && <button onClick={() => setCart([])} className="w-full mt-2 lg:mt-4 py-2 lg:py-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-red-500 transition-colors">Discard Draft Order</button>}
                     </div>
                 </div>
 
