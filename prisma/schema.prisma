@@ -288,6 +288,7 @@ model StoreSetting {
   seoDescription String?
   seoTitle       String?
   announcement   String?  @default("Complimentary Shipping on Orders Above $250")
+  ogImage        String?
 }
 
 model NavItem {

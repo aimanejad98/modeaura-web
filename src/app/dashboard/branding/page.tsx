@@ -47,7 +47,8 @@ export default function BrandingPage() {
             seoTitle: settings.seoTitle,
             seoDescription: settings.seoDescription,
             instagram: settings.instagram,
-            facebook: settings.facebook
+            facebook: settings.facebook,
+            ogImage: settings.ogImage
         });
 
         if (result.success) {
@@ -58,7 +59,7 @@ export default function BrandingPage() {
         setSaving(false);
     }
 
-    async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'favicon') {
+    async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'favicon' | 'ogImage') {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -310,9 +311,9 @@ export default function BrandingPage() {
                             <p className="text-[9px] text-gray-500 font-medium ml-1">Transparent PNG recommended (min. 400x400px)</p>
                         </div>
 
-                        {/* Favicon Upload */}
+                        {/* Favicon Upload (The Icon) */}
                         <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Browser Favicon</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Search Result Icon (Favicon)</label>
                             <div className="relative group aspect-square max-w-[200px] bg-gray-50 border border-dashed border-[var(--mocha-border)] rounded-[2rem] flex items-center justify-center overflow-hidden transition-all hover:border-[var(--gold)]/50">
                                 {settings?.favicon ? (
                                     <>
@@ -334,7 +335,34 @@ export default function BrandingPage() {
                                     </label>
                                 )}
                             </div>
-                            <p className="text-[9px] text-gray-500 font-medium ml-1">Square .ico or .png (recommended 32x32px)</p>
+                            <p className="text-[9px] text-gray-500 font-medium ml-1">This appears next to your URL in Google results. (Square 32x32px recommended)</p>
+                        </div>
+
+                        {/* Social Image Upload (The Picture) */}
+                        <div className="md:col-span-2 space-y-4 pt-6 border-t border-[var(--mocha-border)]/50">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Social Share Image (Search Picture)</label>
+                            <div className="relative group aspect-[1200/630] w-full bg-gray-50 border border-dashed border-[var(--mocha-border)] rounded-[2rem] flex items-center justify-center overflow-hidden transition-all hover:border-[var(--gold)]/50">
+                                {settings?.ogImage ? (
+                                    <>
+                                        <img src={settings.ogImage} alt="Social Image Preview" className="max-h-full max-w-full object-contain" />
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <label className="cursor-pointer flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md transition-all">
+                                                <Upload size={14} /> Replace Image
+                                                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'ogImage')} />
+                                            </label>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <label className="cursor-pointer flex flex-col items-center gap-4 group/btn">
+                                        <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-gray-400 group-hover/btn:text-[var(--gold)] group-hover/btn:scale-110 transition-all">
+                                            <Upload size={24} strokeWidth={1.5} />
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover/btn:text-[var(--text-primary)] transition-colors">Upload Search Picture</span>
+                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'ogImage')} />
+                                    </label>
+                                )}
+                            </div>
+                            <p className="text-[9px] text-gray-500 font-medium ml-1">The image that appears when sharing links on Instagram/WhatsApp/Facebook. (1200x630px recommended)</p>
                         </div>
                     </div>
                 </div>
