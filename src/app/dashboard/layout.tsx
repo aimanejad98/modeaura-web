@@ -113,17 +113,26 @@ export default function DashboardLayout({
 
     const hapticEase = 'var(--haptic-ease)'
 
+    // Initial Load
     useEffect(() => {
         const savedUser = localStorage.getItem('dashboard_user')
-        if (savedUser) setCurrentUser(JSON.parse(savedUser))
+        if (savedUser) {
+            try {
+                setCurrentUser(JSON.parse(savedUser))
+            } catch (e) {
+                console.error('Failed to parse saved user:', e)
+            }
+        }
         loadStaff()
+    }, []) // Run once on mount
 
+    // AFK Lock & Scroll tracking
+    useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 10)
-            setLastActivity(Date.now()) // Track scroll as activity
+            setLastActivity(Date.now())
         }
 
-        // AFK Lock: Track activity
         const trackActivity = () => setLastActivity(Date.now())
         window.addEventListener('mousemove', trackActivity)
         window.addEventListener('mousedown', trackActivity)
@@ -131,12 +140,11 @@ export default function DashboardLayout({
         window.addEventListener('touchstart', trackActivity)
         window.addEventListener('scroll', handleScroll)
 
-        // AFK Lock: Periodic check
         const idleCheck = setInterval(() => {
             if (currentUser && !isLocked && Date.now() - lastActivity > IDLE_TIMEOUT) {
                 setIsLocked(true)
             }
-        }, 30000) // Check every 30 seconds
+        }, 30000)
 
         return () => {
             window.removeEventListener('mousemove', trackActivity)
@@ -146,7 +154,7 @@ export default function DashboardLayout({
             window.removeEventListener('scroll', handleScroll)
             clearInterval(idleCheck)
         }
-    }, [currentUser, isLocked, lastActivity])
+    }, [currentUser, isLocked, lastActivity]) // Activity tracking logic
 
     useEffect(() => {
         setIsSidebarOpen(false)

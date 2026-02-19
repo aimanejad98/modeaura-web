@@ -6,7 +6,9 @@ import { revalidatePath } from 'next/cache'
 // Get store settings
 export async function getStoreSettings() {
     try {
-        let settings = await prisma.storeSetting.findFirst()
+        console.log('🌐 [Settings] Fetching store settings...');
+        const settings = await prisma.storeSetting.findFirst();
+        console.log(`✅ [Settings] Found settings: ${settings?.storeName || 'Default'}`);
         if (!settings) {
             // Create default settings
             settings = await prisma.storeSetting.create({
