@@ -57,24 +57,27 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [terminalStatus, setTerminalStatus] = useState<string>('Disconnected')
     const [paymentStatus, setPaymentStatus] = useState<string>('')
 
+    // Initial Load: Run exactly once
     useEffect(() => {
         loadData()
         initializeTerminal()
+    }, [])
 
-        // AFK Lock: Track activity
+    // AFK Lock: Track activity separately
+    useEffect(() => {
         const trackActivity = () => setLastActivity(Date.now())
         window.addEventListener('mousemove', trackActivity)
         window.addEventListener('mousedown', trackActivity)
         window.addEventListener('keypress', trackActivity)
         window.addEventListener('touchstart', trackActivity)
 
-        // AFK Lock: Check for idle timeout every 10 seconds
+        // Periodic check for idle timeout
         const idleCheck = setInterval(() => {
             if (selectedStaff && Date.now() - lastActivity > IDLE_TIMEOUT) {
                 // Return to login screen
                 setSelectedStaff(null)
-                setAttemptingUser(null) // Reset any half-finished login
-                setTenderedAmount('') // Reset payment state for safety
+                setAttemptingUser(null)
+                setTenderedAmount('')
                 setShowPaymentModal(false)
             }
         }, 10000)
@@ -86,7 +89,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             window.removeEventListener('touchstart', trackActivity)
             clearInterval(idleCheck)
         }
-    }, [selectedStaff, lastActivity]) // Re-run when staff logs in or activity happens
+    }, [selectedStaff, lastActivity, IDLE_TIMEOUT])
 
     async function loadData() {
         setLoading(true)

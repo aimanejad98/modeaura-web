@@ -50,10 +50,12 @@ export async function verifyAccess(staffId: string, password?: string) {
 
 export async function getInventory() {
     try {
+        console.log('📦 [POS] Fetching global inventory...');
         const products = await prisma.product.findMany({
             include: { category: true },
             orderBy: { name: 'asc' }
         });
+        console.log(`✅ [POS] Found ${products.length} products`);
 
         // Group by name and take the first one (representative variant)
         const uniqueProducts = [];
