@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { getInventory, getStaffList, verifyAccess, getProductBySku, getProductVariants } from '@/app/actions/pos'
 import { getCategories } from '@/app/actions/categories'
-import { X, RefreshCw, Wifi, WifiOff, CreditCard } from 'lucide-react'
+import { createOrder } from '@/app/actions/orders'
+import { getCustomers, addCustomer, updateCustomer } from '@/app/actions/customers'
+import { X, RefreshCw, Wifi, WifiOff, CreditCard, UserPlus, Search, User } from 'lucide-react'
 import Link from 'next/link'
 import { loadStripeTerminal } from '@stripe/terminal-js';
 import { createTerminalPaymentIntent, captureTerminalPayment } from '@/app/actions/stripe-terminal'
@@ -57,6 +59,15 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [terminalStatus, setTerminalStatus] = useState<string>('Disconnected')
     const [paymentStatus, setPaymentStatus] = useState<string>('')
 
+    // Customer Management State
+    const [allCustomers, setAllCustomers] = useState<any[]>([])
+    const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
+    const [showCustomerModal, setShowCustomerModal] = useState(false)
+    const [customerForm, setCustomerForm] = useState({
+        name: '', email: '', phone: '', address: '', city: '', province: '', postalCode: ''
+    })
+    const [customerSearch, setCustomerSearch] = useState('')
+
     // Initial Load: Run exactly once
     useEffect(() => {
         loadData()
@@ -93,14 +104,20 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
     async function loadData() {
         setLoading(true)
-        const [staffData, productData, categoriesData] = await Promise.all([
-            getStaffList(),
-            getInventory(),
-            getCategories()
-        ])
-        setStaff(staffData)
-        setProducts(productData)
-        setCategories(categoriesData)
+        try {
+            const [staffData, productData, categoriesData, customerData] = await Promise.all([
+                getStaffList(),
+                getInventory(),
+                getCategories(),
+                getCustomers()
+            ])
+            setStaff(staffData)
+            setProducts(productData)
+            setCategories(categoriesData)
+            setAllCustomers(customerData)
+        } catch (e) {
+            console.error("Load failed", e);
+        }
         setLoading(false)
     }
 
@@ -399,7 +416,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             const { createOrder } = await import('@/app/actions/orders')
             const order = await createOrder({
                 orderId,
-                customer: selectedCustomerType,
+                customer: selectedCustomer?.name || selectedCustomerType,
+                customerId: selectedCustomer?.id,
                 total,
                 date: new Date().toISOString().split('T')[0],
                 items: cart.map(item => ({ name: item.name, qty: item.qty, price: item.price })),
@@ -408,6 +426,9 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 change: changeDue,
                 source: 'POS',
                 status: 'Completed',
+                address: selectedCustomer?.address,
+                city: selectedCustomer?.city,
+                postalCode: selectedCustomer?.postalCode,
                 discountCode: appliedDiscount?.code,
                 discountAmount: discountAmount
             })
@@ -508,7 +529,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
     return (
         <>
-            <div className="flex flex-col lg:flex-row h-[100dvh] gap-4 lg:gap-6 bg-[#F8F9FB] p-4 lg:p-8 overflow-hidden font-sans print:hidden">
+            <div className="flex flex-col lg:flex-row h-[100dvh] gap-3 lg:gap-4 bg-[#F8F9FB] p-2 lg:p-4 overflow-hidden font-sans print:hidden">
                 {/* LEFT Side (Product Browser) */}
                 <div className="flex-1 flex flex-col gap-6 lg:overflow-hidden min-h-[500px]">
                     {/* Header */}
@@ -559,7 +580,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 </div>
 
                 {/* RIGHT Side (Cart) */}
-                <div className="w-full lg:w-[450px] bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 flex flex-col h-[50dvh] lg:h-full overflow-hidden shrink-0 relative transition-all duration-500">
+                <div className="w-full lg:w-[400px] bg-white rounded-[2rem] shadow-2xl border border-gray-100 flex flex-col h-[50dvh] lg:h-full overflow-hidden shrink-0 relative transition-all duration-500">
                     <div className="p-8 border-b border-gray-100 bg-gray-50/30">
                         <div className="flex justify-between items-end mb-6">
                             <div>
@@ -570,34 +591,96 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                         </div>
                         {/* Selected Client Dropdown */}
                         <div className="relative">
-                            <button onClick={() => setCustomerDropdownOpen(!customerDropdownOpen)} className={`w-full bg-white border ${customerDropdownOpen ? 'border-[var(--gold)]' : 'border-gray-200'} rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:border-[var(--gold)] transition-all shadow-sm`}>
-                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 text-xl">👤</div>
-                                <div className="flex-1 text-left">
-                                    <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Selected Client</p>
-                                    <p className="text-sm font-bold text-gray-900">{selectedCustomerType}</p>
-                                </div>
-                                <span className="text-gray-400 text-xs text-xs">▼</span>
-                            </button>
+                            <div className="flex gap-2">
+                                <button onClick={() => setCustomerDropdownOpen(!customerDropdownOpen)} className={`flex-1 bg-white border ${customerDropdownOpen ? 'border-[var(--gold)]' : 'border-gray-200'} rounded-2xl p-3 flex items-center gap-3 cursor-pointer hover:border-[var(--gold)] transition-all shadow-sm`}>
+                                    <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 text-lg">
+                                        <User size={18} />
+                                    </div>
+                                    <div className="flex-1 text-left">
+                                        <p className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Client</p>
+                                        <p className="text-xs font-bold text-gray-900 truncate">
+                                            {selectedCustomer?.name || selectedCustomerType}
+                                        </p>
+                                    </div>
+                                    <span className="text-gray-400 text-[10px]">▼</span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (selectedCustomer) {
+                                            setCustomerForm({
+                                                name: selectedCustomer.name || '',
+                                                email: selectedCustomer.email || '',
+                                                phone: selectedCustomer.phone || '',
+                                                address: selectedCustomer.address || '',
+                                                city: selectedCustomer.city || '',
+                                                province: selectedCustomer.province || '',
+                                                postalCode: selectedCustomer.postalCode || ''
+                                            })
+                                        } else {
+                                            setCustomerForm({ name: '', email: '', phone: '', address: '', city: '', province: '', postalCode: '' })
+                                        }
+                                        setShowCustomerModal(true)
+                                    }}
+                                    className="p-3 bg-gray-900 text-white rounded-2xl hover:bg-[var(--gold)] transition-all shadow-lg"
+                                    title="Add/Edit Customer Details"
+                                >
+                                    <UserPlus size={18} />
+                                </button>
+                            </div>
+
                             {customerDropdownOpen && (
                                 <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-gray-100 shadow-2xl rounded-2xl z-20 overflow-hidden ring-1 ring-black/5 animate-in slide-in-from-top-2 duration-300">
-                                    {customerTypes.map(type => (
-                                        <button key={type} onClick={() => { setSelectedCustomerType(type); setCustomerDropdownOpen(false); }} className="w-full text-left px-6 py-4 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black transition-colors border-b border-gray-50 last:border-0 uppercase tracking-widest">{type}</button>
-                                    ))}
+                                    <div className="p-3 bg-gray-50 border-b border-gray-100">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                            <input
+                                                autoFocus
+                                                type="text"
+                                                placeholder="Search customers..."
+                                                value={customerSearch}
+                                                onChange={(e) => setCustomerSearch(e.target.value)}
+                                                className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-[11px] font-bold outline-none focus:border-[var(--gold)]"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="max-h-[250px] overflow-y-auto">
+                                        {customerTypes.map(type => (
+                                            <button key={type} onClick={() => { setSelectedCustomerType(type); setSelectedCustomer(null); setCustomerDropdownOpen(false); }} className="w-full text-left px-5 py-3 text-[10px] font-bold text-gray-500 hover:bg-gray-50 hover:text-black transition-colors border-b border-gray-50 last:border-0 uppercase tracking-widest">{type}</button>
+                                        ))}
+                                        {allCustomers.filter(c =>
+                                            c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                                            c.phone?.includes(customerSearch) ||
+                                            c.email?.toLowerCase().includes(customerSearch.toLowerCase())
+                                        ).map(customer => (
+                                            <button
+                                                key={customer.id}
+                                                onClick={() => {
+                                                    setSelectedCustomer(customer);
+                                                    setSelectedCustomerType('Registered Client');
+                                                    setCustomerDropdownOpen(false);
+                                                }}
+                                                className="w-full text-left px-5 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <p className="text-[11px] font-black text-gray-900">{customer.name}</p>
+                                                <p className="text-[9px] text-gray-400 font-bold">{customer.phone || customer.email || 'No contact info'}</p>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-4 bg-white custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-3 bg-white custom-scrollbar">
                         {cart.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-6 py-12">
                                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-4xl">🛒</div>
                                 <p className="font-bold text-sm uppercase tracking-widest opacity-50">Empty Boutique Basket</p>
                             </div>
                         ) : cart.map((item: any) => (
-                            <div key={item.id} className="flex gap-5 p-4 rounded-2xl border border-gray-50 hover:bg-gray-50 hover:border-gray-200 transition-all group">
-                                <div className="w-20 h-20 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
-                                    {item.images ? <img src={item.images.split(',')[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" /> : <div className="w-full h-full flex items-center justify-center text-2xl">👕</div>}
+                            <div key={item.id} className="flex gap-4 p-3 rounded-2xl border border-gray-50 hover:bg-gray-50 hover:border-gray-200 transition-all group">
+                                <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                                    {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" /> : <div className="w-full h-full flex items-center justify-center text-xl">👕</div>}
                                 </div>
                                 <div className="flex-1 flex flex-col justify-between py-1">
                                     <div>
@@ -608,7 +691,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                         <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mt-1">{item.size || 'OS'} • {item.color || 'Standard'}</p>
                                     </div>
                                     <div className="flex justify-between items-end">
-                                        <p className="font-black text-lg text-gray-900">${(item.price * item.qty).toFixed(2)}</p>
+                                        <p className="font-black text-base text-gray-900">${(item.price * item.qty).toFixed(2)}</p>
                                         <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-3 py-1.5 shadow-sm">
                                             <button className="text-gray-400 hover:text-black font-black" onClick={() => setCart(cart.map(c => (c.id === item.id && c.variant === item.variant) ? { ...c, qty: Math.max(1, c.qty - 1) } : c))}>-</button>
                                             <span className="text-xs font-black min-w-4 text-center">{item.qty}</span>
@@ -665,12 +748,12 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 <span>HST (Windsor/Ontario 13%)</span>
                                 <span>${tax.toFixed(2)}</span>
                             </div>
-                            <div className="border-t border-gray-200 my-4 pt-4 flex justify-between text-3xl font-black text-gray-900">
-                                <span className="font-display italic text-2xl font-normal">Total</span>
+                            <div className="border-t border-gray-200 my-3 pt-3 flex justify-between text-2xl font-black text-gray-900">
+                                <span className="font-display italic text-xl font-normal">Total</span>
                                 <span>${total.toFixed(2)}</span>
                             </div>
                         </div>
-                        <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full py-4 lg:py-5 gold-btn rounded-2xl text-[12px] shadow-xl disabled:opacity-50 disabled:filter-none transition-all">Finalize Transaction</button>
+                        <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full py-4 gold-btn rounded-xl text-[11px] shadow-xl disabled:opacity-50 disabled:filter-none transition-all">Finalize Transaction</button>
                         {cart.length > 0 && <button onClick={() => setCart([])} className="w-full mt-2 lg:mt-4 py-2 lg:py-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-red-500 transition-colors">Discard Draft Order</button>}
                     </div>
                 </div>
@@ -850,6 +933,131 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 </button>
                                 <button onClick={() => setLastOrder(null)} className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-bold text-lg hover:bg-black transition-all shadow-lg shadow-gray-200">
                                     New Sale
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Customer Modal */}
+                {showCustomerModal && (
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                        <div className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+                            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <div>
+                                    <h3 className="text-2xl font-black text-gray-900">{selectedCustomer ? 'Edit Profile' : 'New Customer'}</h3>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Customer CRM Integration</p>
+                                </div>
+                                <button onClick={() => setShowCustomerModal(false)} className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black transition-colors text-2xl font-bold">×</button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-8 space-y-5 custom-scrollbar">
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div className="col-span-2">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                                        <input
+                                            type="text"
+                                            value={customerForm.name}
+                                            onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                                            placeholder="Jane Doe"
+                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[var(--gold)]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email</label>
+                                        <input
+                                            type="email"
+                                            value={customerForm.email}
+                                            onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                                            placeholder="jane@example.com"
+                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[var(--gold)]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Phone</label>
+                                        <input
+                                            type="tel"
+                                            value={customerForm.phone}
+                                            onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                                            placeholder="+1 (555) 000-0000"
+                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[var(--gold)]"
+                                        />
+                                    </div>
+                                    <div className="col-span-2 border-t border-gray-50 pt-5 mt-2">
+                                        <p className="text-[11px] font-black text-[var(--gold)] uppercase tracking-widest mb-5 italic">Mailing Address (Optional)</p>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Street Address</label>
+                                                <input
+                                                    type="text"
+                                                    value={customerForm.address}
+                                                    onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
+                                                    placeholder="123 Atelier Way"
+                                                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[var(--gold)]"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-3">
+                                                <div>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">City</label>
+                                                    <input
+                                                        type="text"
+                                                        value={customerForm.city}
+                                                        onChange={(e) => setCustomerForm({ ...customerForm, city: e.target.value })}
+                                                        placeholder="Windsor"
+                                                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-[var(--gold)]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Province</label>
+                                                    <input
+                                                        type="text"
+                                                        value={customerForm.province}
+                                                        onChange={(e) => setCustomerForm({ ...customerForm, province: e.target.value })}
+                                                        placeholder="ON"
+                                                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-[var(--gold)]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Postal</label>
+                                                    <input
+                                                        type="text"
+                                                        value={customerForm.postalCode}
+                                                        onChange={(e) => setCustomerForm({ ...customerForm, postalCode: e.target.value })}
+                                                        placeholder="N8X 1A1"
+                                                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-[var(--gold)]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-8 border-t border-gray-100 bg-gray-50/30">
+                                <button
+                                    onClick={async () => {
+                                        if (!customerForm.name) return alert('Name is required');
+                                        setLoading(true);
+                                        try {
+                                            let saved;
+                                            if (selectedCustomer) {
+                                                saved = await updateCustomer(selectedCustomer.id, customerForm as any);
+                                            } else {
+                                                saved = await addCustomer(customerForm as any);
+                                            }
+                                            setSelectedCustomer(saved);
+                                            setSelectedCustomerType('Registered Client');
+                                            setShowCustomerModal(false);
+                                            const updated = await getCustomers();
+                                            setAllCustomers(updated);
+                                        } catch (e) {
+                                            alert('Failed to save customer. Email might already exist.');
+                                        }
+                                        setLoading(false);
+                                    }}
+                                    className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-[var(--gold)] hover:scale-[1.02] transition-all shadow-xl"
+                                >
+                                    {selectedCustomer ? 'Sync Profile' : 'Register Customer'}
                                 </button>
                             </div>
                         </div>

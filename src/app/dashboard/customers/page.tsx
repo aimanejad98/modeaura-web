@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getCustomers, addCustomer, updateCustomer, deleteCustomer } from '@/app/actions/customers'
-import { Search, UserPlus, Mail, Phone, Tag, MoreVertical, Edit2, Trash2, Key, CheckCircle, Compass } from 'lucide-react'
+import { Search, UserPlus, Mail, Phone, Tag, MoreVertical, Edit2, Trash2, Key, CheckCircle, Compass, Copy } from 'lucide-react'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
 
 export default function CustomersPage() {
@@ -14,6 +14,7 @@ export default function CustomersPage() {
     const [newPassword, setNewPassword] = useState('')
     const [newCustomer, setNewCustomer] = useState({ name: '', email: '', phone: '', tags: '' })
     const [searchQuery, setSearchQuery] = useState('')
+    const [copyStatus, setCopyStatus] = useState<string | null>(null)
 
     useEffect(() => {
         loadCustomers()
@@ -90,12 +91,36 @@ export default function CustomersPage() {
                             className="bg-white border border-[#E8E2D9] rounded-2xl pl-12 pr-6 py-4 text-[10px] font-black tracking-widest uppercase focus:outline-none focus:ring-1 focus:ring-[var(--gold)] w-full sm:w-80 shadow-sm transition-all"
                         />
                     </div>
+                    <button onClick={() => {
+                        const emails = filteredCustomers.map(c => c.email).filter(Boolean);
+                        navigator.clipboard.writeText(emails.join(', '));
+                        setCopyStatus('Emails Copied!');
+                        setTimeout(() => setCopyStatus(null), 2000);
+                    }} className="flex items-center gap-2 px-6 bg-[#1B2936]/5 text-[#1B2936] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#1B2936] hover:text-white transition-all">
+                        <Copy size={14} />
+                        Emails
+                    </button>
+                    <button onClick={() => {
+                        const phones = filteredCustomers.map(c => c.phone).filter(Boolean);
+                        navigator.clipboard.writeText(phones.join(', '));
+                        setCopyStatus('Phones Copied!');
+                        setTimeout(() => setCopyStatus(null), 2000);
+                    }} className="flex items-center gap-2 px-6 bg-[#1B2936]/5 text-[#1B2936] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#1B2936] hover:text-white transition-all">
+                        <Copy size={14} />
+                        Numbers
+                    </button>
                     <button onClick={() => setShowAdd(true)} className="gold-btn h-[58px] px-10 rounded-2xl shadow-xl shadow-[var(--gold)]/20 hover:scale-[1.02] active:scale-95">
                         <UserPlus size={16} className="mr-3" />
                         New Entry
                     </button>
                 </div>
             </div>
+
+            {copyStatus && (
+                <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[200] bg-black text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
+                    {copyStatus}
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredCustomers.map((customer) => (
