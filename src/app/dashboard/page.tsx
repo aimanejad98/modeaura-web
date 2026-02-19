@@ -31,14 +31,32 @@ export default function DashboardPage() {
 
     async function loadData() {
         try {
-            console.log('Fetching dashboard data...');
+            console.log('🚀 Starting dashboard data fetch...');
+
+            console.time('📊 Stats Fetch');
+            const statsPromise = getDashboardStats().catch(e => { console.error('Stats error:', e); return null });
+
+            console.time('🤵 Staff Fetch');
+            const staffPromise = getStaff().catch(e => { console.error('Staff error:', e); return [] });
+
+            console.time('🧥 Products Fetch');
+            const productsPromise = getProducts().catch(e => { console.error('Products error:', e); return [] });
+
+            console.time('📜 Orders Fetch');
+            const ordersPromise = getOrders().catch(e => { console.error('Orders error:', e); return [] });
+
+            console.time('📈 Analytics Fetch');
+            const analyticsPromise = getSalesAnalytics().catch(e => { console.error('Analytics error:', e); return null });
+
             const [statsData, staffData, productsData, ordersData, analyticsData] = await Promise.all([
-                getDashboardStats().catch(e => { console.error('Stats error:', e); return null }),
-                getStaff().catch(e => { console.error('Staff error:', e); return [] }),
-                getProducts().catch(e => { console.error('Products error:', e); return [] }),
-                getOrders().catch(e => { console.error('Orders error:', e); return [] }),
-                getSalesAnalytics().catch(e => { console.error('Analytics error:', e); return null })
+                statsPromise.then(res => { console.timeEnd('📊 Stats Fetch'); return res }),
+                staffPromise.then(res => { console.timeEnd('🤵 Staff Fetch'); return res }),
+                productsPromise.then(res => { console.timeEnd('🧥 Products Fetch'); return res }),
+                ordersPromise.then(res => { console.timeEnd('📜 Orders Fetch'); return res }),
+                analyticsPromise.then(res => { console.timeEnd('📈 Analytics Fetch'); return res })
             ])
+
+            console.log('✅ Dashboard data fetch complete.');
 
             // Fallback defaults to prevent crash
             setStats(statsData || { totalRevenue: 0, totalSales: 0, avgOrderValue: 0, totalTraffic: 0 })
