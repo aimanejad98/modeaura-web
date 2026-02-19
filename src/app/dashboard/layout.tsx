@@ -363,7 +363,7 @@ export default function DashboardLayout({
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {currentUser.role === 'Admin' && (
-                                            <Link href="/dashboard/branding" title="Settings" className="p-2 text-white/20 hover:text-[var(--gold)] transition-colors">
+                                            <Link href="/dashboard/settings" title="Settings" className="p-2 text-white/20 hover:text-[var(--gold)] transition-colors">
                                                 <span className="text-lg">⚙️</span>
                                             </Link>
                                         )}

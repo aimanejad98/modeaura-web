@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { getStoreSettings, updateStoreSettings, updateStaffPassword, updateStaffInfo } from '@/app/actions/settings'
+import { registerTerminalReader, getTerminalReaders } from '@/app/actions/terminal'
 import MediaPicker from '@/components/MediaPicker'
-import { Phone, Mail, Instagram, Facebook, Globe } from 'lucide-react'
+import { Phone, Mail, Instagram, Facebook, Globe, MonitorSmartphone, Check, Megaphone, Loader2 } from 'lucide-react'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
 
 export default function SettingsPage() {
-    const [tab, setTab] = useState<'store' | 'branding' | 'account'>('store')
+    const [tab, setTab] = useState<'store' | 'terminal' | 'account'>('store')
     const [settings, setSettings] = useState<any>(null)
     const [currentUser, setCurrentUser] = useState<any>(null)
     const [loading, setLoading] = useState(true)
@@ -15,7 +16,12 @@ export default function SettingsPage() {
     const [message, setMessage] = useState('')
     const [showPicker, setShowPicker] = useState(false)
     const [pickerTarget, setPickerTarget] = useState<'logo' | 'favicon' | null>(null)
-    const [uploadedAssets, setUploadedAssets] = useState<string[]>([])
+
+    // Terminal State
+    const [readers, setReaders] = useState<any[]>([])
+    const [registrationCode, setRegistrationCode] = useState('')
+    const [readerLabel, setReaderLabel] = useState('')
+    const [registering, setRegistering] = useState(false)
 
     // Password change
     const [currentPassword, setCurrentPassword] = useState('')
@@ -24,6 +30,7 @@ export default function SettingsPage() {
 
     useEffect(() => {
         loadData()
+        loadReaders()
     }, [])
 
     async function loadData() {
@@ -36,12 +43,35 @@ export default function SettingsPage() {
         setLoading(false)
     }
 
+    async function loadReaders() {
+        const res = await getTerminalReaders()
+        if (res.success) {
+            setReaders(res.readers || [])
+        }
+    }
+
     async function handleSaveStore(e: React.FormEvent) {
         e.preventDefault()
         setSaving(true)
         await updateStoreSettings(settings)
         setMessage('✅ Store settings saved!')
         setSaving(false)
+        setTimeout(() => setMessage(''), 3000)
+    }
+
+    async function handleRegisterReader() {
+        if (!registrationCode) return
+        setRegistering(true)
+        const res = await registerTerminalReader(registrationCode, readerLabel)
+        if (res.success) {
+            setMessage('✅ Card Reader Registered Successfully!')
+            setRegistrationCode('')
+            setReaderLabel('')
+            loadReaders()
+        } else {
+            setMessage('❌ Failed to register reader: ' + res.error)
+        }
+        setRegistering(false)
         setTimeout(() => setMessage(''), 3000)
     }
 
@@ -96,16 +126,19 @@ export default function SettingsPage() {
         <>
             <div className="space-y-8 animate-fade-in">
                 {/* Header */}
-                <div>
-                    <h2 className="text-4xl font-black italic text-gray-900">Settings</h2>
-                    <p className="text-gray-500 mt-1">Manage your store and account</p>
+                <div className="flex justify-between items-end">
+                    <div>
+                        <h2 className="text-4xl font-black italic text-gray-900">Settings</h2>
+                        <p className="text-gray-500 mt-1">Manage store configuration, hardware, and account</p>
+                    </div>
                 </div>
 
                 {/* Message Toast */}
                 {message && (
-                    <div className={`p-4 rounded-xl font-bold ${message.startsWith('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    <div className={`p-4 rounded-xl font-bold flex items-center gap-2 ${message.startsWith('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                         }`}>
-                        {message}
+                        {message.startsWith('✅') ? <Check size={18} /> : <Megaphone size={18} />}
+                        {message.replace('✅ ', '').replace('❌ ', '')}
                     </div>
                 )}
 
@@ -113,28 +146,28 @@ export default function SettingsPage() {
                 <div className="flex gap-2 p-1 bg-gray-100 rounded-2xl w-fit">
                     <button
                         onClick={() => setTab('store')}
-                        className={`px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'store' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                        className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'store' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
                             }`}
                     >
-                        Store Info
+                        General
                     </button>
                     <button
-                        onClick={() => setTab('branding')}
-                        className={`px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'branding' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                        onClick={() => setTab('terminal')}
+                        className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'terminal' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
                             }`}
                     >
-                        Branding
+                        Terminal
                     </button>
                     <button
                         onClick={() => setTab('account')}
-                        className={`px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'account' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                        className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'account' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
                             }`}
                     >
                         Account
                     </button>
                 </div>
 
-                {/* Store Branding Tab */}
+                {/* Store Settings Tab */}
                 {tab === 'store' && canEditStore && settings && (
                     <form onSubmit={handleSaveStore} className="card p-8 space-y-6">
                         <h3 className="text-xl font-black">Store Information</h3>
@@ -280,80 +313,94 @@ export default function SettingsPage() {
                     </form>
                 )}
 
-                {/* Store Branding Tab */}
-                {tab === 'branding' && canEditStore && settings && (
-                    <div className="card p-8 space-y-8 animate-in slide-in-from-bottom-4">
-                        <div>
-                            <h3 className="text-xl font-black">Visual Identity</h3>
-                            <p className="text-gray-500 text-sm mt-1">Manage logos and design assets for your storefront</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Logo Section */}
-                            <div className="space-y-4">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Principal Logo</label>
-                                <div className="relative group aspect-[16/6] bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center">
-                                    {settings.logo ? (
-                                        <>
-                                            <img src={settings.logo} alt="Logo" className="max-h-full max-w-full object-contain p-4 transition-opacity group-hover:opacity-50" />
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button
-                                                    onClick={() => { setPickerTarget('logo'); setShowPicker(true); }}
-                                                    className="gold-btn px-6 py-2 shadow-xl"
-                                                >
-                                                    Change Logo
-                                                </button>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => { setPickerTarget('logo'); setShowPicker(true); }}
-                                            className="text-center group-hover:scale-110 transition-transform"
-                                        >
-                                            <span className="text-4xl block mb-2">🖼️</span>
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select from Vault</span>
-                                        </button>
-                                    )}
+                {/* Terminal Settings Tab */}
+                {tab === 'terminal' && canEditStore && (
+                    <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
+                        <div className="card p-10 space-y-8">
+                            <div className="flex items-center gap-4 border-b border-[var(--mocha-border)] pb-6">
+                                <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/5">
+                                    <MonitorSmartphone size={24} strokeWidth={1.5} />
                                 </div>
-                                <p className="text-[10px] text-gray-400 italic">Recommended: Transparent PNG, 800x300px</p>
+                                <div>
+                                    <h2 className="text-xl font-display italic text-[var(--text-primary)]">Stripe Terminal</h2>
+                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Manage Card Readers</p>
+                                </div>
                             </div>
 
-                            {/* Favicon Section */}
-                            <div className="space-y-4">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Store Favicon</label>
-                                <div className="relative group w-32 h-32 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center">
-                                    {settings.favicon ? (
-                                        <>
-                                            <img src={settings.favicon} alt="Favicon" className="w-16 h-16 object-contain transition-opacity group-hover:opacity-50" />
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button
-                                                    onClick={() => { setPickerTarget('favicon'); setShowPicker(true); }}
-                                                    className="gold-btn px-4 py-1.5 text-[10px]"
-                                                >
-                                                    Edit
-                                                </button>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => { setPickerTarget('favicon'); setShowPicker(true); }}
-                                            className="text-center group-hover:scale-110 transition-transform"
-                                        >
-                                            <span className="text-2xl block mb-1">🔖</span>
-                                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Icon</span>
-                                        </button>
-                                    )}
-                                </div>
-                                <p className="text-[10px] text-gray-400 italic">Recommended: 64x64px ICO or PNG</p>
-                            </div>
-                        </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                {/* Registration Form */}
+                                <div className="space-y-6">
+                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+                                        <h3 className="font-bold text-indigo-900 mb-2">How to Connect</h3>
+                                        <ol className="list-decimal list-inside text-xs text-indigo-700 space-y-1 font-medium">
+                                            <li>Turn on your Stripe Reader (WisePOS E).</li>
+                                            <li>Connect it to the <strong>SAME Wi-Fi</strong> as this device.</li>
+                                            <li>Go to <strong>Settings</strong> {'>'} <strong>Generate Pairing Code</strong> on the reader.</li>
+                                            <li>Enter the code below.</li>
+                                        </ol>
+                                    </div>
 
-                        <div className="border-t border-gray-100 pt-8 flex justify-end">
-                            <button onClick={handleSaveStore} disabled={saving} className="gold-btn py-4 px-12">
-                                {saving ? 'Syncing...' : 'Update Branding'}
-                            </button>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Pairing Code</label>
+                                        <input
+                                            type="text"
+                                            value={registrationCode}
+                                            onChange={(e) => setRegistrationCode(e.target.value)}
+                                            placeholder="e.g. 123-456"
+                                            className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] font-mono text-lg tracking-widest focus:outline-none focus:border-[var(--gold)] transition-all uppercase placeholder:text-gray-300"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Reader Label (Optional)</label>
+                                        <input
+                                            type="text"
+                                            value={readerLabel}
+                                            onChange={(e) => setReaderLabel(e.target.value)}
+                                            placeholder="e.g. Front Counter iPad"
+                                            className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                                        />
+                                    </div>
+
+                                    <button
+                                        onClick={handleRegisterReader}
+                                        disabled={registering || !registrationCode}
+                                        className="w-full gold-btn py-4 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50"
+                                    >
+                                        {registering ? 'Connecting...' : 'Register Reader'}
+                                    </button>
+                                </div>
+
+                                {/* Connected Readers List */}
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Connected Readers</h3>
+                                    <div className="space-y-3">
+                                        {readers.length === 0 ? (
+                                            <div className="p-8 border-2 border-dashed border-gray-100 rounded-2xl text-center">
+                                                <p className="text-gray-400 text-sm font-medium">No readers connected yet.</p>
+                                            </div>
+                                        ) : (
+                                            readers.map((reader) => (
+                                                <div key={reader.id} className="p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between shadow-sm">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-2 h-2 rounded-full ${reader.status === 'online' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-gray-300'}`} />
+                                                        <div>
+                                                            <p className="font-bold text-sm text-[var(--text-primary)]">{reader.label || 'Unnamed Reader'}</p>
+                                                            <p className="text-[10px] text-gray-400 font-mono">{reader.serial_number}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[9px] font-bold uppercase text-gray-400 tracking-wider">{reader.device_type}</p>
+                                                        <div className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full inline-block mt-1 ${reader.status === 'online' ? 'bg-emerald-50 text-emerald-500' : 'bg-gray-50 text-gray-400'
+                                                            }`}>
+                                                            {reader.status}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -472,20 +519,20 @@ export default function SettingsPage() {
                         icon: "⚙️"
                     },
                     {
+                        title: { en: "Terminal Setup", ar: "إعدادات المحطة" },
+                        description: {
+                            en: "Pair and manage your Stripe WisePOS E readers for in-person payments.",
+                            ar: "اقتران وإدارة قارئات Stripe WisePOS E للمدفوعات الشخصية."
+                        },
+                        icon: "💳"
+                    },
+                    {
                         title: { en: "Account Security", ar: "أمان الحساب" },
                         description: {
                             en: "Update your name, email, and password. Use strong passwords to protect dashboard access.",
                             ar: "حدّث اسمك وبريدك وكلمة مرورك. استخدم كلمات مرور قوية لحماية الوصول للوحة التحكم."
                         },
                         icon: "🔒"
-                    },
-                    {
-                        title: { en: "Brand Assets", ar: "أصول العلامة التجارية" },
-                        description: {
-                            en: "Upload and manage your logo and favicon through the media picker for consistent branding.",
-                            ar: "ارفع وأدر شعارك وأيقونة الموقع عبر منتقي الوسائط لعلامة تجارية متسقة."
-                        },
-                        icon: "🎨"
                     }
                 ]}
             />

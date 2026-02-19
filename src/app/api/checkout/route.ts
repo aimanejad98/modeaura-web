@@ -57,8 +57,8 @@ export async function POST(req: Request) {
             clientSecret: paymentIntent.client_secret,
             id: paymentIntent.id
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[CHECKOUT_ERROR]', error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return new NextResponse(`Internal Error: ${error.message}`, { status: 500 });
     }
 }

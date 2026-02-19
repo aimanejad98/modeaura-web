@@ -32,10 +32,19 @@ export async function getSession() {
     const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
     if (!session) return null;
 
-    const user = await db.customer.findUnique({
+    // Try finding in Customer table first
+    let user: any = await db.customer.findUnique({
         where: { id: session },
         select: { id: true, name: true, email: true, role: true }
     });
+
+    // If not found, try Staff table
+    if (!user) {
+        user = await db.staff.findUnique({
+            where: { id: session },
+            select: { id: true, name: true, email: true, role: true }
+        });
+    }
 
     return user;
 }
