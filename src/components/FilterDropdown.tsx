@@ -70,7 +70,7 @@ export default function FilterDropdown({ label, options, selected, onApply, vari
 
                     {/* Mobile Drawer / Desktop Dropdown */}
                     <div className={`
-                        z-50 animate-in duration-300
+                        z-[110] animate-in duration-300
                         fixed inset-x-0 bottom-0 bg-white rounded-t-[3rem] p-8 shadow-2xl max-h-[85vh] flex flex-col
                         lg:absolute lg:top-full lg:left-0 lg:bottom-auto lg:inset-x-auto lg:mt-4 lg:rounded-3xl lg:p-8 lg:min-w-[280px] lg:max-h-[500px] lg:animate-in lg:fade-in lg:slide-in-from-top-2
                         ${isOpen ? 'slide-in-from-bottom-full' : 'slide-out-to-bottom-full'}

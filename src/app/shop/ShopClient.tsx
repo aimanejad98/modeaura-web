@@ -603,6 +603,7 @@ export default function ShopClient() {
                             <div className="space-y-12">
                                 <FilterDropdown
                                     label="Collection"
+                                    variant="sidebar"
                                     options={availableCollections}
                                     selected={currentCollectionNames}
                                     onApply={(vals) => {
@@ -612,12 +613,14 @@ export default function ShopClient() {
                                 />
                                 <FilterDropdown
                                     label="Style"
+                                    variant="sidebar"
                                     options={availableStyles}
                                     selected={selectedStyleNames}
                                     onApply={setSelectedStyleNames}
                                 />
                                 <FilterDropdown
                                     label="Size"
+                                    variant="sidebar"
                                     options={availableSizes}
                                     selected={selectedSizes}
                                     onApply={setSelectedSizes}
@@ -632,8 +635,8 @@ export default function ShopClient() {
                                         {isKidsOnly && <X size={16} />}
                                     </button>
                                 </div>
-                                <FilterDropdown label="Material" options={availableMaterials} selected={selectedMaterials} onApply={setSelectedMaterials} />
-                                <FilterDropdown label="Color" options={availableColors} selected={selectedColors} onApply={setSelectedColors} />
+                                <FilterDropdown label="Material" variant="sidebar" options={availableMaterials} selected={selectedMaterials} onApply={setSelectedMaterials} />
+                                <FilterDropdown label="Color" variant="sidebar" options={availableColors} selected={selectedColors} onApply={setSelectedColors} />
                                 <div className="space-y-4">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">Price Range</h3>
                                     <PriceFilter min={0} max={maxProductPrice} selectedRange={priceRange} onApply={setPriceRange} />
