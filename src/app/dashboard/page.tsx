@@ -30,40 +30,51 @@ export default function DashboardPage() {
     }, [])
 
     async function loadData() {
+        setLoading(true);
         try {
             console.log('🚀 Starting dashboard data fetch...');
 
-            console.time('📊 Stats Fetch');
-            const statsPromise = getDashboardStats().catch(e => { console.error('Stats error:', e); return null });
+            // Fetch Stats
+            try {
+                console.time('📊 Stats Fetch');
+                const statsData = await getDashboardStats();
+                setStats(statsData || { totalRevenue: 0, totalSales: 0, avgOrderValue: 0, totalTraffic: 0 });
+                console.timeEnd('📊 Stats Fetch');
+            } catch (e) { console.error('Stats error:', e); }
 
-            console.time('🤵 Staff Fetch');
-            const staffPromise = getStaff().catch(e => { console.error('Staff error:', e); return [] });
+            // Fetch Staff
+            try {
+                console.time('🤵 Staff Fetch');
+                const staffData = await getStaff();
+                setStaff(staffData || []);
+                console.timeEnd('🤵 Staff Fetch');
+            } catch (e) { console.error('Staff error:', e); }
 
-            console.time('🧥 Products Fetch');
-            const productsPromise = getProducts().catch(e => { console.error('Products error:', e); return [] });
+            // Fetch Products
+            try {
+                console.time('🧥 Products Fetch');
+                const productsData = await getProducts();
+                setProducts(productsData || []);
+                console.timeEnd('🧥 Products Fetch');
+            } catch (e) { console.error('Products error:', e); }
 
-            console.time('📜 Orders Fetch');
-            const ordersPromise = getOrders().catch(e => { console.error('Orders error:', e); return [] });
+            // Fetch Orders
+            try {
+                console.time('📜 Orders Fetch');
+                const ordersData = await getOrders();
+                setOrders(ordersData || []);
+                console.timeEnd('📜 Orders Fetch');
+            } catch (e) { console.error('Orders error:', e); }
 
-            console.time('📈 Analytics Fetch');
-            const analyticsPromise = getSalesAnalytics().catch(e => { console.error('Analytics error:', e); return null });
-
-            const [statsData, staffData, productsData, ordersData, analyticsData] = await Promise.all([
-                statsPromise.then(res => { console.timeEnd('📊 Stats Fetch'); return res }),
-                staffPromise.then(res => { console.timeEnd('🤵 Staff Fetch'); return res }),
-                productsPromise.then(res => { console.timeEnd('🧥 Products Fetch'); return res }),
-                ordersPromise.then(res => { console.timeEnd('📜 Orders Fetch'); return res }),
-                analyticsPromise.then(res => { console.timeEnd('📈 Analytics Fetch'); return res })
-            ])
+            // Fetch Analytics
+            try {
+                console.time('📈 Analytics Fetch');
+                const analyticsData = await getSalesAnalytics();
+                setChartData(analyticsData || { labels: [], datasets: [] });
+                console.timeEnd('📈 Analytics Fetch');
+            } catch (e) { console.error('Analytics error:', e); }
 
             console.log('✅ Dashboard data fetch complete.');
-
-            // Fallback defaults to prevent crash
-            setStats(statsData || { totalRevenue: 0, totalSales: 0, avgOrderValue: 0, totalTraffic: 0 })
-            setStaff(staffData || [])
-            setProducts(productsData || [])
-            setOrders(ordersData || [])
-            setChartData(analyticsData || { labels: [], datasets: [] })
         } catch (error) {
             console.error('❌ Dashboard Load Failed:', error)
         } finally {
