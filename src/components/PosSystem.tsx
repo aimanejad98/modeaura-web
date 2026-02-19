@@ -31,6 +31,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [lastOrder, setLastOrder] = useState<any>(null)
 
     // Login State
+    const [lastActivity, setLastActivity] = useState<number>(Date.now())
+    const IDLE_TIMEOUT = 5 * 60 * 1000 // 5 minutes
     const [attemptingUser, setAttemptingUser] = useState<any>(null)
     const [password, setPassword] = useState('')
     const [pin, setPin] = useState('')
@@ -59,9 +61,32 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         loadData()
         initializeTerminal()
 
-        // Cleanup terminal on unmount? 
-        // Stripe Terminal SDK manages singleton, but we can disconnect if needed.
-    }, [])
+        // AFK Lock: Track activity
+        const trackActivity = () => setLastActivity(Date.now())
+        window.addEventListener('mousemove', trackActivity)
+        window.addEventListener('mousedown', trackActivity)
+        window.addEventListener('keypress', trackActivity)
+        window.addEventListener('touchstart', trackActivity)
+
+        // AFK Lock: Check for idle timeout every 10 seconds
+        const idleCheck = setInterval(() => {
+            if (selectedStaff && Date.now() - lastActivity > IDLE_TIMEOUT) {
+                // Return to login screen
+                setSelectedStaff(null)
+                setAttemptingUser(null) // Reset any half-finished login
+                setTenderedAmount('') // Reset payment state for safety
+                setShowPaymentModal(false)
+            }
+        }, 10000)
+
+        return () => {
+            window.removeEventListener('mousemove', trackActivity)
+            window.removeEventListener('mousedown', trackActivity)
+            window.removeEventListener('keypress', trackActivity)
+            window.removeEventListener('touchstart', trackActivity)
+            clearInterval(idleCheck)
+        }
+    }, [selectedStaff, lastActivity]) // Re-run when staff logs in or activity happens
 
     async function loadData() {
         setLoading(true)
