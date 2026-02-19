@@ -6,10 +6,12 @@ import { hash } from "bcryptjs";
 
 export async function getStaff() {
     try {
+        console.log('🤵 [Staff] Fetching staff members...');
         const staff = await prisma.staff.findMany({
             include: { shifts: true },
             orderBy: { name: 'asc' }
         });
+        console.log(`✅ [Staff] Found ${staff.length} staff members`);
         return JSON.parse(JSON.stringify(staff));
     } catch (error: any) {
         console.error('[Staff] Fetch failed:', error);
