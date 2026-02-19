@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { getOrders, deleteOrder, updateTracking, updateOrderStatus } from '@/app/actions/orders'
+import { getOrders, deleteOrder, updateTracking, updateOrderStatus, refundOrder } from '@/app/actions/orders'
 import { getProductSku } from '@/app/actions/inventory'
 import { printOnlineReceipt } from '@/components/OnlineReceipt'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
-import { Search, Package, CheckCircle2, Scan, QrCode, X, ChevronRight, Loader2, Boxes, Truck, MapPin, ClipboardCheck } from 'lucide-react'
+import { Search, Package, CheckCircle2, Scan, QrCode, X, ChevronRight, Loader2, Boxes, Truck, MapPin, ClipboardCheck, RotateCcw, AlertCircle, DollarSign } from 'lucide-react'
 
 export default function OrdersPage() {
     const router = useRouter()
@@ -15,6 +15,11 @@ export default function OrdersPage() {
     const [filter, setFilter] = useState('all')
     const [editingTracking, setEditingTracking] = useState<any>(null)
     const [trackingData, setTrackingData] = useState({ trackingNumber: '', courier: '' })
+
+    // Refund State
+    const [refundingOrder, setRefundingOrder] = useState<any>(null)
+    const [restockItems, setRestockItems] = useState(true)
+    const [processingRefund, setProcessingRefund] = useState(false)
 
     // Fetching Logic
     const [fetchingOrder, setFetchingOrder] = useState<any>(null)
@@ -53,6 +58,19 @@ export default function OrdersPage() {
             await deleteOrder(id)
             loadOrders()
         }
+    }
+
+    async function handleRefund() {
+        if (!refundingOrder) return
+        setProcessingRefund(true)
+        const res = await refundOrder(refundingOrder.id, restockItems)
+        if (res.success) {
+            setRefundingOrder(null)
+            loadOrders()
+        } else {
+            alert('Refund failed: ' + res.error)
+        }
+        setProcessingRefund(false)
     }
 
     // Barcode Scan Handler
@@ -281,6 +299,16 @@ export default function OrdersPage() {
                                                         <Package size={14} /> Finalize Pack
                                                     </button>
                                                 )}
+                                                {/* Refund Button */}
+                                                {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped' || order.status === 'Packaging') && (
+                                                    <button
+                                                        onClick={() => setRefundingOrder(order)}
+                                                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                                        title="Refund Order"
+                                                    >
+                                                        <RotateCcw size={16} />
+                                                    </button>
+                                                )}
                                                 <button onClick={() => printOnlineReceipt(order)} className="p-2 text-gray-400 hover:text-[var(--gold)]">🖨️</button>
                                                 <button onClick={() => handleDelete(order.id)} className="p-2 text-gray-300 hover:text-rose-500">🗑️</button>
                                             </div>
@@ -485,6 +513,60 @@ export default function OrdersPage() {
                                         </button>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Refund Modal */}
+            {refundingOrder && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                    <div className="relative bg-white rounded-[2rem] p-8 max-w-lg w-full shadow-2xl animate-in zoom-in-95 leading-relaxed">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-2xl font-display italic text-gray-900">Process Refund</h3>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Order {refundingOrder.orderId}</p>
+                            </div>
+                            <div className="p-3 bg-rose-50 rounded-full text-rose-500">
+                                <DollarSign size={24} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 text-amber-700">
+                                <AlertCircle className="shrink-0 mt-0.5" size={18} />
+                                <div className="text-xs font-medium">
+                                    <p className="font-bold mb-1 uppercase tracking-wide">Manual Action Required</p>
+                                    <p>This action will only update the system records. You must manually process the actual money refund in your Stripe Dashboard or cash register.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setRestockItems(!restockItems)}>
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${restockItems ? 'bg-[var(--gold)] border-[var(--gold)] text-white' : 'border-gray-300 bg-white'}`}>
+                                    {restockItems && <CheckCircle2 size={12} strokeWidth={4} />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">Restock Items</p>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Automatically add items back to inventory</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setRefundingOrder(null)}
+                                    className="flex-1 py-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleRefund}
+                                    disabled={processingRefund}
+                                    className="flex-1 py-3 bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-colors shadow-lg shadow-rose-200 disabled:opacity-50"
+                                >
+                                    {processingRefund ? 'Processing...' : 'Confirm Refund'}
+                                </button>
                             </div>
                         </div>
                     </div>

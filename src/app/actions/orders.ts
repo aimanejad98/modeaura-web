@@ -224,3 +224,53 @@ export async function deleteOrder(id: string) {
         return { success: false };
     }
 }
+
+export async function refundOrder(orderId: string, restock: boolean = true) {
+    try {
+        console.log(`🔄 [Refund] Processing refund for order ${orderId} (Restock: ${restock})`);
+
+        // 1. Get Order & Items
+        const order = await prisma.order.findUnique({
+            where: { id: orderId }
+        });
+
+        if (!order) throw new Error("Order not found");
+
+        // 2. Restock Logic
+        if (restock) {
+            const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items as string || '[]');
+
+            for (const item of items) {
+                if (item.id) {
+                    await prisma.product.update({
+                        where: { id: item.id },
+                        data: {
+                            stock: { increment: Number(item.quantity || 1) }
+                        }
+                    }).catch(err => console.error(`Failed to restock item ${item.name}:`, err));
+                }
+            }
+            console.log(`✅ [Refund] Restocked items for ${order.orderId}`);
+        }
+
+        // 3. Update Order Status
+        const updatedOrder = await prisma.order.update({
+            where: { id: orderId },
+            data: {
+                status: 'Refunded',
+                payment: 'Refunded',
+                shippingStatus: 'Returned'
+            }
+        });
+
+        revalidatePath('/dashboard/orders');
+        revalidatePath('/dashboard/inventory');
+        revalidatePath('/dashboard/financials');
+
+        return { success: true, order: updatedOrder };
+
+    } catch (error: any) {
+        console.error('[Refund] Failed:', error);
+        return { success: false, error: error.message };
+    }
+}
