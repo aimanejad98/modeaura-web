@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Search, ShoppingBag, ChevronDown, Menu, X, Instagram, Facebook, Twitter, Phone, Mail, Heart, User, Globe, LogOut, Moon, PartyPopper } from 'lucide-react';
+import { Search, ShoppingBag, ChevronDown, Menu, X, Instagram, Facebook, Phone, Mail, Heart, User, Globe, LogOut, Moon, PartyPopper } from 'lucide-react';
 import { getMainCategories } from '@/app/actions/categories';
 import { getNavItems } from '@/app/actions/navigation';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -548,9 +548,16 @@ export default function Navbar() {
                         <div className="mt-auto pt-10 border-t border-[var(--mocha-border)]">
                             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--gold)]">Mode AURA Windsor</p>
                             <div className="flex justify-center gap-6 mt-4 text-[var(--text-muted)]">
-                                <a href="https://www.instagram.com/modeaura1/" target="_blank" rel="noopener noreferrer"><Instagram size={18} /></a>
-                                <Facebook size={18} />
-                                <Twitter size={18} />
+                                {settings?.instagram && (
+                                    <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--gold)] transition-colors">
+                                        <Instagram size={18} />
+                                    </a>
+                                )}
+                                {settings?.facebook && (
+                                    <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--gold)] transition-colors">
+                                        <Facebook size={18} />
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </div>

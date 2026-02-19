@@ -45,7 +45,9 @@ export default function BrandingPage() {
             announcement: JSON.stringify(announcements.filter(a => a.trim() !== '')),
             tagline: settings.tagline,
             seoTitle: settings.seoTitle,
-            seoDescription: settings.seoDescription
+            seoDescription: settings.seoDescription,
+            instagram: settings.instagram,
+            facebook: settings.facebook
         });
 
         if (result.success) {
@@ -161,15 +163,15 @@ export default function BrandingPage() {
                     </div>
                 </div>
 
-                {/* Brand Taglines */}
+                {/* Brand Taglines & Social */}
                 <div className="card p-10 space-y-8">
                     <div className="flex items-center gap-4 border-b border-[var(--mocha-border)] pb-6">
                         <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-400 border border-purple-500/20 shadow-lg shadow-purple-500/5">
                             <Palette size={24} strokeWidth={1.5} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-display italic text-[var(--text-primary)]">Identity & Taglines</h2>
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Brand Slogans</p>
+                            <h2 className="text-xl font-display italic text-[var(--text-primary)]">Identity & Social</h2>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Brand Slogans & Links</p>
                         </div>
                     </div>
 
@@ -183,6 +185,29 @@ export default function BrandingPage() {
                                 placeholder="e.g. Where Fashion Meets Accessories"
                                 className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium placeholder:text-gray-400"
                             />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-top border-[var(--mocha-border)]/50">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Instagram URL</label>
+                                <input
+                                    type="text"
+                                    value={settings?.instagram || ''}
+                                    onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
+                                    placeholder="https://instagram.com/modeaura1"
+                                    className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Facebook URL</label>
+                                <input
+                                    type="text"
+                                    value={settings?.facebook || ''}
+                                    onChange={(e) => setSettings({ ...settings, facebook: e.target.value })}
+                                    placeholder="https://facebook.com/modeaura"
+                                    className="w-full bg-gray-50 border border-[var(--mocha-border)] rounded-2xl px-6 py-4 text-[var(--text-primary)] focus:outline-none focus:border-[var(--gold)] transition-all font-medium"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

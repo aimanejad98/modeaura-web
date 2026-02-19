@@ -52,12 +52,16 @@ export default function Footer() {
                             {settings?.tagline || 'A sanctuary of modern elegance where architecture meets the art of modest fashion.'}
                         </p>
                         <div className="flex gap-4">
-                            <a href={settings?.instagram || "https://www.instagram.com/modeaura1/"} target="_blank" rel="noopener noreferrer" className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center hover:bg-[var(--gold)] hover:border-[var(--gold)] transition-all group">
-                                <Instagram size={18} strokeWidth={1} className="group-hover:scale-110 transition-transform" />
-                            </a>
-                            <a href={settings?.facebook || "https://www.facebook.com/profile.php?id=61561081692244"} target="_blank" rel="noopener noreferrer" className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center hover:bg-[var(--gold)] hover:border-[var(--gold)] transition-all group">
-                                <Facebook size={18} strokeWidth={1} className="group-hover:scale-110 transition-transform" />
-                            </a>
+                            {settings?.instagram && (
+                                <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center hover:bg-[var(--gold)] hover:border-[var(--gold)] transition-all group">
+                                    <Instagram size={18} strokeWidth={1} className="group-hover:scale-110 transition-transform" />
+                                </a>
+                            )}
+                            {settings?.facebook && (
+                                <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center hover:bg-[var(--gold)] hover:border-[var(--gold)] transition-all group">
+                                    <Facebook size={18} strokeWidth={1} className="group-hover:scale-110 transition-transform" />
+                                </a>
+                            )}
                         </div>
                     </div>
 
