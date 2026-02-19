@@ -1,5 +1,4 @@
-"use server";
-
+import { getSession } from '@/lib/auth';
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
@@ -213,6 +212,9 @@ export async function trackOrder(orderId: string) {
 }
 
 export async function deleteOrder(id: string) {
+    const session = await getSession();
+    if (!session) return { success: false, error: "Unauthorized" };
+
     try {
         await prisma.order.delete({
             where: { id }
@@ -220,12 +222,15 @@ export async function deleteOrder(id: string) {
         revalidatePath('/dashboard/orders');
         return { success: true };
     } catch (error) {
-        console.error('[Orders] Delete failed:', error);
+        console.error('Delete order error:', error);
         return { success: false };
     }
 }
 
 export async function refundOrder(orderId: string, restock: boolean = true) {
+    const session = await getSession();
+    if (!session) return { success: false, error: "Unauthorized" };
+
     try {
         console.log(`🔄 [Refund] Processing refund for order ${orderId} (Restock: ${restock})`);
 

@@ -567,46 +567,47 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 {/* LEFT Side (Product Browser) */}
                 <div className="h-[55dvh] md:h-full flex-1 flex flex-col gap-1.5 lg:overflow-hidden min-h-0">
                     {/* Header */}
-                    <div className="bg-white p-2 lg:p-2.5 rounded-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2">
+                    <div className="bg-white p-2 lg:p-3 rounded-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div className="text-center sm:text-left">
-                            <h2 className="text-sm lg:text-base font-black text-gray-900 leading-tight">Product Browser</h2>
-                            <p className="text-[8px] font-bold text-[var(--gold)] uppercase tracking-widest">Operator: {selectedStaff.name}</p>
+                            <h2 className="text-base lg:text-lg font-black text-gray-900 leading-tight">Product Browser</h2>
+                            <p className="text-[10px] font-bold text-[var(--gold)] uppercase tracking-widest">Operator: {selectedStaff.name}</p>
                         </div>
                         <form onSubmit={handleScan} className="flex-1 w-full max-w-sm relative group">
-                            <input ref={scanInputRef} autoFocus type="text" placeholder="Scan or search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-5 pr-10 py-2.5 bg-gray-50 rounded-xl border border-gray-100 focus:border-[var(--gold)] focus:ring-4 focus:ring-[var(--gold)]/5 outline-none transition-all text-[11px] font-bold" />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs group-focus-within:text-[var(--gold)]">🔍</span>
+                            <input ref={scanInputRef} autoFocus type="text" placeholder="Scan or search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-5 pr-10 py-3 bg-gray-50 rounded-xl border border-gray-100 focus:border-[var(--gold)] focus:ring-4 focus:ring-[var(--gold)]/5 outline-none transition-all text-xs font-bold" />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm group-focus-within:text-[var(--gold)]">🔍</span>
                         </form>
-                        <div className="flex items-center gap-3">
-                            <button onClick={() => setSelectedStaff(null)} className="text-[8px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors whitespace-nowrap">Switch Staff</button>
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => setSelectedStaff(null)} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors whitespace-nowrap">Switch Staff</button>
                             <div className="w-px h-3 bg-gray-200" />
-                            <Link href="/dashboard" className="text-[8px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors whitespace-nowrap">Admin Exit</Link>
+                            <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors whitespace-nowrap">Admin Exit</Link>
                         </div>
                     </div>
 
                     {/* Categories */}
-                    <div className="flex gap-1.5 overflow-x-auto pb-2 no-scrollbar">
+                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                         {['All Items', ...categories.filter(c => !c.parentId).map(c => c.name), 'Kids'].map(cat => (
-                            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${selectedCategory === cat ? 'bg-gray-900 text-white shadow-lg shadow-black/20' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}>{cat}</button>
+                            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-6 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategory === cat ? 'bg-gray-900 text-white shadow-lg shadow-black/20' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}>{cat}</button>
                         ))}
                     </div>
 
                     {/* Grid */}
+                    {/* Grid */}
                     <div className="flex-1 overflow-y-auto lg:pr-1">
-                        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-1 lg:gap-1.5">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 lg:gap-2.5">
                             {filteredProducts.map((product) => (
-                                <button key={product.id} onClick={() => openVariantLookup(product)} className="bg-white p-1 rounded-lg hover:shadow-xl transition-all border border-gray-100 group flex flex-col items-center text-center relative">
+                                <button key={product.id} onClick={() => openVariantLookup(product)} className="bg-white p-1.5 rounded-lg hover:shadow-xl transition-all border border-gray-100 group flex flex-col items-center text-center relative">
                                     {product.stock <= 3 && (
-                                        <span className="absolute top-1 right-1 flex h-1 w-1 z-10">
+                                        <span className="absolute top-1 right-1 flex h-1.5 w-1.5 z-10">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-1 w-1 bg-red-500"></span>
+                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
                                         </span>
                                     )}
-                                    <div className="w-full aspect-[1/1.1] bg-gray-50 rounded mb-1 overflow-hidden relative border border-gray-50">
-                                        {product.images ? <img src={product.images.split(',')[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" /> : <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px]">🛍️</div>}
-                                        <div className="absolute bottom-0.5 right-0.5 bg-white/95 backdrop-blur text-[7px] font-black px-1 py-0.5 rounded shadow border border-gray-50 text-[#1E1E1E] tracking-tighter">${product.price}</div>
+                                    <div className="w-full aspect-[1/1.1] bg-gray-50 rounded mb-1.5 overflow-hidden relative border border-gray-50">
+                                        {product.images ? <img src={product.images.split(',')[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" /> : <div className="w-full h-full flex items-center justify-center text-gray-300 text-[12px]">🛍️</div>}
+                                        <div className="absolute bottom-1 right-1 bg-white/95 backdrop-blur text-[10px] font-black px-1.5 py-0.5 rounded shadow border border-gray-50 text-[#1E1E1E] tracking-tighter">${product.price}</div>
                                     </div>
-                                    <p className="font-bold text-gray-900 text-[8px] line-clamp-1 mb-0.5 group-hover:text-[var(--gold)] transition-colors leading-tight">{product.name}</p>
-                                    <p className="text-[6px] font-black uppercase tracking-widest text-gray-400 mt-auto opacity-70">{product.category?.name}</p>
+                                    <p className="font-bold text-gray-900 text-[10px] line-clamp-1 mb-0.5 group-hover:text-[var(--gold)] transition-colors leading-tight">{product.name}</p>
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mt-auto opacity-70">{product.category?.name}</p>
                                 </button>
                             ))}
                         </div>
@@ -702,31 +703,31 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-2 lg:p-2.5 space-y-1.5 bg-white custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-2 lg:p-3 space-y-2 bg-white custom-scrollbar">
                         {cart.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-2 py-4">
-                                <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-xl">🛒</div>
-                                <p className="font-bold text-[7px] uppercase tracking-widest opacity-50 text-center">Empty Basket</p>
+                                <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-2xl">🛒</div>
+                                <p className="font-bold text-[9px] uppercase tracking-widest opacity-50 text-center">Empty Basket</p>
                             </div>
                         ) : cart.map((item: any) => (
-                            <div key={item.id} className="flex gap-1.5 p-1.5 rounded-lg border border-gray-50 hover:bg-gray-50 hover:border-gray-200 transition-all group">
-                                <div className="w-9 h-9 bg-gray-50 rounded flex-shrink-0 border border-gray-50 overflow-hidden">
-                                    {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" /> : <div className="w-full h-full flex items-center justify-center text-[10px]">👕</div>}
+                            <div key={item.id} className="flex gap-2 p-2 rounded-lg border border-gray-50 hover:bg-gray-50 hover:border-gray-200 transition-all group">
+                                <div className="w-10 h-10 bg-gray-50 rounded flex-shrink-0 border border-gray-50 overflow-hidden">
+                                    {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" /> : <div className="w-full h-full flex items-center justify-center text-[12px]">👕</div>}
                                 </div>
                                 <div className="flex-1 flex flex-col justify-between py-0 min-w-0">
                                     <div>
                                         <div className="flex justify-between items-start gap-1">
-                                            <p className="font-bold text-gray-900 text-[9px] line-clamp-1 leading-tight">{item.name}</p>
-                                            <button onClick={() => removeFromCart(item.id, item.variant)} className="text-gray-300 hover:text-red-500 transition-all shrink-0"><X size={12} /></button>
+                                            <p className="font-bold text-gray-900 text-[10px] line-clamp-1 leading-tight">{item.name}</p>
+                                            <button onClick={() => removeFromCart(item.id, item.variant)} className="text-gray-300 hover:text-red-500 transition-all shrink-0"><X size={14} /></button>
                                         </div>
-                                        <p className="text-[7px] font-bold text-gray-400 tracking-tight uppercase truncate">{item.size || 'OS'} • {item.color || 'ST'}</p>
+                                        <p className="text-[8px] font-bold text-gray-400 tracking-tight uppercase truncate">{item.size || 'OS'} • {item.color || 'ST'}</p>
                                     </div>
                                     <div className="flex justify-between items-end gap-1.5">
-                                        <p className="font-black text-[10px] text-gray-900 leading-none">${(item.price * item.qty).toFixed(2)}</p>
+                                        <p className="font-black text-xs text-gray-900 leading-none">${(item.price * item.qty).toFixed(2)}</p>
                                         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded px-1.5 py-0.5 shadow-sm shrink-0">
-                                            <button className="text-gray-400 hover:text-black font-black text-[8px]" onClick={() => setCart(cart.map(c => (c.id === item.id && c.variant === item.variant) ? { ...c, qty: Math.max(1, c.qty - 1) } : c))}>-</button>
-                                            <span className="text-[8px] font-black min-w-2 text-center">{item.qty}</span>
-                                            <button className="text-gray-400 hover:text-black font-black text-[8px]" onClick={() => {
+                                            <button className="text-gray-400 hover:text-black font-black text-[10px]" onClick={() => setCart(cart.map(c => (c.id === item.id && c.variant === item.variant) ? { ...c, qty: Math.max(1, c.qty - 1) } : c))}>-</button>
+                                            <span className="text-[10px] font-black min-w-4 text-center">{item.qty}</span>
+                                            <button className="text-gray-400 hover:text-black font-black text-[10px]" onClick={() => {
                                                 const currentQty = Number(item.qty);
                                                 const maxStock = Number(item.stock);
                                                 if (currentQty + 1 > maxStock) {
@@ -748,46 +749,46 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                             {appliedDiscount ? (
                                 <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg border border-green-100">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-green-600 font-bold text-[9px] uppercase tracking-wider">🏷️ {appliedDiscount.code}</span>
-                                        <span className="text-[8px] font-bold text-green-500">(-{appliedDiscount.type === 'Percentage' ? `${appliedDiscount.value}%` : `$${appliedDiscount.value}`})</span>
+                                        <span className="text-green-600 font-bold text-[10px] uppercase tracking-wider">🏷️ {appliedDiscount.code}</span>
+                                        <span className="text-[9px] font-bold text-green-500">(-{appliedDiscount.type === 'Percentage' ? `${appliedDiscount.value}%` : `$${appliedDiscount.value}`})</span>
                                     </div>
                                     <button onClick={removeDiscount} className="text-gray-400 hover:text-red-500 font-bold p-1 text-xs">×</button>
                                 </div>
                             ) : (
                                 <div className="flex gap-1.5">
                                     <div className="relative flex-1">
-                                        <input type="text" placeholder="Promo" value={discountCode} onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(''); }} className={`w-full p-1.5 bg-white border ${discountError ? 'border-red-300' : 'border-gray-100'} rounded-lg text-[9px] font-bold uppercase tracking-wider outline-none focus:border-[var(--gold)]`} />
+                                        <input type="text" placeholder="Promo / Gift Card" value={discountCode} onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountError(''); }} className={`w-full p-2 bg-white border ${discountError ? 'border-red-300' : 'border-gray-100'} rounded-lg text-[10px] font-bold uppercase tracking-wider outline-none focus:border-[var(--gold)]`} />
                                         {discountError && <span className="absolute right-1 text-[7px] text-red-500 font-bold">{discountError}</span>}
                                     </div>
-                                    <button onClick={handleApplyDiscount} disabled={!discountCode} className="px-2 py-1 bg-gray-900 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-[var(--gold)] disabled:opacity-50 transition-colors">Apply</button>
+                                    <button onClick={handleApplyDiscount} disabled={!discountCode} className="px-3 py-1 bg-gray-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[var(--gold)] disabled:opacity-50 transition-colors">Apply</button>
                                 </div>
                             )}
                         </div>
 
-                        <div className="space-y-1 mb-3">
-                            <div className="flex justify-between text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                        <div className="space-y-1.5 mb-3">
+                            <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">
                                 <span>Subtotal</span>
                                 <span>${subtotal.toFixed(2)}</span>
                             </div>
                             {appliedDiscount && (
-                                <div className="flex justify-between text-[9px] font-bold text-green-600 uppercase tracking-widest">
+                                <div className="flex justify-between text-[10px] font-bold text-green-600 uppercase tracking-widest">
                                     <span>Discount</span>
                                     <span>-${discountAmount.toFixed(2)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                            <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                 <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
                                 <span>${tax.toFixed(2)}</span>
                             </div>
-                            <div className="border-t border-gray-200 my-1 pt-1 flex justify-between text-sm font-black text-gray-900">
-                                <span className="font-display italic text-xs font-normal">Total Due</span>
+                            <div className="border-t border-gray-200 my-1 pt-2 flex justify-between text-base font-black text-gray-900">
+                                <span className="font-display italic text-sm font-normal">Total Due</span>
                                 <span>${total.toFixed(2)}</span>
                             </div>
                         </div>
-                        <button disabled={cart.length === 0 || finalizing} onClick={handleFinalizeTransaction} className="w-full py-2 gold-btn rounded-lg text-[9px] shadow-lg disabled:opacity-50 disabled:filter-none transition-all uppercase font-black tracking-widest leading-none">
+                        <button disabled={cart.length === 0 || finalizing} onClick={handleFinalizeTransaction} className="w-full py-3 gold-btn rounded-lg text-[10px] shadow-lg disabled:opacity-50 disabled:filter-none transition-all uppercase font-black tracking-widest leading-none">
                             {finalizing ? '...' : 'Finalize Sale'}
                         </button>
-                        <button onClick={clearCart} className="w-full mt-1 py-1 text-[6px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-red-500 transition-colors">Discard</button>
+                        <button onClick={clearCart} className="w-full mt-1.5 py-1 text-[8px] font-black uppercase tracking-[0.2em] text-gray-300 hover:text-red-500 transition-colors">Discard</button>
                     </div>
                 </div>
 

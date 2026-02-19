@@ -52,7 +52,7 @@ export default async function RootLayout({
     }
 
     return (
-        <html lang="en" className={`${inter.variable} ${cormorant.variable}`} style={themeStyles as React.CSSProperties}>
+        <html lang="en" className={`${inter.variable} ${cormorant.variable}`} style={themeStyles as React.CSSProperties} suppressHydrationWarning>
             <head />
             <body className={inter.className}>
                 <div className="phygital-light" />

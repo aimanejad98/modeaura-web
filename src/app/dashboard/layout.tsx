@@ -332,12 +332,12 @@ export default function DashboardLayout({
                                                     key={item.href}
                                                     href={item.href}
                                                     title={isSidebarCollapsed ? item.name : undefined}
-                                                    className={`group flex items-center ${isSidebarCollapsed ? 'justify-center p-2' : 'gap-2 px-3 py-1.5'} rounded-lg text-[9px] font-black tracking-widest uppercase transition-all duration-300 ${isActive
+                                                    className={`group flex items-center ${isSidebarCollapsed ? 'justify-center p-2' : 'gap-2 px-3 py-2'} rounded-lg text-[11px] font-black tracking-widest uppercase transition-all duration-300 ${isActive
                                                         ? 'bg-[var(--gold)] text-white shadow-lg shadow-[var(--gold)]/20'
                                                         : 'text-white/60 hover:bg-white/[0.05] hover:text-white'
                                                         }`}
                                                 >
-                                                    <span className={`text-base transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                                    <span className={`text-lg transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
                                                         {item.icon}
                                                     </span>
                                                     {!isSidebarCollapsed && item.name}
@@ -352,23 +352,23 @@ export default function DashboardLayout({
 
                     <div className={`${isSidebarCollapsed ? 'p-1' : 'p-4'} border-t border-white/[0.05]`}>
                         <div className={`bg-white/5 rounded-2xl ${isSidebarCollapsed ? 'p-1 justify-center' : 'p-3'} flex items-center gap-2 group`}>
-                            <div className="w-8 h-8 rounded-full bg-[var(--gold)]/10 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20 group-hover:scale-105 transition-transform shrink-0 text-xs">
+                            <div className="w-10 h-10 rounded-full bg-[var(--gold)]/10 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/20 group-hover:scale-105 transition-transform shrink-0 text-sm">
                                 {currentUser.name[0]}
                             </div>
                             {!isSidebarCollapsed && (
                                 <>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[9px] font-black uppercase tracking-widest truncate">{currentUser.name}</p>
-                                        <p className="text-[7px] font-bold uppercase tracking-widest text-[var(--gold)] truncate">{currentUser.role}</p>
+                                        <p className="text-[11px] font-black uppercase tracking-widest truncate">{currentUser.name}</p>
+                                        <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--gold)] truncate">{currentUser.role}</p>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {currentUser.role === 'Admin' && (
                                             <Link href="/dashboard/branding" title="Settings" className="p-2 text-white/20 hover:text-[var(--gold)] transition-colors">
-                                                <span className="text-base">⚙️</span>
+                                                <span className="text-lg">⚙️</span>
                                             </Link>
                                         )}
                                         <button onClick={handleLogout} title="Logout" className="p-2 text-white/20 hover:text-red-400 transition-colors">
-                                            <span className="text-base">🚪</span>
+                                            <span className="text-lg">🚪</span>
                                         </button>
                                     </div>
                                 </>
@@ -380,19 +380,19 @@ export default function DashboardLayout({
 
             <main className={`flex-1 flex flex-col min-w-0 bg-[#FAF9F6] relative transition-all duration-500 ${!isPosPage ? (isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60') : ''}`}>
                 {!isPosPage && (
-                    <header className={`print:hidden sticky top-0 z-40 bg-white/60 backdrop-blur-2xl border-b border-[#E8E2D9] px-4 lg:px-8 h-12 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-xl shadow-black/[0.03]' : ''}`}>
+                    <header className={`print:hidden sticky top-0 z-40 bg-white/60 backdrop-blur-2xl border-b border-[#E8E2D9] px-4 lg:px-8 h-14 flex items-center justify-between transition-all duration-500 ${scrolled ? 'shadow-xl shadow-black/[0.03]' : ''}`}>
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => {
                                     if (window.innerWidth < 1024) setIsSidebarOpen(true)
                                     else setIsSidebarCollapsed(!isSidebarCollapsed)
                                 }}
-                                className="p-1.5 rounded-lg bg-white border border-[#E8E2D9] shadow-sm hover:bg-gray-50 transition-colors"
+                                className="p-2 rounded-lg bg-white border border-[#E8E2D9] shadow-sm hover:bg-gray-50 transition-colors"
                             >
-                                <Menu size={14} />
+                                <Menu size={16} />
                             </button>
                             <div className="hidden sm:block">
-                                <h2 className="text-sm font-display italic text-[#1B2936] tracking-tight">
+                                <h2 className="text-base font-display italic text-[#1B2936] tracking-tight">
                                     {allNavItems.find(i => i.href === pathname)?.name || 'Atelier Overview'}
                                 </h2>
                             </div>
@@ -403,11 +403,11 @@ export default function DashboardLayout({
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <Link href="/dashboard/pos" className="gold-btn px-4 py-1.5 rounded-full text-[8px] gap-2 shadow-lg shadow-[var(--gold)]/10 animate-in fade-in slide-in-from-right-4 duration-1000">
+                            <Link href="/dashboard/pos" className="gold-btn px-5 py-2 rounded-full text-[10px] gap-2 shadow-lg shadow-[var(--gold)]/10 animate-in fade-in slide-in-from-right-4 duration-1000">
                                 POS REGISTER
                             </Link>
                             <div className="h-6 w-px bg-[#E8E2D9] hidden sm:block" />
-                            <Link href="/" target="_blank" className="text-[9px] font-black uppercase tracking-widest text-black/30 hover:text-black transition-colors">VIST STORE</Link>
+                            <Link href="/" target="_blank" className="text-[10px] font-black uppercase tracking-widest text-black/30 hover:text-black transition-colors">VIST STORE</Link>
                         </div>
                     </header>
                 )}
