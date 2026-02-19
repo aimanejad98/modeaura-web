@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getOrders, deleteOrder } from '@/app/actions/orders'
-import { Trash2 } from 'lucide-react'
+import { getOrders, deleteOrder, refundOrder } from '@/app/actions/orders'
+import { Trash2, RotateCcw, CheckCircle2, AlertCircle, DollarSign } from 'lucide-react'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
 
 export default function ReceiptsPage() {
@@ -11,6 +11,11 @@ export default function ReceiptsPage() {
     const [filter, setFilter] = useState('all') // 'all', 'POS', 'WEBSITE'
     const [paymentFilter, setPaymentFilter] = useState('all') // 'all', 'Cash', 'Card'
     const [search, setSearch] = useState('')
+
+    // Refund State
+    const [refundingOrder, setRefundingOrder] = useState<any>(null)
+    const [restockItems, setRestockItems] = useState(true)
+    const [processingRefund, setProcessingRefund] = useState(false)
 
     useEffect(() => {
         loadOrders()
@@ -21,6 +26,19 @@ export default function ReceiptsPage() {
         const data = await getOrders()
         setOrders(data)
         setLoading(false)
+    }
+
+    async function handleRefund() {
+        if (!refundingOrder) return
+        setProcessingRefund(true)
+        const res = await refundOrder(refundingOrder.id, restockItems)
+        if (res.success) {
+            setRefundingOrder(null)
+            loadOrders()
+        } else {
+            alert('Refund failed: ' + res.error)
+        }
+        setProcessingRefund(false)
     }
 
     function printReceipt(order: any) {
@@ -252,6 +270,15 @@ export default function ReceiptsPage() {
                                 >
                                     <Trash2 size={16} />
                                 </button>
+                                {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped') && (
+                                    <button
+                                        onClick={() => setRefundingOrder(order)}
+                                        className="p-2 hover:bg-rose-50 rounded-xl text-gray-300 hover:text-rose-500 transition-colors"
+                                        title="Refund Order"
+                                    >
+                                        <RotateCcw size={16} />
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => printReceipt(order)}
                                     className="gold-btn py-2 px-4 text-xs"
@@ -301,6 +328,60 @@ export default function ReceiptsPage() {
                     }
                 ]}
             />
+
+            {/* Refund Modal */}
+            {refundingOrder && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                    <div className="relative bg-white rounded-[2rem] p-8 max-w-lg w-full shadow-2xl animate-in zoom-in-95 leading-relaxed">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-2xl font-display italic text-gray-900">Process Refund</h3>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Order {refundingOrder.orderId}</p>
+                            </div>
+                            <div className="p-3 bg-rose-50 rounded-full text-rose-500">
+                                <DollarSign size={24} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 text-amber-700">
+                                <AlertCircle className="shrink-0 mt-0.5" size={18} />
+                                <div className="text-xs font-medium">
+                                    <p className="font-bold mb-1 uppercase tracking-wide">Manual Action Required</p>
+                                    <p>This action will only update the system records. You must manually process the actual money refund in your Stripe Dashboard or cash register.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setRestockItems(!restockItems)}>
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${restockItems ? 'bg-[var(--gold)] border-[var(--gold)] text-white' : 'border-gray-300 bg-white'}`}>
+                                    {restockItems && <CheckCircle2 size={12} strokeWidth={4} />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">Restock Items</p>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Automatically add items back to inventory</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setRefundingOrder(null)}
+                                    className="flex-1 py-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleRefund}
+                                    disabled={processingRefund}
+                                    className="flex-1 py-3 bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-colors shadow-lg shadow-rose-200 disabled:opacity-50"
+                                >
+                                    {processingRefund ? 'Processing...' : 'Confirm Refund'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
