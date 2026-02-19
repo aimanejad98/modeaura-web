@@ -301,7 +301,15 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     }
 
     const filteredProducts = products.filter(p => {
-        const matchesCategory = selectedCategory === 'All Items' || (selectedCategory === 'Kids' ? p.isKids === true : p.category?.name === selectedCategory)
+        const matchesCategory = selectedCategory === 'All Items' || (selectedCategory === 'Kids' ? p.isKids === true : (() => {
+            const activeCat = categories.find(c => c.name === selectedCategory);
+            if (!activeCat) return p.category?.name === selectedCategory; // Fallback to exact name match
+
+            // Find all children IDs for this category
+            const childrenIds = categories.filter(c => c.parentId === activeCat.id).map(c => c.id);
+            return p.categoryId === activeCat.id || childrenIds.includes(p.categoryId);
+        })());
+
         const term = searchTerm.toLowerCase()
         const matchesSearch = !searchTerm || p.name.toLowerCase().includes(term) || (p.sku && p.sku.toLowerCase().includes(term))
         return matchesCategory && matchesSearch

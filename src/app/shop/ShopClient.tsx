@@ -128,12 +128,17 @@ export default function ShopClient() {
         if (selectedStyleNames.length > 0 && !isAbayaActive) {
             const stylesLower = selectedStyleNames.map(s => s.toLowerCase());
 
-            // Collect allowed sizes from the selected patterns
-            const patternsWithRestrictions = patterns.filter(p => selectedStyleNames.includes(p.name) && p.allowedSizes);
+            // Collect allowed sizes from the selected patterns (case-insensitive)
+            const patternsWithRestrictions = patterns.filter(p =>
+                stylesLower.includes(p.name.toLowerCase()) && p.allowedSizes
+            );
+
             const globalAllowedSizes = new Set<string>();
-            patternsWithRestrictions.forEach(p => {
-                p.allowedSizes.split(',').forEach((s: string) => globalAllowedSizes.add(s.trim()));
-            });
+            if (patternsWithRestrictions.length > 0) {
+                patternsWithRestrictions.forEach(p => {
+                    p.allowedSizes.split(',').forEach((s: string) => globalAllowedSizes.add(s.trim()));
+                });
+            }
 
             productsForSizes = productsForSizes.filter(p => {
                 const styleName = (p.style || '').toLowerCase();
@@ -142,33 +147,27 @@ export default function ShopClient() {
 
                 return stylesLower.includes(styleName) || stylesLower.includes(categoryName);
             });
-        }
 
-        productsForSizes.forEach(p => {
-            if (p.size) {
-                p.size.split(',').forEach((s: string) => sizes.add(s.trim()));
-            }
-        });
-
-        // Final filtering of sizes if specific patterns are selected
-        if (selectedStyleNames.length > 0 && !isAbayaActive) {
-            const patternsWithRestrictions = patterns.filter(p => selectedStyleNames.includes(p.name) && p.allowedSizes);
-            if (patternsWithRestrictions.length > 0) {
-                const globalAllowedSizes = new Set<string>();
-                patternsWithRestrictions.forEach(p => {
-                    p.allowedSizes.split(',').forEach((s: string) => globalAllowedSizes.add(s.trim()));
+            // If we have pattern-specific size restrictions, extract sizes and return filtered set
+            if (globalAllowedSizes.size > 0) {
+                const tempSizes = new Set<string>();
+                productsForSizes.forEach(p => {
+                    if (p.size) {
+                        p.size.split(',').forEach((s: string) => {
+                            const trimmed = s.trim();
+                            if (globalAllowedSizes.has(trimmed)) {
+                                tempSizes.add(trimmed);
+                            }
+                        });
+                    }
                 });
 
-                if (globalAllowedSizes.size > 0) {
-                    const filteredSizes = Array.from(sizes).filter(s => globalAllowedSizes.has(s));
-                    // Return filtered sizes early
-                    return filteredSizes.sort((a, b) => {
-                        const numA = parseFloat(a);
-                        const numB = parseFloat(b);
-                        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-                        return a.localeCompare(b);
-                    });
-                }
+                return Array.from(tempSizes).sort((a, b) => {
+                    const numA = parseFloat(a);
+                    const numB = parseFloat(b);
+                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                    return a.localeCompare(b);
+                });
             }
         }
         return Array.from(sizes).sort((a, b) => {

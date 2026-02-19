@@ -36,6 +36,7 @@ model Staff {
   name              String
   email             String    @unique
   password          String?
+  pin               String?
   phone             String?
   role              String    @default("Staff")
   hourlyRate        Float     @default(0)

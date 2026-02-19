@@ -23,6 +23,10 @@ export async function addStaff(data: any) {
         if (data.password && !data.password.startsWith('$2')) {
             data.password = await hash(data.password, 12);
         }
+        // Hash PIN before storing (ensure it's a 4-digit PIN)
+        if (data.pin && data.pin.length === 4 && !isNaN(Number(data.pin))) {
+            data.pin = await hash(data.pin, 12);
+        }
         const staff = await prisma.staff.create({
             data: {
                 ...data,
@@ -46,6 +50,19 @@ export async function updateStaff(id: string, data: any) {
             // Don't overwrite password with empty string
             delete data.password;
         }
+
+        // Hash PIN before storing (ensure it's a 4-digit PIN and not already hashed)
+        if (data.pin && data.pin.length === 4 && !isNaN(Number(data.pin))) {
+            data.pin = await hash(data.pin, 12);
+        } else if (data.pin === '') {
+            data.pin = null; // Clear PIN if empty
+        } else if (data.pin && data.pin.startsWith('$2')) {
+            // Already hashed, keep as is
+        } else if (data.pin) {
+            // Invalid PIN format but not empty, ignore or handle as needed
+            delete data.pin;
+        }
+
         const staff = await prisma.staff.update({
             where: { id },
             data

@@ -11,7 +11,7 @@ export default function StaffPage() {
     const [showAdd, setShowAdd] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [formData, setFormData] = useState({
-        name: '', email: '', password: '', phone: '', role: 'Cashier', hourlyRate: 0
+        name: '', email: '', password: '', pin: '', phone: '', role: 'Cashier', hourlyRate: 0
     })
 
     useEffect(() => {
@@ -32,7 +32,7 @@ export default function StaffPage() {
         } else {
             await addStaff(formData)
         }
-        setFormData({ name: '', email: '', password: '', phone: '', role: 'Cashier', hourlyRate: 0 })
+        setFormData({ name: '', email: '', password: '', pin: '', phone: '', role: 'Cashier', hourlyRate: 0 })
         setShowAdd(false)
         setEditingId(null)
         loadStaff()
@@ -43,6 +43,7 @@ export default function StaffPage() {
             name: member.name,
             email: member.email,
             password: '',
+            pin: '',
             phone: member.phone || '',
             role: member.role,
             hourlyRate: member.hourlyRate || 0
@@ -84,7 +85,7 @@ export default function StaffPage() {
                     <h2 className="text-4xl font-black italic text-gray-900">Staff</h2>
                     <p className="text-gray-500 mt-1">{staff.length} team members</p>
                 </div>
-                <button onClick={() => { setShowAdd(true); setEditingId(null); setFormData({ name: '', email: '', password: '', phone: '', role: 'Cashier', hourlyRate: 0 }); }} className="gold-btn">
+                <button onClick={() => { setShowAdd(true); setEditingId(null); setFormData({ name: '', email: '', password: '', pin: '', phone: '', role: 'Cashier', hourlyRate: 0 }); }} className="gold-btn">
                     + Add Staff
                 </button>
             </div>
@@ -125,6 +126,10 @@ export default function StaffPage() {
                                 <span className="text-gray-400">Password</span>
                                 <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{member.password ? '••••••••' : 'Not set'}</span>
                             </div>
+                            <div className="flex justify-between font-bold border-t border-gray-50 pt-2 mt-2">
+                                <span className="text-gray-400">POS PIN</span>
+                                <span className={member.pin ? 'text-green-600' : 'text-red-400'}>{member.pin ? '✓ SET' : '✗ NOT SET'}</span>
+                            </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Hourly Rate</span>
                                 <span className="font-bold text-[#D4AF37]">${member.hourlyRate?.toFixed(2) || '0.00'}</span>
@@ -159,20 +164,12 @@ export default function StaffPage() {
                 ))}
             </div>
 
-            {staff.length === 0 && (
-                <div className="card p-16 text-center text-gray-400">
-                    <div className="text-4xl mb-4">👥</div>
-                    <p className="font-bold">No staff members yet</p>
-                    <p className="text-sm">Add your first team member to get started</p>
-                </div>
-            )}
-
             {/* Add/Edit Modal */}
             {showAdd && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl p-8 w-full max-w-lg animate-fade-in">
-                        <h3 className="text-2xl font-black mb-6">{editingId ? 'Edit Staff' : 'Add Staff'}</h3>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="bg-white rounded-3xl p-8 w-full max-w-lg animate-fade-in shadow-2xl">
+                        <h3 className="text-2xl font-black mb-6">{editingId ? 'Edit Staff Member' : 'Add New Staff Member'}</h3>
+                        <form onSubmit={handleSubmit} className="space-y-4 text-left">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Name *</label>
@@ -180,7 +177,7 @@ export default function StaffPage() {
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         required
-                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
+                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold"
                                     />
                                 </div>
                                 <div>
@@ -190,29 +187,33 @@ export default function StaffPage() {
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         required
-                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
+                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold"
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Password *</label>
+                                    <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Website Password *</label>
                                     <input
                                         type="text"
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        required
-                                        placeholder="Login password"
-                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
+                                        required={!editingId}
+                                        placeholder={editingId ? "Leave blank to keep" : "Login password"}
+                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Phone</label>
+                                    <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">POS PIN (4 Digits)</label>
                                     <input
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
+                                        type="text"
+                                        maxLength={4}
+                                        pattern="\d{4}"
+                                        value={formData.pin}
+                                        onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                                        placeholder="e.g. 1234"
+                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold"
                                     />
                                 </div>
                             </div>
@@ -223,11 +224,11 @@ export default function StaffPage() {
                                     <select
                                         value={formData.role}
                                         onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
+                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold"
                                     >
-                                        <option value="Admin">Admin - Full access</option>
-                                        <option value="Manager">Manager - No finance</option>
-                                        <option value="Cashier">Cashier - POS & Inventory view only</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Cashier">Cashier</option>
                                     </select>
                                 </div>
                                 <div>
@@ -237,17 +238,17 @@ export default function StaffPage() {
                                         step="0.01"
                                         value={formData.hourlyRate}
                                         onChange={(e) => setFormData({ ...formData, hourlyRate: parseFloat(e.target.value) || 0 })}
-                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
+                                        className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] outline-none transition-all font-bold"
                                     />
                                 </div>
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => { setShowAdd(false); setEditingId(null); }} className="flex-1 p-4 bg-gray-100 rounded-xl font-bold hover:bg-gray-200">
+                                <button type="button" onClick={() => { setShowAdd(false); setEditingId(null); }} className="flex-1 p-4 bg-gray-100 rounded-xl font-bold hover:bg-gray-200 transition-colors">
                                     Cancel
                                 </button>
                                 <button type="submit" className="flex-1 gold-btn py-4">
-                                    {editingId ? 'Update' : 'Add Staff'}
+                                    {editingId ? 'Update Profile' : 'Add Member'}
                                 </button>
                             </div>
                         </form>

@@ -24,12 +24,19 @@ export async function verifyAccess(staffId: string, password?: string) {
 
         if (!staff) return { success: false, message: 'Staff not found' };
 
+        // First try to verify PIN if it looks like a 4-digit PIN
+        const bcrypt = require('bcryptjs');
+        const staffRecord = staff as any;
+        if (password && password.length === 4 && staffRecord.pin) {
+            const isPinValid = await bcrypt.compare(password, staffRecord.pin);
+            if (isPinValid) return { success: true };
+        }
+
         if (!password || !staff.password) {
             return { success: false, message: 'Invalid password' };
         }
 
         // Use bcrypt to verify password against stored hash
-        const bcrypt = require('bcryptjs');
         const isValid = await bcrypt.compare(password, staff.password);
         if (!isValid) {
             return { success: false, message: 'Invalid password' };
