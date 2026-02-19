@@ -119,9 +119,14 @@ export default function Navbar() {
                     >
                         <div className="max-w-7xl mx-auto px-8 flex justify-between items-center text-[9px] font-black uppercase tracking-[0.3em]">
                             {/* Left: Socials */}
+                            {/* Left: Socials */}
                             <div className="hidden md:flex items-center gap-4">
-                                <a href="https://www.instagram.com/modeaura1/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Instagram size={13} strokeWidth={1.5} /></a>
-                                <a href="https://www.facebook.com/profile.php?id=61561081692244" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Facebook size={13} strokeWidth={1.5} /></a>
+                                {settings?.instagram && (
+                                    <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Instagram size={13} strokeWidth={1.5} /></a>
+                                )}
+                                {settings?.facebook && (
+                                    <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Facebook size={13} strokeWidth={1.5} /></a>
+                                )}
                             </div>
 
                             {/* Center: Rotating Announcement (Desktop) / Marquee (Mobile) */}
@@ -172,12 +177,16 @@ export default function Navbar() {
                             {/* Right: Contact & Currency */}
                             <div className="flex items-center gap-6">
                                 <div className="hidden md:flex items-center gap-4">
-                                    <a href="tel:+12265060808" className="flex items-center gap-1.5 hover:text-white transition-colors">
-                                        <Phone size={11} strokeWidth={2} /> +1 (226) 506-0808
-                                    </a>
-                                    <a href="mailto:modeaura1@gmail.com" className="flex items-center gap-1.5 hover:text-white transition-colors">
-                                        <Mail size={11} strokeWidth={2} /> modeaura1@gmail.com
-                                    </a>
+                                    {settings?.phone && (
+                                        <a href={`tel:${settings.phone}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
+                                            <Phone size={11} strokeWidth={2} /> {settings.phone}
+                                        </a>
+                                    )}
+                                    {settings?.email && (
+                                        <a href={`mailto:${settings.email}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
+                                            <Mail size={11} strokeWidth={2} /> {settings.email}
+                                        </a>
+                                    )}
                                 </div>
                                 <div className="relative">
                                     <button
