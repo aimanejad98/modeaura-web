@@ -139,11 +139,11 @@ export default function TrackOrderPage() {
                         <div className="pt-6 border-t border-gray-100 space-y-3">
                             <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
                                 <span>Subtotal</span>
-                                <span>${(Number(order.total) / 1.13 - (order.shippingCost || 10)).toFixed(2)}</span>
+                                <span>${(Number(order.total) / 1.13 - (order.shippingCost ?? 0)).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
                                 <span>Logistics</span>
-                                <span>${(order.shippingCost || 10).toFixed(2)}</span>
+                                <span>${(order.shippingCost ?? 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
                                 <span>Tax (HST 13%)</span>

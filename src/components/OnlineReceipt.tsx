@@ -11,7 +11,7 @@ export function printOnlineReceipt(order: any) {
   })()
 
   // Professional calc for totals
-  const shipping = order.shippingCost || 10.00
+  const shipping = order.shippingCost ?? 0.00
   const taxRate = 0.13
 
   // Ensure numbers are valid
@@ -72,7 +72,7 @@ export function printOnlineReceipt(order: any) {
         </div>
         <div>
           <div class="meta-label">Payment Method</div>
-          <div class="meta-value">${order.paymentMethod || 'Credit Card'}</div>
+          <div class="meta-value">${order.paymentMethod || 'Card Payment'}</div>
         </div>
       </div>
 
