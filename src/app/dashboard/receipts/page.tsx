@@ -28,15 +28,19 @@ export default function ReceiptsPage() {
         if (!printWindow) return
 
         const items = order.items || []
-        const itemsHtml = items.map((item: any) => `
+        const itemsHtml = items.map((item: any) => {
+            const qty = item.qty || 1
+            const price = parseFloat(item.price) || 0
+            const total = qty * price
+            return `
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee;">
                 <div>
                     <span style="font-weight: 600;">${item.name}</span>
-                    <span style="color: #666; margin-left: 8px;">×${item.qty}</span>
+                    <span style="color: #666; margin-left: 8px;">×${qty}</span>
                 </div>
-                <span style="font-weight: 600;">$${(item.price * item.qty).toFixed(2)}</span>
+                <span style="font-weight: 600;">$${total.toFixed(2)}</span>
             </div>
-        `).join('')
+        `}).join('')
 
         const subtotal = order.total / 1.13
         const tax = order.total - subtotal
@@ -61,7 +65,7 @@ export default function ReceiptsPage() {
         </head>
         <body>
             <div class="header">
-                <div class="logo">ModeAura</div>
+                <div class="logo">Mode AURA</div>
                 <div class="info">Luxury Accessories</div>
                 <div class="info">${new Date(order.createdAt || order.date).toLocaleString()}</div>
             </div>
@@ -80,7 +84,7 @@ export default function ReceiptsPage() {
                     <span>$${subtotal.toFixed(2)}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; color: #666; font-size: 12px; margin-bottom: 4px;">
-                    <span>Tax (13%)</span>
+                    <span>HST (13%)</span>
                     <span>$${tax.toFixed(2)}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; color: #666; margin-top: 8px;">

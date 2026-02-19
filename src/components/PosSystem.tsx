@@ -1092,7 +1092,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             {lastOrder && (
                 <div className="hidden print:block print:w-[80mm] print:p-2 bg-white text-black font-mono text-sm print:pb-20">
                     <div className="text-center mb-4">
-                        <h1 className="text-2xl font-black uppercase tracking-tighter">ModeAura</h1>
+                        <h1 className="text-2xl font-black uppercase tracking-tighter">Mode AURA</h1>
                         <p className="text-xs">Luxury Accessories</p>
                         <p className="text-xs mt-1">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
                         <p className="text-xs">Order #{lastOrder.orderId}</p>
@@ -1121,7 +1121,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                             <span>${(lastOrder.total / 1.13).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span>Tax (13%)</span>
+                            <span>HST (13%)</span>
                             <span>${(lastOrder.total - (lastOrder.total / 1.13)).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-black text-lg mt-2">
