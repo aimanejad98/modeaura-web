@@ -24,7 +24,7 @@ export default function InsurancePage() {
     const [showAssetForm, setShowAssetForm] = useState(false)
     const [newAsset, setNewAsset] = useState({ name: '', type: 'Equipment', value: 0, description: '' })
 
-    // --- SECURITY & LOGISTICS ---
+    // --- SHIPPING & SECURITY ---
     const [hasMonitoredAlarm, setHasMonitoredAlarm] = useState(true)
     const [hasFireSprinklers, setHasFireSprinklers] = useState(false)
     const [usSalesPercent, setUsSalesPercent] = useState(0)
@@ -247,7 +247,7 @@ export default function InsurancePage() {
                         </div>
                     </div>
 
-                    {/* 4. Security & Logistics Details */}
+                    {/* 4. Shipping & Security */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100">
                             <div className="flex items-center gap-3 mb-6">
