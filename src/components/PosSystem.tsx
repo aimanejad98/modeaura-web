@@ -1179,7 +1179,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             </div>
             {/* PRINT ONLY RECEIPT LAYOUT */}
             {lastOrder && (
-                <div className="hidden print:block print:w-[80mm] print:p-2 bg-white text-black font-mono text-[10px] leading-tight print:pb-20">
+                <div className="hidden print:block print:max-w-[300px] print:mx-auto print:p-2 bg-white text-black font-mono text-[10px] leading-tight print:pb-20">
                     <div className="text-center mb-2">
                         <h1 className="text-xl font-black tracking-tighter mb-1">{storeSettings?.storeName || 'MODE AURA'}</h1>
                         <p className="font-bold">{storeSettings?.tagline || 'Fashion and Accessories'}</p>

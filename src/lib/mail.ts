@@ -55,8 +55,11 @@ async function sendMailWithFallback(mailOptions: any, logTag: string) {
             return { success: true, warning: `Sent via fallback port ${altPort}` };
         } catch (fallbackError: any) {
             console.error(`[Mail] Fallback failed: ${fallbackError.message}`);
-            // Return the original error usually, or a combined message
-            return { success: false, error: fallbackError.message || fallbackError };
+            // Return BOTH errors to help debug
+            return {
+                success: false,
+                error: `Primary (${primaryPort}/${primarySecure ? 'SSL' : 'TLS'}): ${primaryError.message}. Fallback (${altPort}/${altSecure ? 'SSL' : 'TLS'}): ${fallbackError.message}`
+            };
         }
     }
 }
