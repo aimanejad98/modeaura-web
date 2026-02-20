@@ -240,7 +240,7 @@ export async function sendReceiptEmail(email: string, orderDetails: any) {
                                         <p style="margin: 0; color: #1B2936; font-size: 14px; font-weight: bold;">Thank You for Shopping at Mode Aura</p>
                                         <p style="margin: 10px 0 20px; color: #999; font-size: 12px; line-height: 1.6;">
                                             Please retain this receipt for your records.<br>
-                                            Visit <a href="https://modeaura.ca/policy" style="color: #D4AF37; text-decoration: none;">modeaura.ca/policy</a> for returns & exchanges.
+                                            Visit <a href="https://modeaura.ca/returns" style="color: #D4AF37; text-decoration: none;">modeaura.ca/returns</a> for returns & exchanges.
                                         </p>
                                         <div style="font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 2px; margin-top: 20px;">
                                             Mode Aura Boutique &bull; Windsor, ON &bull; N8X 2S2
