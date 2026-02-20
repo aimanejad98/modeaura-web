@@ -115,4 +115,22 @@ export async function updateStaffInfo(staffId: string, data: { name?: string; ph
         console.error('[Settings] Info update failed:', error)
         return { success: false }
     }
-}
+    // Test Email Connection
+    export async function testEmailConnection(email: string) {
+        try {
+            const { sendMailWithFallback } = await import('@/lib/mail');
+            console.log(`[Settings] Testing email connection to ${email}...`);
+
+            const result = await sendMailWithFallback({
+                to: email,
+                from: process.env.SMTP_USER,
+                subject: 'Test Email from Dashboard Settings',
+                text: 'This is a test email from your Mode Aura Dashboard. If you received this, your email configuration is working correctly!'
+            }, "TEST EMAIL");
+
+            return result;
+        } catch (error: any) {
+            console.error('[Settings] Test email failed:', error);
+            return { success: false, error: error.message || String(error) };
+        }
+    }

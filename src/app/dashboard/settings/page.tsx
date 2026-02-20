@@ -219,11 +219,49 @@ export default function SettingsPage() {
 
                         <div>
                             <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Address</label>
-                            <input
-                                value={settings.address || ''}
-                                onChange={(e) => setSettings({ ...settings, address: e.target.value })}
-                                className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
                             />
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-xs font-bold text-gray-400 uppercase">Test Email Configuration</label>
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    value={settings.email || ''}
+                                    readOnly
+                                    className="flex-1 p-4 bg-gray-100 rounded-xl text-gray-500"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        if (!settings.email) return;
+                                        const btn = document.getElementById('test-email-btn') as HTMLButtonElement;
+                                        if (btn) btn.innerText = 'Sending...';
+
+                                        try {
+                                            const { testEmailConnection } = await import('@/app/actions/settings');
+                                            const res = await testEmailConnection(settings.email);
+                                            if (res.success) {
+                                                alert('✅ Test Email Sent Successfully! Check your inbox.');
+                                            } else {
+                                                alert(`❌ Send Failed: ${res.error}`);
+                                            }
+                                        } catch (e) {
+                                            alert('❌ Error: ' + e);
+                                        }
+
+                                        if (btn) btn.innerText = 'Test Email';
+                                    }}
+                                    id="test-email-btn"
+                                    className="px-6 rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800 transition-colors"
+                                >
+                                    Test Email
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-2">
+                                Click "Test Email" to verify your SMTP settings. If this works, your receipt emails should also work.
+                            </p>
                         </div>
 
                         <h3 className="text-xl font-black pt-4">Social Media</h3>
