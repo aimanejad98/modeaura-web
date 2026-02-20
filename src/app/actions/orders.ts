@@ -78,8 +78,27 @@ export async function createOrder(data: {
             discountAmount: data.discountAmount || 0
         };
 
-        const order = await prisma.order.create({
-            data: dbData
+        const order = await prisma.$transaction(async (tx) => {
+            // 1. Create Order
+            const newOrder = await tx.order.create({
+                data: dbData
+            });
+
+            // 2. Deduct Stock
+            for (const item of items) {
+                if (item.id) {
+                    await tx.product.update({
+                        where: { id: item.id },
+                        data: { stock: { decrement: Number(item.qty || 1) } }
+                    }).catch(err => {
+                        console.error(`[Orders] Failed to deduct stock for ${item.name} (${item.id}):`, err);
+                        // Optional: Throw error to rollback transaction if strict inventory is required
+                        // throw err; 
+                    });
+                }
+            }
+
+            return newOrder;
         });
 
         revalidatePath('/dashboard/pos');

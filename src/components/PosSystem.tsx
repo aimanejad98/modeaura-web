@@ -463,7 +463,17 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 customerId: selectedCustomer?.id,
                 total,
                 date: new Date().toISOString().split('T')[0],
-                items: cart.map(item => ({ name: item.name, qty: item.qty, price: item.price })),
+                items: cart.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    qty: item.qty,
+                    price: item.price,
+                    sku: item.sku,
+                    variant: item.variant,
+                    size: item.size,
+                    color: item.color,
+                    image: item.image
+                })),
                 paymentMethod,
                 amountPaid: received,
                 change: changeDue,
@@ -483,7 +493,17 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
             setLastOrder({
                 ...order,
-                items: cart.map(item => ({ name: item.name, qty: item.qty, price: item.price })),
+                items: cart.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    qty: item.qty,
+                    price: item.price,
+                    sku: item.sku,
+                    variant: item.variant,
+                    size: item.size,
+                    color: item.color,
+                    image: item.image
+                })),
                 changeDue: paymentTab === 'cash' ? changeDue : 0,
                 paymentMethod,
                 amountReceived: received,
@@ -1202,7 +1222,12 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 <div key={i}>
                                     <div className="font-bold">{item.sku || 'ITEM-' + i}</div>
                                     <div className="grid grid-cols-12">
-                                        <div className="col-span-6 truncate pr-1">{item.name}</div>
+                                        <div className="col-span-6 pr-1">
+                                            <div className="truncate">{item.name}</div>
+                                            <div className="text-[8px] font-normal text-gray-500">
+                                                {item.variant ? item.variant : [item.size, item.color].filter(Boolean).join(' / ')}
+                                            </div>
+                                        </div>
                                         <div className="col-span-2 text-center">{itemQty}</div>
                                         <div className="col-span-2 text-right">{itemPrice.toFixed(2)}</div>
                                         <div className="col-span-2 text-right">{(itemPrice * itemQty).toFixed(2)}</div>
