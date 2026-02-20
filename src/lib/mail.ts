@@ -21,6 +21,9 @@ export async function sendResetCode(email: string, code: string) {
             port: parseInt(SMTP_PORT),
             secure: parseInt(SMTP_PORT) === 465,
             auth: { user: SMTP_USER, pass: SMTP_PASS },
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
         const mailOptions = {
@@ -73,6 +76,9 @@ export async function sendVerificationLink(email: string, token: string) {
             port: parseInt(SMTP_PORT),
             secure: parseInt(SMTP_PORT) === 465,
             auth: { user: SMTP_USER, pass: SMTP_PASS },
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
         const mailOptions = {
@@ -124,6 +130,9 @@ export async function sendOrderReadyForPickupEmail(email: string, orderId: strin
             port: parseInt(SMTP_PORT),
             secure: parseInt(SMTP_PORT) === 465,
             auth: { user: SMTP_USER, pass: SMTP_PASS },
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
         const mailOptions = {
@@ -181,6 +190,9 @@ export async function sendReceiptEmail(email: string, orderDetails: any) {
             port: parseInt(SMTP_PORT),
             secure: parseInt(SMTP_PORT) === 465,
             auth: { user: SMTP_USER, pass: SMTP_PASS },
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
 
