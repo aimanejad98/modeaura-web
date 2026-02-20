@@ -27,7 +27,7 @@ const createTransporter = (portOverride?: number, secureOverride?: boolean) => {
         connectionTimeout: 10000, // 10s timeout
         greetingTimeout: 10000,
         socketTimeout: 10000
-    });
+    } as any);
 };
 
 /**
