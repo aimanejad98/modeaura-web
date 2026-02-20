@@ -1,5 +1,16 @@
 import nodemailer from 'nodemailer';
 
+import dns from 'dns';
+
+// Force IPv4 ordering to prevent ENETUNREACH on systems with broken IPv6
+try {
+    if (dns.setDefaultResultOrder) {
+        dns.setDefaultResultOrder('ipv4first');
+    }
+} catch (e) {
+    // Ignore if not supported in this Node version
+}
+
 const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, NEXT_PUBLIC_BASE_URL } = process.env;
 
 /**

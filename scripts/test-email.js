@@ -2,6 +2,12 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
+const dns = require('dns');
+
+// Force IPv4
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 // Load .env
 const envPath = path.resolve(__dirname, '../.env');
