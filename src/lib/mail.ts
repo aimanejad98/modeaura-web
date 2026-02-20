@@ -34,10 +34,22 @@ const createTransporter = (portOverride?: number, secureOverride?: boolean) => {
         tls: {
             rejectUnauthorized: false
         },
-        family: 4, // Force IPv4 to avoid ENETUNREACH on IPv6
-        connectionTimeout: 10000, // 10s timeout
+        // forcefully resolve to IPv4
+        // family: 4, // failed
+        // Custom lookup to filter IPv4 only
+        name: 'modeaura-mailer',
+        debug: true,
+        logger: true,
+        connectionTimeout: 10000,
         greetingTimeout: 10000,
-        socketTimeout: 10000
+        socketTimeout: 10000,
+        // @ts-ignore
+        lookup: (hostname, options, callback) => {
+            dns.lookup(hostname, { family: 4, all: false }, (err, address, family) => {
+                if (err) callback(err, null, 4);
+                else callback(null, address, 4);
+            });
+        }
     } as any);
 };
 

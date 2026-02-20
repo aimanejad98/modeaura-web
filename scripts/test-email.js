@@ -39,6 +39,12 @@ async function testEmail() {
         },
         tls: {
             rejectUnauthorized: false
+        },
+        lookup: (hostname, options, callback) => {
+            dns.lookup(hostname, { family: 4, all: false }, (err, address, family) => {
+                if (err) callback(err, null, 4);
+                else callback(null, address, 4);
+            });
         }
     });
 
