@@ -343,7 +343,7 @@ export default function ReceiptsPage() {
                                 >
                                     <Trash2 size={16} />
                                 </button>
-                                {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped') && (
+                                {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped' || order.status === 'Completed' || order.status === 'Order Received' || order.status === 'Order Placed') && (
                                     <button
                                         onClick={() => setRefundingOrder(order)}
                                         className="p-2 hover:bg-rose-50 rounded-xl text-gray-300 hover:text-rose-500 transition-colors"
