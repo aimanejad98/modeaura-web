@@ -45,7 +45,7 @@ export async function sendResetCode(email: string, code: string) {
         html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #eee; border-radius: 20px;">
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #1B2936; margin: 0;">Mode <span style="color: #D4AF37;">AURA</span></h1>
+                    <img src="https://modeaura.ca/logo.png" alt="Mode Aura" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
                 </div>
                 <h2 style="text-align: center; color: #1B2936; font-size: 18px; text-transform: uppercase; letter-spacing: 2px;">Reset Your Password</h2>
                 <p style="text-align: center; color: #666; font-size: 14px; line-height: 1.6;">Use the code below to reset your password. It will expire in 15 minutes.</p>
@@ -71,8 +71,8 @@ export async function sendVerificationLink(email: string, token: string) {
         html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #eee; border-radius: 20px;">
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #1B2936; margin: 0;">Mode <span style="color: #D4AF37;">AURA</span></h1>
-                    <p style="font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 3px;">Where Fashion Meets Accessories</p>
+                    <img src="https://modeaura.ca/logo.png" alt="Mode Aura" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
+                    <p style="font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 3px; margin-top: 15px;">Where Fashion Meets Accessories</p>
                 </div>
                 <h2 style="text-align: center; color: #1B2936; font-size: 18px; text-transform: uppercase; letter-spacing: 2px;">Welcome to the Atelier</h2>
                 <p style="text-align: center; color: #666; font-size: 14px; line-height: 1.6;">Click the button below to verify your email and activate your account.</p>
@@ -95,7 +95,7 @@ export async function sendOrderReadyForPickupEmail(email: string, orderId: strin
         html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #eee; border-radius: 20px;">
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #1B2936; margin: 0;">Mode <span style="color: #D4AF37;">AURA</span></h1>
+                    <img src="https://modeaura.ca/logo.png" alt="Mode Aura" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
                 </div>
                 <h2 style="text-align: center; color: #1B2936; font-size: 18px; text-transform: uppercase; letter-spacing: 2px;">Ready for Pickup</h2>
                 <p style="text-align: center; color: #666; font-size: 14px; line-height: 1.6;">Good news, ${customerName}! Your order is packed and ready for collection.</p>
@@ -155,8 +155,11 @@ export async function sendReceiptEmail(email: string, orderDetails: any) {
                                 <!-- Header -->
                                 <tr>
                                     <td style="padding: 40px 0; text-align: center; background-color: #1B2936;">
-                                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; letter-spacing: 2px; font-weight: 300;">MODE <span style="color: #D4AF37; font-weight: 700;">AURA</span></h1>
-                                        <p style="color: #8fa1b3; margin: 10px 0 0; font-size: 10px; text-transform: uppercase; letter-spacing: 3px;">Luxury Accessories</p>
+                                        <!-- Logo Image -->
+                                        <img src="https://modeaura.ca/logo.png" alt="Mode Aura" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
+                                        <!-- Fallback Text (Hidden if image loads, but good for accessibility) -->
+                                        <div style="display: none; color: #ffffff; margin: 10px 0 0; font-size: 28px; letter-spacing: 2px;">MODE <span style="color: #D4AF37;">AURA</span></div>
+                                        <p style="color: #8fa1b3; margin: 15px 0 0; font-size: 10px; text-transform: uppercase; letter-spacing: 3px;">Luxury Accessories</p>
                                     </td>
                                 </tr>
 
