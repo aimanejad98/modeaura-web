@@ -52,9 +52,11 @@ export async function createOrder(data: {
     shippingMethod?: string;
     discountCode?: string;
     discountAmount?: number;
+    tax?: number;
+    shippingCost?: number;
 }) {
     try {
-        const { paymentMethod, amountPaid, change, source, status, items, ...rest } = data;
+        const { paymentMethod, amountPaid, change, source, status, items, tax, shippingCost, ...rest } = data;
 
         // Ensure we only pass fields that exist in the schema
         const dbData: any = {
@@ -109,6 +111,40 @@ export async function createOrder(data: {
 
             return newOrder;
         });
+
+        // 4. Send Confirmation Email (Only for Online/Website orders)
+        // We do this after transaction to not block it, but inside the main function
+        if (source === 'WEBSITE' && rest.customer.includes('@')) {
+            try {
+                const parts = rest.customer.split('|');
+                const customerName = parts[0].trim();
+                const email = parts.length > 1 ? parts[1].trim() : '';
+
+                if (email) {
+                    const orderDetails = {
+                        orderId: rest.orderId,
+                        date: data.date,
+                        total: data.total,
+                        subtotal: data.total - (tax || 0) - (shippingCost || 0) + (data.discountAmount || 0),
+                        tax: tax || 0,
+                        shippingCost: shippingCost || 0,
+                        discountAmount: data.discountAmount || 0,
+                        items: items,
+                        customerName: customerName,
+                        paymentMethod: paymentMethod,
+                        shippingAddress: data.address && data.city ? `${data.address}, ${data.city}` : 'Store Pickup'
+                    };
+
+                    const { sendOrderConfirmationEmail } = await import('@/lib/mail');
+                    await sendOrderConfirmationEmail(email, orderDetails);
+                    console.log(`📧 [Orders] Sent confirmation email to ${email}`);
+                }
+            } catch (err) {
+                console.error('⚠️ [Orders] Failed to send confirmation email:', err);
+            }
+        }
+
+        return order;
 
         revalidatePath('/dashboard/pos');
         revalidatePath('/dashboard/orders');
@@ -197,20 +233,20 @@ export async function updateTracking(id: string, trackingNumber: string, courier
             }
         });
 
-        // 2. Send Shipping Email
-        try {
-            const parts = order.customer.split('|');
-            if (parts.length > 1) {
-                const name = parts[0].trim();
-                const email = parts[1].trim();
-                const { sendOrderShippedEmail } = await import('@/lib/mail');
-                await sendOrderShippedEmail(email, order.orderId, name, trackingNumber, courier);
-                console.log(`📧 [Orders] Sent shipping email to ${email}`);
-            }
-        } catch (emailError) {
-            console.error('⚠️ [Orders] Failed to send shipping email:', emailError);
-            // Don't fail the request if email fails, just log it
-        }
+        // 2. Send Shipping Email - DISABLED per user request
+        // try {
+        //     const parts = order.customer.split('|');
+        //     if (parts.length > 1) {
+        //         const name = parts[0].trim();
+        //         const email = parts[1].trim();
+        //         const { sendOrderShippedEmail } = await import('@/lib/mail');
+        //         await sendOrderShippedEmail(email, order.orderId, name, trackingNumber, courier);
+        //         console.log(`📧 [Orders] Sent shipping email to ${email}`);
+        //     }
+        // } catch (emailError) {
+        //     console.error('⚠️ [Orders] Failed to send shipping email:', emailError);
+        //     // Don't fail the request if email fails, just log it
+        // }
 
         revalidatePath('/dashboard/orders');
         revalidatePath('/dashboard/shipping');

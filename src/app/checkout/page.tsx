@@ -186,7 +186,9 @@ export default function CheckoutPage() {
                 source: 'WEBSITE',
                 shippingMethod: deliveryMethod === 'pickup' ? 'Store Pickup' : (isLocalDelivery ? 'Local Hand-Delivery' : 'Standard'),
                 discountCode: discount?.code,
-                discountAmount: discount?.amount
+                discountAmount: discount?.amount,
+                tax: gstAmount + hstAmount,
+                shippingCost: shippingCost
             };
 
             await createOrder(orderData);

@@ -150,6 +150,139 @@ export async function sendOrderShippedEmail(email: string, orderId: string, cust
 }
 
 /**
+ * Sends an online order confirmation.
+ */
+export async function sendOrderConfirmationEmail(email: string, orderDetails: any) {
+    const itemsHtml = orderDetails.items.map((item: any) => `
+        <tr>
+            <td style="padding: 15px 0; border-bottom: 1px solid #eee; width: 60%;">
+                <span style="display: block; font-weight: bold; color: #1B2936; font-size: 14px;">${item.name}</span>
+                <span style="display: block; font-size: 11px; color: #666; margin-top: 4px;">
+                    ${item.sku ? `SKU: ${item.sku} <br>` : ''}
+                    ${item.variant ? item.variant : [item.size, item.color].filter(Boolean).join(' / ')}
+                </span>
+                <span style="display: block; font-size: 12px; color: #999; margin-top: 4px;">Qty: ${item.qty || item.quantity}</span>
+            </td>
+            <td style="padding: 15px 0; border-bottom: 1px solid #eee; text-align: right; vertical-align: top; font-weight: bold; color: #1B2936;">
+                $${(item.price * (item.qty || item.quantity)).toFixed(2)}
+            </td>
+        </tr>
+    `).join('');
+
+    return sendMailWithFallback({
+        to: email,
+        subject: `Order Confirmation - Mode AURA #${orderDetails.orderId}`,
+        html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #F8F9FB; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F8F9FB;">
+                    <tr>
+                        <td style="padding: 40px 10px;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden;">
+                                
+                                <!-- Header -->
+                                <tr>
+                                    <td style="padding: 40px 0; text-align: center; background-color: #1B2936;">
+                                        <img src="https://modeaura.ca/logo.png" alt="Mode Aura" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
+                                        <p style="color: #8fa1b3; margin: 15px 0 0; font-size: 10px; text-transform: uppercase; letter-spacing: 3px;">Luxury Accessories</p>
+                                    </td>
+                                </tr>
+
+                                <!-- Welcome Message -->
+                                <tr>
+                                    <td style="padding: 30px 40px; text-align: center;">
+                                        <h2 style="margin: 0 0 10px; color: #1B2936; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Thank You for Your Order</h2>
+                                        <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                                            We've received your order and are preparing it with care. You will receive another email when your items ship.
+                                        </p>
+                                        <div style="background: #f9f9f9; padding: 20px; text-align: center; margin: 25px 0 0; border-radius: 10px;">
+                                            <span style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 1px;">Order Number</span><br>
+                                            <span style="font-size: 20px; font-weight: 900; color: #1B2936;">#${orderDetails.orderId}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Shipping Address -->
+                                <tr>
+                                    <td style="padding: 0 40px 20px;">
+                                        <h3 style="font-size: 12px; font-weight: bold; color: #1B2936; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Shipping To</h3>
+                                        <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">
+                                            ${orderDetails.customerName}<br>
+                                            ${orderDetails.shippingAddress}
+                                        </p>
+                                    </td>
+                                </tr>
+
+                                <!-- Items -->
+                                <tr>
+                                    <td style="padding: 10px 40px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            ${itemsHtml}
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Totals -->
+                                <tr>
+                                    <td style="padding: 20px 40px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            <tr>
+                                                <td style="padding: 5px 0; color: #666; font-size: 14px;">Subtotal</td>
+                                                <td style="padding: 5px 0; text-align: right; color: #1B2936; font-weight: bold;">$${orderDetails.subtotal.toFixed(2)}</td>
+                                            </tr>
+                                            ${orderDetails.discountAmount > 0 ? `
+                                            <tr>
+                                                <td style="padding: 5px 0; color: #10b981; font-size: 14px;">Discount</td>
+                                                <td style="padding: 5px 0; text-align: right; color: #10b981; font-weight: bold;">-$${orderDetails.discountAmount.toFixed(2)}</td>
+                                            </tr>
+                                            ` : ''}
+                                            <tr>
+                                                <td style="padding: 5px 0; color: #666; font-size: 14px;">Shipping</td>
+                                                <td style="padding: 5px 0; text-align: right; color: #1B2936; font-weight: bold;">${orderDetails.shippingCost > 0 ? `$${orderDetails.shippingCost.toFixed(2)}` : 'Free'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 5px 0; color: #666; font-size: 14px;">Tax</td>
+                                                <td style="padding: 5px 0; text-align: right; color: #1B2936; font-weight: bold;">$${orderDetails.tax.toFixed(2)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-top: 15px; border-top: 2px solid #1B2936; color: #1B2936; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Total</td>
+                                                <td style="padding-top: 15px; border-top: 2px solid #1B2936; text-align: right; color: #1B2936; font-size: 24px; font-weight: 900;">$${orderDetails.total.toFixed(2)}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="padding: 40px; background-color: #f8f9fb; text-align: center;">
+                                        <div style="text-align: center; margin-bottom: 20px;">
+                                            <a href="https://modeaura.ca/track-order?orderId=${orderDetails.orderId}" style="background: #1B2936; color: white; padding: 12px 30px; text-decoration: none; border-radius: 50px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;">Track Order</a>
+                                        </div>
+                                        <p style="margin: 10px 0 20px; color: #999; font-size: 12px; line-height: 1.6;">
+                                            Need help? Reply to this email.<br>
+                                            Visit <a href="https://modeaura.ca/returns" style="color: #D4AF37; text-decoration: none;">modeaura.ca/returns</a> for returns & exchanges.
+                                        </p>
+                                        <div style="font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 2px; margin-top: 20px;">
+                                            Mode Aura Boutique &bull; Windsor, ON &bull; N8X 2S2
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+        `,
+    }, "ORDER CONFIRMATION");
+}
+
+/**
  * Sends a digital receipt for a POS order.
  */
 export async function sendReceiptEmail(email: string, orderDetails: any) {
