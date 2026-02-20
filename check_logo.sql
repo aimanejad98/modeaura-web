@@ -1,1 +1,0 @@
-SELECT logo FROM "StoreSettings";

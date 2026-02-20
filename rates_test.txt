@@ -1,3 +1,0 @@
-Testing ShipStation Rate Fetch (fedex_walleted)...
-Status Code: 200
-CARRIERS: [{"serviceName":"FedEx First Overnight┬«","serviceCode":"fedex_first_overnight","shipmentCost":111.71,"otherCost":23.35},{"serviceName":"FedEx Priority Overnight┬«","serviceCode":"fedex_priority_overnight","shipmentCost":37.10,"otherCost":7.76},{"serviceName":"FedEx Economy","serviceCode":"fedex_economy","shipmentCost":33.95,"otherCost":7.1},{"serviceName":"FedEx 2Day┬«","serviceCode":"fedex_2day","shipmentCost":33.95,"otherCost":7.1},{"serviceName":"FedEx Standard Overnight┬«","serviceCode":"fedex_standard_overnight","shipmentCost":33.95,"otherCost":7.1},{"serviceName":"FedEx Ground┬«","serviceCode":"fedex_ground","shipmentCost":10.23,"otherCost":2.22}]
