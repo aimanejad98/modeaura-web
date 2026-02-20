@@ -117,6 +117,39 @@ export async function sendOrderReadyForPickupEmail(email: string, orderId: strin
 }
 
 /**
+ * Sends a "Order Shipped" notification with tracking.
+ */
+export async function sendOrderShippedEmail(email: string, orderId: string, customerName: string, trackingNumber: string, courier: string) {
+    const trackingUrl = `https://modeaura.ca/track-order?orderId=${orderId}`;
+
+    return sendMailWithFallback({
+        to: email,
+        subject: `Your Order #${orderId} has Shipped! - Mode AURA`,
+        html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #eee; border-radius: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <img src="https://modeaura.ca/logo.png" alt="Mode Aura" style="max-width: 150px; height: auto; display: block; margin: 0 auto;">
+                </div>
+                <h2 style="text-align: center; color: #1B2936; font-size: 18px; text-transform: uppercase; letter-spacing: 2px;">On Its Way</h2>
+                <p style="text-align: center; color: #666; font-size: 14px; line-height: 1.6;">Great news, ${customerName}! Your order has left our boutique and is on its way to you.</p>
+                
+                <div style="background: #f9f9f9; padding: 30px; text-align: center; margin: 20px 0; border-radius: 15px;">
+                    <div style="font-size: 14px; text-transform: uppercase; color: #999; letter-spacing: 2px; margin-bottom: 5px;">Tracking Number</div>
+                    <span style="display: block; font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #1B2936; margin-bottom: 5px;">${trackingNumber}</span>
+                    <span style="font-size: 12px; color: #666;">(${courier})</span>
+                </div>
+
+                <div style="text-align: center; margin: 40px 0;">
+                    <a href="${trackingUrl}" style="background: #1B2936; color: white; padding: 15px 40px; text-decoration: none; border-radius: 50px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;">Track Your Order</a>
+                </div>
+
+                <p style="text-align: center; color: #999; font-size: 12px; margin-top: 30px;">Please allow 24 hours for the tracking to update.</p>
+            </div>
+        `,
+    }, "ORDER SHIPPED");
+}
+
+/**
  * Sends a digital receipt for a POS order.
  */
 export async function sendReceiptEmail(email: string, orderDetails: any) {

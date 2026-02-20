@@ -184,6 +184,7 @@ export async function updateTracking(id: string, trackingNumber: string, courier
             if (eta.getDay() !== 0 && eta.getDay() !== 6) daysAdded++;
         }
 
+        // 1. Update Database
         const order = await prisma.order.update({
             where: { id },
             data: {
@@ -195,6 +196,22 @@ export async function updateTracking(id: string, trackingNumber: string, courier
                 estimatedDeliveryDate: eta.toISOString().split('T')[0]
             }
         });
+
+        // 2. Send Shipping Email
+        try {
+            const parts = order.customer.split('|');
+            if (parts.length > 1) {
+                const name = parts[0].trim();
+                const email = parts[1].trim();
+                const { sendOrderShippedEmail } = await import('@/lib/mail');
+                await sendOrderShippedEmail(email, order.orderId, name, trackingNumber, courier);
+                console.log(`📧 [Orders] Sent shipping email to ${email}`);
+            }
+        } catch (emailError) {
+            console.error('⚠️ [Orders] Failed to send shipping email:', emailError);
+            // Don't fail the request if email fails, just log it
+        }
+
         revalidatePath('/dashboard/orders');
         revalidatePath('/dashboard/shipping');
         revalidatePath(`/api/orders/${order.orderId}`);

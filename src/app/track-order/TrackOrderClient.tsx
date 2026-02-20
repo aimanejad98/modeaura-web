@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { trackOrder } from '@/app/actions/orders'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { Search, Package, Truck, MapPin, CheckCircle2, Clock, AlertTriangle, ArrowRight } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 
 const TIMELINE_STEPS = [
     { key: 'Processing', label: 'Order Placed', icon: Package, description: 'Your order has been confirmed' },
@@ -20,11 +21,33 @@ function getStepIndex(status: string): number {
 }
 
 export default function TrackOrderClient() {
+    const searchParams = useSearchParams()
     const [orderId, setOrderId] = useState('')
     const [order, setOrder] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [searched, setSearched] = useState(false)
+
+    // Auto-search if orderId is in URL
+    useEffect(() => {
+        const urlOrderId = searchParams.get('orderId')
+        if (urlOrderId) {
+            setOrderId(urlOrderId)
+            // Call internal track function immediately
+            const fetchOrder = async () => {
+                setLoading(true)
+                setSearched(true)
+                const result = await trackOrder(urlOrderId.toUpperCase())
+                if (result) {
+                    setOrder(result)
+                } else {
+                    setError('Order not found. Please check your order number and try again.')
+                }
+                setLoading(false)
+            }
+            fetchOrder()
+        }
+    }, [searchParams])
 
     const handleTrack = async (e: React.FormEvent) => {
         e.preventDefault()
