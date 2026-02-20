@@ -13,10 +13,7 @@ async function fixAddress() {
                 data: {
                     storeName: 'Mode AURA',
                     tagline: 'Luxury Modest Fashion',
-                    address: 'Mode Aura Boutique', // Generic
-                    city: 'Windsor',
-                    province: 'ON',
-                    postalCode: 'N8X 2S2',
+                    address: 'Mode Aura Boutique, Windsor, ON N8X 2S2',
                     phone: '', // Clear phone
                     email: 'modeaura1@gmail.com',
                 }
@@ -29,10 +26,7 @@ async function fixAddress() {
             await prisma.storeSetting.update({
                 where: { id: settings.id },
                 data: {
-                    address: 'Mode Aura Boutique',
-                    city: 'Windsor',
-                    province: 'ON',
-                    postalCode: 'N8X 2S2',
+                    address: 'Mode Aura Boutique, Windsor, ON N8X 2S2',
                     phone: '', // Clear phone
                 }
             });
