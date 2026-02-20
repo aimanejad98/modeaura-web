@@ -12,7 +12,10 @@ export function printOnlineReceipt(order: any) {
 
   // Professional calc for totals
   const shipping = order.shippingCost ?? 0.00
-  const taxRate = 0.13
+
+  // Tax Rates
+  const gstRate = 0.05
+  const hstRate = 0.08
 
   // Ensure numbers are valid
   const total = Number(order.total) || 0
@@ -22,7 +25,10 @@ export function printOnlineReceipt(order: any) {
     return sum + (price * qty)
   }, 0)
 
-  const tax = subtotal * taxRate
+  // Taxable amount includes shipping
+  const taxableAmount = subtotal + shipping
+  const gst = taxableAmount * gstRate
+  const hst = taxableAmount * hstRate
 
   printWindow.document.write(`
     <!DOCTYPE html>
@@ -119,8 +125,12 @@ export function printOnlineReceipt(order: any) {
           <span>$${shipping.toFixed(2)}</span>
         </div>
         <div class="total-row text-gray-400">
-          <span>Sales Tax (HST 13%)</span>
-          <span>$${tax.toFixed(2)}</span>
+          <span>GST (5%)</span>
+          <span>$${gst.toFixed(2)}</span>
+        </div>
+        <div class="total-row text-gray-400">
+          <span>HST (8%)</span>
+          <span>$${hst.toFixed(2)}</span>
         </div>
         <div class="total-row grand-total italic">
           <span>Total CAD</span>
@@ -142,6 +152,7 @@ export function printOnlineReceipt(order: any) {
       </script>
     </body>
     </html>
+
     `)
   printWindow.document.close()
 }

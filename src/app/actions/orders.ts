@@ -3,6 +3,7 @@
 import { getSession } from '@/lib/auth';
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { sendOrderReadyForPickupEmail, sendReceiptEmail } from '@/lib/mail';
 
 export async function getOrders() {
     try {
@@ -116,6 +117,25 @@ export async function updateOrderStatus(id: string, status: string) {
             where: { id },
             data
         });
+
+        // Trigger Email Notification for Pickup
+        if (status === 'Ready for Pickup') {
+            try {
+                const parts = order.customer.split('|');
+                if (parts.length > 1) {
+                    const name = parts[0].trim();
+                    const email = parts[1].trim();
+                    // Use the imported function
+                    await sendOrderReadyForPickupEmail(email, order.orderId, name);
+                    console.log(`📧 [Orders] Sent pickup email to ${email}`);
+                } else {
+                    console.log('⚠️ [Orders] No email found in customer string for pickup notification');
+                }
+            } catch (err) {
+                console.error('⚠️ [Orders] Failed to send pickup email:', err);
+            }
+        }
+
         revalidatePath('/dashboard/orders');
         revalidatePath('/dashboard/shipping');
         revalidatePath(`/api/orders/${order.orderId}`);
@@ -282,5 +302,15 @@ export async function refundOrder(orderId: string, restock: boolean = true) {
     } catch (error: any) {
         console.error('[Refund] Failed:', error);
         return { success: false, error: error.message };
+    }
+}
+
+export async function emailReceipt(email: string, orderDetails: any) {
+    try {
+        const result = await sendReceiptEmail(email, orderDetails);
+        return result;
+    } catch (error) {
+        console.error('Failed to email receipt:', error);
+        return { success: false, error };
     }
 }

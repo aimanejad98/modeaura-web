@@ -68,7 +68,8 @@ export default function HeroSlider() {
                         {/* Layout Content */}
                         <div className="relative h-full w-full">
                             {layout === 'Full' && (
-                                <div className="h-full max-w-7xl mx-auto px-8 flex items-center justify-center text-center pt-32 md:pt-48">
+                                <div className="h-full max-w-7xl mx-auto px-8 flex items-center justify-center text-center pt-32 md:pt-64">
+
                                     <div className={`max-w-3xl space-y-8 transition-all duration-1000 delay-300 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                                         <div className="space-y-4">
                                             <h5 className={`${slide.subtitleFont || 'font-black'} uppercase tracking-[0.6em] text-[10px] md:text-[11px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]`} style={{ color: slide.subtitleColor || 'var(--gold)' }}>

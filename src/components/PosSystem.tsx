@@ -71,6 +71,10 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [transactionId, setTransactionId] = useState('')
     const [mounted, setMounted] = useState(false)
     const [taxRate, setTaxRate] = useState(0.13) // Default to 13%
+    // Email Receipt State
+    const [receiptEmail, setReceiptEmail] = useState('')
+    const [emailSending, setEmailSending] = useState(false)
+    const [emailSent, setEmailSent] = useState(false)
 
     const generateId = () => `ID #${Date.now().toString().slice(-4)}`
 
@@ -482,12 +486,39 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             })
             setCart([])
             setAppliedDiscount(null)
+            setAppliedDiscount(null)
             setShowPaymentModal(false)
             setTransactionId(generateId())
+            // Pre-fill email if customer is selected
+            if (selectedCustomer && selectedCustomer.email) {
+                setReceiptEmail(selectedCustomer.email)
+            } else {
+                setReceiptEmail('')
+            }
+            setEmailSent(false)
+            setEmailSending(false)
         } catch (error) {
             console.error('Checkout failed:', error)
             alert('Failed to process transaction. Please try again.')
         }
+    }
+
+    async function handleEmailReceipt() {
+        if (!receiptEmail || !lastOrder) return
+        setEmailSending(true)
+        try {
+            const { emailReceipt } = await import('@/app/actions/orders')
+            const result = await emailReceipt(receiptEmail, lastOrder)
+            if (result.success) {
+                setEmailSent(true)
+            } else {
+                alert('Failed to send email receipt')
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Error sending email')
+        }
+        setEmailSending(false)
     }
 
     if (loading) return (
@@ -965,6 +996,26 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 <button onClick={() => window.print()} className="w-full py-3 bg-white border-2 border-gray-100 text-gray-900 rounded-xl font-bold hover:bg-gray-50 transition-colors">
                                     🖨️ Print Receipt
                                 </button>
+
+                                {/* Email Receipt Section */}
+                                <div className="flex gap-2">
+                                    <input
+                                        type="email"
+                                        placeholder="Enter email for receipt..."
+                                        value={receiptEmail}
+                                        onChange={(e) => setReceiptEmail(e.target.value)}
+                                        disabled={emailSent || emailSending}
+                                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-[#D4AF37]"
+                                    />
+                                    <button
+                                        onClick={handleEmailReceipt}
+                                        disabled={!receiptEmail || emailSent || emailSending}
+                                        className={`px-4 py-3 rounded-xl font-bold text-white transition-all ${emailSent ? 'bg-green-500' : 'bg-[#1E1E1E] hover:bg-black'}`}
+                                    >
+                                        {emailSending ? '...' : emailSent ? '✓' : '✉️'}
+                                    </button>
+                                </div>
+
                                 <button onClick={() => setLastOrder(null)} className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-bold text-lg hover:bg-black transition-all shadow-lg shadow-gray-200">
                                     New Sale
                                 </button>

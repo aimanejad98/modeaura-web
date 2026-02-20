@@ -5,13 +5,12 @@ import { useCart } from '@/context/CartContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Price from '@/components/Price';
-import { ShieldCheck, Truck, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Loader2, MapPin, ShieldCheck, Ticket, Truck, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createOrder } from '@/app/actions/orders';
 import { getCurrentUser } from '@/app/actions/auth';
 import { validateDiscountCode, incrementDiscountUses } from '@/app/actions/discounts';
-import { Ticket, X, Loader2 } from 'lucide-react';
 
 // Stripe Imports
 import { loadStripe } from '@stripe/stripe-js';
@@ -43,6 +42,8 @@ export default function CheckoutPage() {
         country: 'Canada',
         email: ''
     });
+
+    const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping');
 
     const canadianProvinces = [
         'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 'Newfoundland and Labrador',
@@ -83,11 +84,13 @@ export default function CheckoutPage() {
     }, []);
 
     const isLocalDelivery = useMemo(() => {
+        if (deliveryMethod === 'pickup') return false;
         const city = formData.city.toLowerCase().trim();
         return city === 'windsor' || city === 'lasalle';
-    }, [formData.city]);
+    }, [formData.city, deliveryMethod]);
 
     const shippingCost = useMemo(() => {
+        if (deliveryMethod === 'pickup') return 0;
         if (isLocalDelivery) return 0;
         if (!formData.country) return 0;
         if (formData.country === 'Canada') {
@@ -99,9 +102,12 @@ export default function CheckoutPage() {
             return 18;
         }
         return 0;
-    }, [formData.country, formData.province, formData.city, isLocalDelivery]);
+    }, [formData.country, formData.province, formData.city, isLocalDelivery, deliveryMethod]);
 
-    const finalTotal = (totalAfterDiscount + shippingCost) * 1.13;
+    const taxableAmount = totalAfterDiscount + shippingCost;
+    const gstAmount = taxableAmount * 0.05;
+    const hstAmount = taxableAmount * 0.08;
+    const finalTotal = taxableAmount + gstAmount + hstAmount;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -160,7 +166,8 @@ export default function CheckoutPage() {
             const orderId = `MA-${Math.floor(100000 + Math.random() * 900000)}`;
             const orderData = {
                 orderId: orderId,
-                customer: `${formData.firstName} ${formData.lastName}`,
+                customer: `${formData.firstName} ${formData.lastName} | ${formData.email}`,
+
                 customerId: user?.id || null,
                 email: formData.email,
                 total: finalTotal,
@@ -169,15 +176,15 @@ export default function CheckoutPage() {
                     ...item,
                     sku: item.sku || 'N/A'
                 })),
-                address: formData.address,
-                city: formData.city,
-                province: formData.province,
-                postalCode: formData.postalCode,
+                address: deliveryMethod === 'pickup' ? 'Mode Aura Boutique (Pickup)' : formData.address,
+                city: deliveryMethod === 'pickup' ? 'Windsor' : formData.city,
+                province: deliveryMethod === 'pickup' ? 'Ontario' : formData.province,
+                postalCode: deliveryMethod === 'pickup' ? 'N8X 2S2' : formData.postalCode,
                 status: 'Pending',
                 paymentMethod: 'Credit Card (Stripe)',
                 amountPaid: finalTotal,
                 source: 'WEBSITE',
-                shippingMethod: isLocalDelivery ? 'Local Hand-Delivery' : 'Standard',
+                shippingMethod: deliveryMethod === 'pickup' ? 'Store Pickup' : (isLocalDelivery ? 'Local Hand-Delivery' : 'Standard'),
                 discountCode: discount?.code,
                 discountAmount: discount?.amount
             };
@@ -196,6 +203,8 @@ export default function CheckoutPage() {
             alert('Payment successful but order creation failed. Please contact support.');
         }
     };
+
+    // ... (Empty cart check and Success view remain unchanged)
 
     if (cart.length === 0 && paymentStep !== 'success') {
         return (
@@ -258,11 +267,44 @@ export default function CheckoutPage() {
                             <form onSubmit={handleProceedToPayment} className="space-y-12 animate-in slide-in-from-left-4 duration-500">
                                 <div className="space-y-8">
                                     <div className="flex items-center justify-between">
-                                        <h2 className="text-3xl font-display italic text-[#1B2936]">Shipping Details</h2>
+                                        <h2 className="text-3xl font-display italic text-[#1B2936]">Delivery Details</h2>
                                         {!user && (
                                             <Link href="/login?redirect=/checkout" className="text-[9px] font-black uppercase tracking-widest text-[var(--gold)] hover:text-black transition-colors">Already a member? Sign In</Link>
                                         )}
                                     </div>
+
+                                    {/* Delivery Method Toggle */}
+                                    <div className="grid grid-cols-2 gap-4 bg-white p-2 rounded-2xl border border-gray-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setDeliveryMethod('shipping')}
+                                            className={`py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${deliveryMethod === 'shipping' ? 'bg-[#1B2936] text-white shadow-lg' : 'text-gray-400 hover:text-[#1B2936]'}`}
+                                        >
+                                            Standard Shipping
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDeliveryMethod('pickup')}
+                                            className={`py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${deliveryMethod === 'pickup' ? 'bg-[#1B2936] text-white shadow-lg' : 'text-gray-400 hover:text-[#1B2936]'}`}
+                                        >
+                                            Pick from Store
+                                        </button>
+                                    </div>
+
+                                    {/* Pickup Info */}
+                                    {deliveryMethod === 'pickup' && (
+                                        <div className="p-8 bg-white border border-[var(--gold)]/20 rounded-[2rem] flex gap-6 animate-in fade-in zoom-in-95">
+                                            <div className="w-16 h-16 bg-[#FAF9F6] rounded-2xl flex items-center justify-center text-[#1B2936] shrink-0">
+                                                <MapPin size={24} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-[#1B2936]">Mode Aura Boutique</h4>
+                                                <p className="text-sm text-gray-500 mt-1">Windsor, Ontario</p>
+                                                <p className="text-[10px] font-black text-[var(--gold)] uppercase tracking-widest mt-4">Ready in 24 Hours</p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">First Name</label>
@@ -285,57 +327,63 @@ export default function CheckoutPage() {
                                                 className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none" required
                                             />
                                         </div>
-                                        <div className="col-span-2 space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Shipping Address</label>
-                                            <input
-                                                type="text" name="address" value={formData.address} onChange={handleInputChange}
-                                                placeholder="Street address, apartment, suite, etc."
-                                                className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none" required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Country</label>
-                                            <select
-                                                name="country" value={formData.country} onChange={handleInputChange}
-                                                className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none cursor-pointer"
-                                                required
-                                            >
-                                                <option value="Canada">Canada</option>
-                                                <option value="United States">United States</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">City</label>
-                                            <input
-                                                type="text" name="city" value={formData.city} onChange={handleInputChange}
-                                                placeholder="e.g. Windsor"
-                                                className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none" required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{formData.country === 'Canada' ? 'Province' : 'State'}</label>
-                                            <select
-                                                name="province" value={formData.province} onChange={handleInputChange}
-                                                className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none cursor-pointer"
-                                                required
-                                            >
-                                                <option value="">Select {formData.country === 'Canada' ? 'Province' : 'State'}</option>
-                                                {provinces.map(p => (
-                                                    <option key={p} value={p}>{p}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{formData.country === 'Canada' ? 'Postal Code' : 'ZIP Code'}</label>
-                                            <input
-                                                type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange}
-                                                placeholder={formData.country === 'Canada' ? 'A1A 1A1' : '12345'}
-                                                className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none" required
-                                            />
-                                        </div>
+
+                                        {/* Shipping Fields - Only show if Shipping */}
+                                        {deliveryMethod === 'shipping' && (
+                                            <>
+                                                <div className="col-span-2 space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Shipping Address</label>
+                                                    <input
+                                                        type="text" name="address" value={formData.address} onChange={handleInputChange}
+                                                        placeholder="Street address, apartment, suite, etc."
+                                                        className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none" required
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Country</label>
+                                                    <select
+                                                        name="country" value={formData.country} onChange={handleInputChange}
+                                                        className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none cursor-pointer"
+                                                        required
+                                                    >
+                                                        <option value="Canada">Canada</option>
+                                                        <option value="United States">United States</option>
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">City</label>
+                                                    <input
+                                                        type="text" name="city" value={formData.city} onChange={handleInputChange}
+                                                        placeholder="e.g. Windsor"
+                                                        className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none" required
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{formData.country === 'Canada' ? 'Province' : 'State'}</label>
+                                                    <select
+                                                        name="province" value={formData.province} onChange={handleInputChange}
+                                                        className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none cursor-pointer"
+                                                        required
+                                                    >
+                                                        <option value="">Select {formData.country === 'Canada' ? 'Province' : 'State'}</option>
+                                                        {provinces.map(p => (
+                                                            <option key={p} value={p}>{p}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{formData.country === 'Canada' ? 'Postal Code' : 'ZIP Code'}</label>
+                                                    <input
+                                                        type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange}
+                                                        placeholder={formData.country === 'Canada' ? 'A1A 1A1' : '12345'}
+                                                        className="w-full bg-white border border-gray-100 rounded-xl px-6 py-4 text-sm focus:ring-1 focus:ring-[var(--gold)] outline-none" required
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
 
-                                    {isLocalDelivery && (
+                                    {isLocalDelivery && deliveryMethod === 'shipping' && (
                                         <div className="p-6 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-[2rem] flex items-center gap-4 animate-in fade-in zoom-in-95">
                                             <div className="w-12 h-12 bg-[#D4AF37] rounded-full flex items-center justify-center text-white shrink-0">
                                                 <Truck size={20} />
@@ -357,7 +405,7 @@ export default function CheckoutPage() {
                                 <div className="space-y-8">
                                     <div className="flex items-center justify-between">
                                         <h2 className="text-3xl font-display italic text-[#1B2936]">Payment Method</h2>
-                                        <button onClick={() => setPaymentStep('info')} className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors">← Edit Shipping</button>
+                                        <button onClick={() => setPaymentStep('info')} className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors">← Edit Details</button>
                                     </div>
 
                                     {clientSecret && (
@@ -456,12 +504,16 @@ export default function CheckoutPage() {
                                     )}
                                 </div>
                                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                    <span>Taxes (HST/GST)</span>
-                                    <Price amount={(totalAfterDiscount + shippingCost) * 0.13} />
+                                    <span>GST (5%)</span>
+                                    <Price amount={gstAmount} />
+                                </div>
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                    <span>HST (8%)</span>
+                                    <Price amount={hstAmount} />
                                 </div>
                                 <div className="flex justify-between items-baseline pt-4 border-t border-gray-50">
                                     <span className="text-xs font-black uppercase tracking-[0.2em] text-[#1B2936]">Total Value</span>
-                                    <Price amount={(totalAfterDiscount + shippingCost) * 1.13} className="text-4xl font-display italic text-[var(--gold)]" />
+                                    <Price amount={finalTotal} className="text-4xl font-display italic text-[var(--gold)]" />
                                 </div>
                             </div>
                         </div>
@@ -473,3 +525,4 @@ export default function CheckoutPage() {
         </main>
     );
 }
+

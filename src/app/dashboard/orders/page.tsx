@@ -6,7 +6,8 @@ import { getOrders, deleteOrder, updateTracking, updateOrderStatus, refundOrder 
 import { getProductSku } from '@/app/actions/inventory'
 import { printOnlineReceipt } from '@/components/OnlineReceipt'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
-import { Search, Package, CheckCircle2, Scan, QrCode, X, ChevronRight, Loader2, Boxes, Truck, MapPin, ClipboardCheck, RotateCcw, AlertCircle, DollarSign } from 'lucide-react'
+import { Search, Package, CheckCircle2, Scan, QrCode, X, ChevronRight, Loader2, Boxes, Truck, MapPin, ClipboardCheck, RotateCcw, AlertCircle, DollarSign, PackageCheck } from 'lucide-react'
+
 
 export default function OrdersPage() {
     const router = useRouter()
@@ -275,29 +276,48 @@ export default function OrdersPage() {
                                         </td>
                                         <td className="p-5 text-right">
                                             <div className="flex items-center justify-end gap-3 transition-all duration-300">
-                                                {(order.status === 'Pending' || order.status === 'Paid') && (
-                                                    <button
-                                                        onClick={() => startFetching(order)}
-                                                        className="px-4 py-2 bg-[#1B2936] text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black flex items-center gap-2 shadow-lg"
-                                                    >
-                                                        <Scan size={14} /> Start Picking
-                                                    </button>
+                                                {/* Pickup Workflow */}
+                                                {order.shippingMethod === 'Store Pickup' && (
+                                                    <>
+                                                        {order.status === 'Pending' && (
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(order.id, 'Ready for Pickup')}
+                                                                className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-blue-100 transition-colors"
+                                                            >
+                                                                <PackageCheck size={14} /> Ready for Pickup
+                                                            </button>
+                                                        )}
+                                                        {order.status === 'Ready for Pickup' && (
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(order.id, 'Picked Up')}
+                                                                className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-green-100 transition-colors"
+                                                            >
+                                                                <CheckCircle2 size={14} /> Confirm Pickup
+                                                            </button>
+                                                        )}
+                                                    </>
                                                 )}
-                                                {order.status === 'Fetching' && (
-                                                    <button
-                                                        onClick={() => setFetchingOrder(order)}
-                                                        className="px-4 py-2 bg-sky-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-sky-600 flex items-center gap-2 shadow-lg"
-                                                    >
-                                                        <Scan size={14} /> Resume Scan
-                                                    </button>
-                                                )}
-                                                {order.status === 'Packaging' && (
-                                                    <button
-                                                        onClick={() => handleStatusUpdate(order.id, 'Ready for Shipping')}
-                                                        className="px-4 py-2 bg-amber-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-600 flex items-center gap-2 shadow-lg"
-                                                    >
-                                                        <Package size={14} /> Finalize Pack
-                                                    </button>
+
+                                                {/* Standard Shipping Workflow */}
+                                                {order.shippingMethod !== 'Store Pickup' && (
+                                                    <>
+                                                        {(order.status === 'Pending' || order.status === 'Paid') && (
+                                                            <button
+                                                                onClick={() => startFetching(order)}
+                                                                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-indigo-100 transition-colors"
+                                                            >
+                                                                <Scan size={14} /> Start Picking
+                                                            </button>
+                                                        )}
+                                                        {order.status === 'Packaging' && (
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(order.id, 'Ready for Shipping')}
+                                                                className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-amber-100 transition-colors"
+                                                            >
+                                                                <Package size={14} /> Finalize Pack
+                                                            </button>
+                                                        )}
+                                                    </>
                                                 )}
                                                 {/* Refund Button */}
                                                 {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped' || order.status === 'Packaging') && (
