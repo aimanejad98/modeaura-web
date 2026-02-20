@@ -1179,118 +1179,54 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             </div>
             {/* PRINT ONLY RECEIPT LAYOUT */}
             {lastOrder && (
-                <div className="hidden print:block print:max-w-[300px] print:mx-auto print:p-2 bg-white text-black font-mono text-[10px] leading-tight print:pb-20">
-                    <div className="text-center mb-2">
-                        <h1 className="text-xl font-black tracking-tighter mb-1">{storeSettings?.storeName || 'MODE AURA'}</h1>
-                        <p className="font-bold">{storeSettings?.tagline || 'Fashion and Accessories'}</p>
-                        <p>{storeSettings?.address || '2670 Kevin St'}</p>
-                        {storeSettings?.city && <p>{storeSettings.city}, {storeSettings.province} {storeSettings.postalCode}</p>}
-                        {storeSettings?.phone && <p>Tel: {storeSettings.phone}</p>}
-                        <p>{storeSettings?.taxId ? `GST/HST Reg. No. ${storeSettings.taxId}` : ''}</p>
-                        <p className="mt-1">Visit Us At {storeSettings?.website || 'www.modeaura.ca'}</p>
+                <div className="hidden print:block print:max-w-[300px] print:mx-auto print:p-2 bg-white text-black leading-tight print:pb-20" style={{ fontFamily: "'Courier New', monospace" }}>
+                    <div className="text-center mb-4 pb-4 border-b-2 border-black">
+                        <h1 className="text-2xl font-black uppercase tracking-tighter mb-1">Mode AURA</h1>
+                        <p className="text-[11px] text-gray-600 mt-1">Luxury Accessories</p>
+                        <p className="text-[11px] text-gray-600 mt-1">{new Date().toLocaleString()}</p>
                     </div>
 
-                    <div className="flex justify-between mb-1">
-                        <span>Store: 001</span>
-                        <span>Register: 1</span>
-                    </div>
-                    <div className="flex justify-between mb-1">
-                        <span>Date: {new Date().toLocaleDateString()}</span>
-                        <span>Time: {new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                        <span>Trans: {lastOrder.orderId.replace('MA-', '')}</span>
-                        <span>Cashier: Admin</span>
+                    <div className="flex justify-between text-xs text-gray-600 mb-4">
+                        <span>Order #{lastOrder.orderId}</span>
                     </div>
 
-                    <div className="mb-2 border-b border-black border-dashed"></div>
-
-                    <div className="grid grid-cols-12 font-bold mb-1">
-                        <div className="col-span-6">Item</div>
-                        <div className="col-span-2 text-center">Qty</div>
-                        <div className="col-span-2 text-right">Price</div>
-                        <div className="col-span-2 text-right">Amnt</div>
-                    </div>
-
-                    <div className="mb-2 border-b border-black border-dashed"></div>
-
-                    <div className="space-y-2 mb-2">
+                    <div className="mb-4">
                         {lastOrder.items.map((item: any, i: number) => {
                             const itemPrice = Number(item.price) || 0;
                             const itemQty = Number(item.qty) || 1;
+                            const itemTotal = itemPrice * itemQty;
                             return (
-                                <div key={i}>
-                                    <div className="font-bold">{item.sku || 'ITEM-' + i}</div>
-                                    <div className="grid grid-cols-12">
-                                        <div className="col-span-6 pr-1">
-                                            <div className="truncate">{item.name}</div>
-                                            <div className="text-[8px] font-normal text-gray-500">
-                                                {item.variant ? item.variant : [item.size, item.color].filter(Boolean).join(' / ')}
-                                            </div>
+                                <div key={i} className="flex justify-between py-2 border-b border-dashed border-gray-200">
+                                    <div>
+                                        <div className="font-bold text-sm">{item.name}</div>
+                                        <div className="text-[10px] text-gray-600 mt-0.5">
+                                            {item.sku ? `SKU: ${item.sku}` : ''}
+                                            {item.variant ? ` • ${item.variant}` : [item.size, item.color].filter(Boolean).length > 0 ? ` • ${[item.size, item.color].filter(Boolean).join(' / ')}` : ''}
                                         </div>
-                                        <div className="col-span-2 text-center">{itemQty}</div>
-                                        <div className="col-span-2 text-right">{itemPrice.toFixed(2)}</div>
-                                        <div className="col-span-2 text-right">{(itemPrice * itemQty).toFixed(2)}</div>
+                                        <div className="text-[10px] text-gray-600 mt-0.5">Qty: {itemQty} @ ${itemPrice.toFixed(2)}</div>
                                     </div>
+                                    <span className="font-bold text-sm">${itemTotal.toFixed(2)}</span>
                                 </div>
                             );
                         })}
                     </div>
 
-                    <div className="mb-2 border-b border-black border-dashed"></div>
-
-                    <div className="space-y-1 text-right max-w-[80%] ml-auto">
-                        <div className="flex justify-between">
+                    <div className="border-t-2 border-black pt-2 mt-4 space-y-1">
+                        <div className="flex justify-between text-xs text-gray-600">
                             <span>Subtotal</span>
-                            <span>{lastOrder.subtotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>GST (5%)</span>
-                            <span>{(lastOrder.subtotal * 0.05).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>HST (8%)</span>
-                            <span>{(lastOrder.subtotal * 0.08).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-black text-sm mt-1">
-                            <span>Total</span>
-                            <span>{lastOrder.total.toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 mb-2 border-b border-black border-dashed"></div>
-
-                    <div className="space-y-1 text-right max-w-[80%] ml-auto">
-                        <div className="flex justify-between">
-                            <span>{lastOrder.payment || 'Payment'}</span>
-                            <span>{lastOrder.amountReceived?.toFixed(2) || lastOrder.total.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Change</span>
-                            <span>{lastOrder.changeDue.toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 text-center space-y-2">
-                        <p>***********************************</p>
-                        <p className="font-bold">{storeSettings?.receiptNote || 'Thank you for shopping with us!'}</p>
-                        <p>NO REFUNDS OR EXCHANGES</p>
-                        <p>ON FINAL SALE ITEMS</p>
-                        <p>***********************************</p>
-
-                        <div className="mt-4 pt-2">
-                            {/* Simulated Barcode */}
-                            <div className="h-12 bg-black w-3/4 mx-auto mask-barcode flex items-end justify-center text-white text-[8px] pb-1 tracking-[4px]">
-                                ||| || ||| || |||
+                            <div className="mt-4 pt-2">
+                                {/* Simulated Barcode */}
+                                <div className="h-12 bg-black w-3/4 mx-auto mask-barcode flex items-end justify-center text-white text-[8px] pb-1 tracking-[4px]">
+                                    ||| || ||| || |||
+                                </div>
+                                <p className="text-[8px] mt-1">{lastOrder.orderId}</p>
                             </div>
-                            <p className="text-[8px] mt-1">{lastOrder.orderId}</p>
-                        </div>
-                        <div className="pt-2 text-[8px] uppercase tracking-widest">
-                            Mode Aura &bull; Customer Copy
+                            <div className="pt-2 text-[8px] uppercase tracking-widest">
+                                Mode Aura &bull; Customer Copy
+                            </div>
                         </div>
                     </div>
-                </div>
             )}
-        </>
-    )
-}
+                </>
+            )
+            }
