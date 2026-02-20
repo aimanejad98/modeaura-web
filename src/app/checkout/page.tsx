@@ -495,25 +495,23 @@ export default function CheckoutPage() {
                                         <span>-<Price amount={discount.amount} /></span>
                                     </div>
                                 )}
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                <div className="flex justify-between text-gray-500">
                                     <span>Shipping</span>
-                                    {shippingCost === 0 ? (
-                                        <span className="text-[var(--gold)]">COMPLIMENTARY</span>
-                                    ) : (
-                                        <Price amount={shippingCost} />
-                                    )}
+                                    <span>{shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`}</span>
                                 </div>
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                <div className="flex justify-between text-gray-500">
                                     <span>GST (5%)</span>
-                                    <Price amount={gstAmount} />
+                                    <span>${gstAmount.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                <div className="flex justify-between text-gray-500">
                                     <span>HST (8%)</span>
-                                    <Price amount={hstAmount} />
+                                    <span>${hstAmount.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between items-baseline pt-4 border-t border-gray-50">
-                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-[#1B2936]">Total Value</span>
-                                    <Price amount={finalTotal} className="text-4xl font-display italic text-[var(--gold)]" />
+                                <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                                    <span className="font-display italic text-xl text-[#1B2936]">Total Value</span>
+                                    <span className="font-display italic text-2xl text-[var(--gold)]">
+                                        CAD ${finalTotal.toFixed(2)}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -525,4 +523,3 @@ export default function CheckoutPage() {
         </main>
     );
 }
-
