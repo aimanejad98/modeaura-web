@@ -28,6 +28,7 @@
     "react": "latest",
     "react-dom": "latest",
     "recharts": "^3.7.0",
+    "resend": "^6.9.2",
     "sharp": "^0.34.5",
     "shippo": "^2.17.4",
     "stripe": "^20.3.1",

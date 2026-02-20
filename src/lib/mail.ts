@@ -1,110 +1,37 @@
-import nodemailer from 'nodemailer';
+import { resend } from './resend';
 
-import dns from 'dns';
-
-// Force IPv4 ordering to prevent ENETUNREACH on systems with broken IPv6
-try {
-    if (dns.setDefaultResultOrder) {
-        dns.setDefaultResultOrder('ipv4first');
-    }
-} catch (e) {
-    // Ignore if not supported in this Node version
-}
-
-const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, NEXT_PUBLIC_BASE_URL } = process.env;
+const { SMTP_FROM, NEXT_PUBLIC_BASE_URL } = process.env;
 
 /**
- * Creates a Nodemailer transporter.
- */
-const createTransporter = (portOverride?: number, secureOverride?: boolean) => {
-    const port = portOverride || parseInt(SMTP_PORT || '465');
-    // Auto-detect secure if not provided: true for 465, false otherwise
-    const secure = secureOverride !== undefined ? secureOverride : (port === 465);
-
-    console.log(`[Mail] Creating transporter: ${SMTP_HOST}:${port} (Secure: ${secure})`);
-
-    return nodemailer.createTransport({
-        host: SMTP_HOST,
-        port: port,
-        secure: secure,
-        auth: {
-            user: SMTP_USER,
-            pass: SMTP_PASS,
-        },
-        tls: {
-            rejectUnauthorized: false
-        },
-        // forcefully resolve to IPv4
-        // family: 4, // failed
-        // Custom lookup to filter IPv4 only
-        name: 'modeaura-mailer',
-        debug: true,
-        logger: true,
-        connectionTimeout: 30000,
-        greetingTimeout: 30000,
-        socketTimeout: 30000,
-        // @ts-ignore
-        lookup: (hostname, options, callback) => {
-            console.log(`[Mail DNS] Resolving ${hostname} (forcing IPv4)...`);
-            dns.lookup(hostname, { family: 4, all: false }, (err, address, family) => {
-                if (err) {
-                    console.error('[Mail DNS] Resolution failed:', err);
-                    callback(err, null, 4);
-                } else {
-                    console.log(`[Mail DNS] Resolved ${hostname} to ${address} (Family: ${family})`);
-                    callback(null, address, 4);
-                }
-            });
-        }
-    } as any);
-};
-
-/**
- * Robust email sender with fallback logic.
- * Tries the configured port first, then toggles (465 <-> 587) if connection fails.
+ * Robust email sender using Resend.
+ * Replaces the old Nodemailer transport.
  */
 export async function sendMailWithFallback(mailOptions: any, logTag: string) {
-    // 1. Check for missing config (Dev Mode)
-    if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-        console.log(`--- DEVELOPMENT MAIL LOG: ${logTag} ---`);
-        console.log(`To: ${mailOptions.to}`);
-        console.log(`Subject: ${mailOptions.subject}`);
-        console.log('----------------------------------------');
-        return { success: true, loggedToConsole: true };
-    }
+    console.log(`[Mail] Sending email via Resend: ${logTag}`);
 
-    const primaryPort = parseInt(SMTP_PORT);
-    const primarySecure = primaryPort === 465;
+    // Validate From Address
+    // Resend free tier ONLY allows 'onboarding@resend.dev' or verified domains.
+    // We use the environment variable, but fallback to safety if missing.
+    const fromAddress = SMTP_FROM || 'onboarding@resend.dev';
 
-    // 2. Try Primary Configuration
     try {
-        const transporter = createTransporter(primaryPort, primarySecure);
-        await transporter.verify(); // Validate connection before sending
-        await transporter.sendMail(mailOptions);
-        return { success: true };
-    } catch (primaryError: any) {
-        console.warn(`[Mail] Primary config failed (${primaryPort}/${primarySecure ? 'SSL' : 'TLS'}). Error: ${primaryError.message}`);
+        const data = await resend.emails.send({
+            from: fromAddress,
+            to: mailOptions.to,
+            subject: mailOptions.subject,
+            html: mailOptions.html,
+        });
 
-        // 3. Fallback Strategy: Toggle Port
-        // If 465 failed, try 587 (TLS). If 587 failed, try 465 (SSL).
-        const altPort = primaryPort === 465 ? 587 : 465;
-        const altSecure = altPort === 465;
-
-        console.log(`[Mail] Retrying with Fallback config (${altPort}/${altSecure ? 'SSL' : 'TLS'})...`);
-
-        try {
-            const fallbackTransporter = createTransporter(altPort, altSecure);
-            await fallbackTransporter.sendMail(mailOptions);
-            console.log(`[Mail] Fallback success! Please update .env to use PORT=${altPort}.`);
-            return { success: true, warning: `Sent via fallback port ${altPort}` };
-        } catch (fallbackError: any) {
-            console.error(`[Mail] Fallback failed: ${fallbackError.message}`);
-            // Return BOTH errors to help debug
-            return {
-                success: false,
-                error: `Primary (${primaryPort}/${primarySecure ? 'SSL' : 'TLS'}): ${primaryError.message}. Fallback (${altPort}/${altSecure ? 'SSL' : 'TLS'}): ${fallbackError.message}`
-            };
+        if (data.error) {
+            console.error(`[Mail] Resend Error:`, data.error);
+            return { success: false, error: data.error.message };
         }
+
+        console.log(`[Mail] Success! Id: ${data.data?.id}`);
+        return { success: true };
+    } catch (error: any) {
+        console.error(`[Mail] Exception:`, error);
+        return { success: false, error: error.message };
     }
 }
 
@@ -113,7 +40,6 @@ export async function sendMailWithFallback(mailOptions: any, logTag: string) {
  */
 export async function sendResetCode(email: string, code: string) {
     return sendMailWithFallback({
-        from: SMTP_FROM || `"Mode AURA" <${SMTP_USER}>`,
         to: email,
         subject: 'Your Password Reset Code - Mode AURA',
         html: `
@@ -140,7 +66,6 @@ export async function sendVerificationLink(email: string, token: string) {
     const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
 
     return sendMailWithFallback({
-        from: SMTP_FROM || `"Mode AURA" <${SMTP_USER}>`,
         to: email,
         subject: 'Verify Your Identity - Mode AURA',
         html: `
@@ -165,7 +90,6 @@ export async function sendVerificationLink(email: string, token: string) {
  */
 export async function sendOrderReadyForPickupEmail(email: string, orderId: string, customerName: string) {
     return sendMailWithFallback({
-        from: SMTP_FROM || `"Mode AURA" <${SMTP_USER}>`,
         to: email,
         subject: `Order #${orderId} is Ready for Pickup - Mode AURA`,
         html: `
@@ -213,7 +137,6 @@ export async function sendReceiptEmail(email: string, orderDetails: any) {
     `).join('');
 
     return sendMailWithFallback({
-        from: SMTP_FROM || `"Mode AURA" <${SMTP_USER}>`,
         to: email,
         subject: `Receipt for Order #${orderDetails.orderId}`,
         html: `
