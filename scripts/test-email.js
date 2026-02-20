@@ -29,26 +29,38 @@ async function testEmail() {
     console.log(`Pass: ${process.env.SMTP_PASS ? '********' : 'MISSING'}`);
     console.log('--------------------------------');
 
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '465'),
-        secure: parseInt(process.env.SMTP_PORT || '465') === 465, // true for 465, false for 587
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        },
-        tls: {
-            rejectUnauthorized: false
-        },
-        lookup: (hostname, options, callback) => {
-            dns.lookup(hostname, { family: 4, all: false }, (err, address, family) => {
-                if (err) callback(err, null, 4);
-                else callback(null, address, 4);
-            });
-        }
-    });
-
     try {
+        console.log('Resolving DNS for smtp.gmail.com...');
+        // Manually resolve to IPv4
+        const addresses = await new Promise((resolve, reject) => {
+            dns.resolve4('smtp.gmail.com', (err, addresses) => {
+                if (err) reject(err);
+                else resolve(addresses);
+            });
+        });
+
+        if (!addresses || addresses.length === 0) {
+            throw new Error('No IPv4 addresses found for smtp.gmail.com');
+        }
+
+        const ip = addresses[0];
+        console.log(`✅ ID Resolved to: ${ip} (Using this to force IPv4)`);
+
+        const transporter = nodemailer.createTransport({
+            host: ip, // Use IP directly
+            port: parseInt(process.env.SMTP_PORT || '465'),
+            secure: parseInt(process.env.SMTP_PORT || '465') === 465,
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+            tls: {
+                rejectUnauthorized: false,
+                servername: 'smtp.gmail.com' // Required when using IP
+            },
+            connectionTimeout: 30000,
+        });
+
         console.log('Verifying connection...');
         await transporter.verify();
         console.log('✅ Connection Successful!');
@@ -56,7 +68,7 @@ async function testEmail() {
         console.log('Sending test email...');
         const info = await transporter.sendMail({
             from: process.env.SMTP_USER,
-            to: process.env.SMTP_USER, // Send to self
+            to: process.env.SMTP_USER,
             subject: 'Test Email - Mode Aura',
             text: 'If you see this, email sending is WORKING!'
         });
