@@ -53,8 +53,14 @@ export default function ReceiptsPage() {
             return `
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee;">
                 <div>
-                    <span style="font-weight: 600;">${item.name}</span>
-                    <span style="color: #666; margin-left: 8px;">×${qty}</span>
+                    <div style="font-weight: 600;">${item.name}</div>
+                    <div style="font-size: 10px; color: #666; margin-top: 2px;">
+                        ${item.sku ? `SKU: ${item.sku}` : ''} 
+                        ${item.variantName ? ` • ${item.variantName}` : ''}
+                        ${item.size ? ` • Size: ${item.size}` : ''}
+                        ${item.color ? ` • Color: ${item.color}` : ''}
+                    </div>
+                    <div style="font-size: 10px; color: #666; margin-top: 2px;">Qty: ${qty} @ $${price.toFixed(2)}</div>
                 </div>
                 <span style="font-weight: 600;">$${total.toFixed(2)}</span>
             </div>
