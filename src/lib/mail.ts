@@ -5,13 +5,27 @@ const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, NEXT_PUBLIC_BASE_
 /**
  * Creates a Nodemailer transporter.
  */
-const createTransporter = (port: number, isSecure: boolean) => {
+const createTransporter = (portOverride?: number, secureOverride?: boolean) => {
+    const port = portOverride || parseInt(SMTP_PORT || '465');
+    // Auto-detect secure if not provided: true for 465, false otherwise
+    const secure = secureOverride !== undefined ? secureOverride : (port === 465);
+
+    console.log(`[Mail] Creating transporter: ${SMTP_HOST}:${port} (Secure: ${secure})`);
+
     return nodemailer.createTransport({
         host: SMTP_HOST,
         port: port,
-        secure: isSecure, // true for 465, false for other ports
-        auth: { user: SMTP_USER, pass: SMTP_PASS },
-        tls: { rejectUnauthorized: false }
+        secure: secure,
+        auth: {
+            user: SMTP_USER,
+            pass: SMTP_PASS,
+        },
+        tls: {
+            rejectUnauthorized: false
+        },
+        connectionTimeout: 10000, // 10s timeout
+        greetingTimeout: 10000,
+        socketTimeout: 10000
     });
 };
 
