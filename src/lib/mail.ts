@@ -40,14 +40,20 @@ const createTransporter = (portOverride?: number, secureOverride?: boolean) => {
         name: 'modeaura-mailer',
         debug: true,
         logger: true,
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 10000,
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
         // @ts-ignore
         lookup: (hostname, options, callback) => {
+            console.log(`[Mail DNS] Resolving ${hostname} (forcing IPv4)...`);
             dns.lookup(hostname, { family: 4, all: false }, (err, address, family) => {
-                if (err) callback(err, null, 4);
-                else callback(null, address, 4);
+                if (err) {
+                    console.error('[Mail DNS] Resolution failed:', err);
+                    callback(err, null, 4);
+                } else {
+                    console.log(`[Mail DNS] Resolved ${hostname} to ${address} (Family: ${family})`);
+                    callback(null, address, 4);
+                }
             });
         }
     } as any);
