@@ -326,10 +326,11 @@ export async function refundOrder(orderId: string, restock: boolean = true) {
 
 export async function emailReceipt(email: string, orderDetails: any) {
     try {
+        const { sendReceiptEmail } = await import('@/lib/mail');
         const result = await sendReceiptEmail(email, orderDetails);
         return result;
     } catch (error: any) {
         console.error('Failed to email receipt:', error);
-        return { success: false, error: error.message || error };
+        return { success: false, error: error.message || String(error) };
     }
 }
