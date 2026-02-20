@@ -92,10 +92,19 @@ export async function createOrder(data: {
                         data: { stock: { decrement: Number(item.qty || 1) } }
                     }).catch(err => {
                         console.error(`[Orders] Failed to deduct stock for ${item.name} (${item.id}):`, err);
-                        // Optional: Throw error to rollback transaction if strict inventory is required
-                        // throw err; 
                     });
                 }
+            }
+
+            // 3. Update Customer Valuation
+            if (rest.customerId) {
+                await tx.customer.update({
+                    where: { id: rest.customerId },
+                    data: {
+                        totalSpend: { increment: Number(data.total) },
+                        lastVisit: new Date().toISOString()
+                    }
+                }).catch(err => console.error(`[Orders] Failed to update valuation for ${rest.customerId}:`, err));
             }
 
             return newOrder;
@@ -332,5 +341,35 @@ export async function emailReceipt(email: string, orderDetails: any) {
     } catch (error: any) {
         console.error('Failed to email receipt:', error);
         return { success: false, error: error.message || String(error) };
+    }
+}
+
+export async function resendReceiptEmail(orderId: string, email: string) {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId }
+        });
+
+        if (!order) throw new Error("Order not found");
+
+        const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+
+        const orderDetails = {
+            orderId: order.orderId,
+            date: order.date,
+            total: order.total,
+            subtotal: order.total, // Approximated if not stored separates
+            tax: 0, // Approximated
+            items: items,
+            customerName: order.customer.split('|')[0].trim(),
+            paymentMethod: order.paymentMethod,
+            shippingAddress: order.address ? `${order.address}, ${order.city}` : 'In-Store Pickup'
+        };
+
+        const { sendReceiptEmail } = await import('@/lib/mail');
+        return await sendReceiptEmail(email, orderDetails);
+    } catch (error: any) {
+        console.error('[Orders] Resend receipt failed:', error);
+        return { success: false, error: error.message };
     }
 }

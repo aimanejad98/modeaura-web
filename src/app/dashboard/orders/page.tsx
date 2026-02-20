@@ -16,6 +16,7 @@ export default function OrdersPage() {
     const [filter, setFilter] = useState('all')
     const [editingTracking, setEditingTracking] = useState<any>(null)
     const [trackingData, setTrackingData] = useState({ trackingNumber: '', courier: '' })
+    const [resendingEmail, setResendingEmail] = useState<string | null>(null)
 
     // Refund State
     const [refundingOrder, setRefundingOrder] = useState<any>(null)
@@ -59,6 +60,25 @@ export default function OrdersPage() {
             await deleteOrder(id)
             loadOrders()
         }
+    }
+
+    async function handleResendEmail(order: any) {
+        const email = prompt('Enter email address to send receipt:', 'customer_email_placeholder');
+        if (!email) return;
+
+        setResendingEmail(order.id);
+        try {
+            const { resendReceiptEmail } = await import('@/app/actions/orders');
+            const res = await resendReceiptEmail(order.id, email);
+            if (res.success) {
+                alert('✅ Receipt sent successfully!');
+            } else {
+                alert('❌ Failed to send receipt: ' + res.error);
+            }
+        } catch (e: any) {
+            alert('❌ Error: ' + e.message);
+        }
+        setResendingEmail(null);
     }
 
     async function handleRefund() {
@@ -366,7 +386,15 @@ export default function OrdersPage() {
                                         {order.items?.length || 0} ITEMS
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <button onClick={() => printOnlineReceipt(order)} className="p-2 text-gray-400">🖨️</button>
+                                        <button
+                                            onClick={() => handleResendEmail(order)}
+                                            disabled={resendingEmail === order.id}
+                                            className="p-2 text-gray-400 hover:text-[var(--gold)] transition-colors"
+                                            title="Resend Receipt Email"
+                                        >
+                                            {resendingEmail === order.id ? <Loader2 className="animate-spin" size={16} /> : '✉️'}
+                                        </button>
+                                        <button onClick={() => printOnlineReceipt(order)} className="p-2 text-gray-400 hover:text-black transition-colors" title="Print Receipt">🖨️</button>
                                         {(order.status === 'Pending' || order.status === 'Paid') && (
                                             <button
                                                 onClick={() => startFetching(order)}

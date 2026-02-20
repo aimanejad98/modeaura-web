@@ -30,6 +30,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     // Payment Modal State
     const [showPaymentModal, setShowPaymentModal] = useState(false)
     const [paymentTab, setPaymentTab] = useState<'cash' | 'card'>('cash')
+    const [paymentMethod, setPaymentMethod] = useState<string>('Card')
     const [tenderedAmount, setTenderedAmount] = useState('')
     const [lastOrder, setLastOrder] = useState<any>(null)
 
@@ -909,8 +910,48 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 <h3 className="text-xl font-black text-gray-900 mb-6">Select Payment Method</h3>
                                 <div className="flex gap-4 mb-8">
                                     <button onClick={() => setPaymentTab('cash')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'cash' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💵 Cash</button>
-                                    <button onClick={() => setPaymentTab('card')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'card' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💳 Card</button>
+                                    <button onClick={() => setPaymentTab('card')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'card' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💳 Card / Terminal</button>
                                 </div>
+
+                                {paymentTab === 'card' && (
+                                    <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-lg">
+                                        <button
+                                            onClick={() => setPaymentMethod('Debit Card')}
+                                            className={`flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'Debit Card' ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            Debit
+                                        </button>
+                                        <button
+                                            onClick={() => setPaymentMethod('Credit Card')}
+                                            className={`flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'Credit Card' ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            Credit
+                                        </button>
+                                        <button
+                                            onClick={() => setPaymentMethod('Card')}
+                                            className={`flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'Card' ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            Other
+                                        </button>
+                                    </div>
+                                )}
+
+                                {paymentTab === 'card' && (
+                                    <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-lg">
+                                        <button
+                                            onClick={() => setPaymentMethod('Debit Card')}
+                                            className={`flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'Debit Card' ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            Debit
+                                        </button>
+                                        <button
+                                            onClick={() => setPaymentMethod('Credit Card')}
+                                            className={`flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'Credit Card' ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            Credit
+                                        </button>
+                                    </div>
+                                )}
 
                                 {paymentTab === 'cash' ? (
                                     <div className="space-y-6">
