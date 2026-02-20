@@ -153,7 +153,11 @@ export async function sendReceiptEmail(email: string, orderDetails: any) {
         <tr>
             <td style="padding: 15px 0; border-bottom: 1px solid #eee; width: 60%;">
                 <span style="display: block; font-weight: bold; color: #1B2936; font-size: 14px;">${item.name}</span>
-                <span style="display: block; font-size: 12px; color: #999;">Qty: ${item.qty}</span>
+                <span style="display: block; font-size: 11px; color: #666; margin-top: 4px;">
+                    ${item.sku ? `SKU: ${item.sku} <br>` : ''}
+                    ${item.variant ? item.variant : [item.size, item.color].filter(Boolean).join(' / ')}
+                </span>
+                <span style="display: block; font-size: 12px; color: #999; margin-top: 4px;">Qty: ${item.qty}</span>
             </td>
             <td style="padding: 15px 0; border-bottom: 1px solid #eee; text-align: right; vertical-align: top; font-weight: bold; color: #1B2936;">
                 $${(item.price * item.qty).toFixed(2)}
