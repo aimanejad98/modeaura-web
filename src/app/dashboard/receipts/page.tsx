@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { getOrders, deleteOrder, refundOrder } from '@/app/actions/orders'
+import { getStoreSettings } from '@/app/actions/settings'
 import { Trash2, RotateCcw, CheckCircle2, AlertCircle, DollarSign } from 'lucide-react'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
 
 export default function ReceiptsPage() {
     const [orders, setOrders] = useState<any[]>([])
+    const [settings, setSettings] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all') // 'all', 'POS', 'WEBSITE'
     const [paymentFilter, setPaymentFilter] = useState('all') // 'all', 'Cash', 'Card'
@@ -23,8 +25,12 @@ export default function ReceiptsPage() {
 
     async function loadOrders() {
         setLoading(true)
-        const data = await getOrders()
+        const [data, storeData] = await Promise.all([
+            getOrders(),
+            getStoreSettings()
+        ])
         setOrders(data)
+        setSettings(storeData)
         setLoading(false)
     }
 
@@ -92,12 +98,12 @@ export default function ReceiptsPage() {
             
             <!-- Header -->
             <div class="text-center mb-2">
-                <h1 class="text-xl font-black tracking-tighter mb-1">MODE AURA</h1>
-                <p class="font-bold text-[10px]">Fashion and Accessories</p>
-                <p class="text-[10px]">Mode Aura Boutique</p>
-                <p class="text-[10px]">Windsor, ON N8X 2S2</p>
-                <p class="text-[10px]">www.modeaura.ca</p>
-                <p class="text-[10px] mt-1">Thank you for your business</p>
+                <h1 class="text-xl font-black tracking-tighter mb-1">${settings?.storeName || 'MODE AURA'}</h1>
+                <p class="font-bold text-[10px]">${settings?.tagline || 'Fashion and Accessories'}</p>
+                <p class="text-[10px]">${settings?.address || 'Mode Aura Boutique'}</p>
+                <p class="text-[10px]">${settings?.phone || ''}</p>
+                <p class="text-[10px]">${settings?.website || 'www.modeaura.ca'}</p>
+                <p class="text-[10px] mt-1">${settings?.receiptNote || 'Thank you for your business'}</p>
             </div>
 
             <!-- Info -->
