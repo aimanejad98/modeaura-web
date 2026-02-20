@@ -1214,19 +1214,45 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                     <div className="border-t-2 border-black pt-2 mt-4 space-y-1">
                         <div className="flex justify-between text-xs text-gray-600">
                             <span>Subtotal</span>
-                            <div className="mt-4 pt-2">
-                                {/* Simulated Barcode */}
-                                <div className="h-12 bg-black w-3/4 mx-auto mask-barcode flex items-end justify-center text-white text-[8px] pb-1 tracking-[4px]">
-                                    ||| || ||| || |||
-                                </div>
-                                <p className="text-[8px] mt-1">{lastOrder.orderId}</p>
-                            </div>
-                            <div className="pt-2 text-[8px] uppercase tracking-widest">
-                                Mode Aura &bull; Customer Copy
-                            </div>
+                            <span>${(lastOrder.total / 1.13).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-600">
+                            <span>HST (13%)</span>
+                            <span>${(lastOrder.total - (lastOrder.total / 1.13)).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-600 mt-2">
+                            <span>Customer</span>
+                            <span>{lastOrder.customer || 'Guest'}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-600">
+                            <span>Payment</span>
+                            <span>{lastOrder.paymentMethod || 'Cash'}</span>
+                        </div>
+                        <div className="flex justify-between font-black text-lg mt-2 pt-2">
+                            <span>TOTAL</span>
+                            <span>${lastOrder.total.toFixed(2)}</span>
                         </div>
                     </div>
+
+                    <div className="text-center mt-6 pt-4 border-t border-dashed border-gray-300 text-[11px] text-gray-600">
+                        <p>Thank you for shopping with us!</p>
+                        <p>No refunds/exchanges on accessories.</p>
+                        <p className="mt-1 font-bold">modeaura.ca</p>
+                        <p className="mt-2 text-[10px]">Authorized Dealer</p>
+                    </div>
+
+                    <div className="mt-4 pt-2 text-center">
+                        {/* Simulated Barcode */}
+                        <div className="h-8 bg-black w-2/3 mx-auto mask-barcode flex items-end justify-center text-white text-[8px] pb-1 tracking-[4px]">
+                            ||| || ||| || |||
+                        </div>
+                        <p className="text-[8px] mt-1">{lastOrder.orderId}</p>
+                        <div className="pt-2 text-[8px] uppercase tracking-widest text-gray-400">
+                            Mode Aura &bull; Customer Copy
+                        </div>
+                    </div>
+                </div>
             )}
-                </>
-            )
-            }
+        </>
+    )
+}
