@@ -48,15 +48,15 @@ async function testEmail() {
 
         const transporter = nodemailer.createTransport({
             host: ip, // Use IP directly
-            port: parseInt(process.env.SMTP_PORT || '465'),
-            secure: parseInt(process.env.SMTP_PORT || '465') === 465,
+            port: 587, // Try TLS port
+            secure: false, // False for TLS
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             },
             tls: {
                 rejectUnauthorized: false,
-                servername: 'smtp.gmail.com' // Required when using IP
+                // servername: 'smtp.gmail.com' // Required when using IP
             },
             connectionTimeout: 30000,
         });
