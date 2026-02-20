@@ -155,10 +155,9 @@ export async function sendOrderReadyForPickupEmail(email: string, orderId: strin
 
         await transporter.sendMail(mailOptions);
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error('Email delivery failed:', error);
-        // Don't throw, just log, so we don't break the order update flow
-        return { success: false, error };
+        return { success: false, error: error.message || error };
     }
 }
 
