@@ -94,10 +94,10 @@ export default function ReceiptsPage() {
             <div class="text-center mb-2">
                 <h1 class="text-xl font-black tracking-tighter mb-1">MODE AURA</h1>
                 <p class="font-bold text-[10px]">Fashion and Accessories</p>
-                <p class="text-[10px]">2670 Kevin St</p>
+                <p class="text-[10px]">Mode Aura Boutique</p>
                 <p class="text-[10px]">Windsor, ON N8X 2S2</p>
-                <p class="text-[10px]">Tel: (519) 999-9999</p>
-                <p class="text-[10px] mt-1">Visit Us At www.modeaura.ca</p>
+                <p class="text-[10px]">www.modeaura.ca</p>
+                <p class="text-[10px] mt-1">Thank you for your business</p>
             </div>
 
             <!-- Info -->

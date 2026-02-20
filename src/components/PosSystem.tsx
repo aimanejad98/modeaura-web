@@ -1224,8 +1224,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                     <div className="text-center mb-2">
                         <h1 className="text-xl font-black tracking-tighter mb-1">{storeSettings?.storeName || 'MODE AURA'}</h1>
                         <p className="font-bold">{storeSettings?.tagline || 'Fashion and Accessories'}</p>
-                        <p>{storeSettings?.address || '2670 Kevin St'}</p>
-                        {storeSettings?.city && <p>{storeSettings.city}, {storeSettings.province} {storeSettings.postalCode}</p>}
+                        <p>{storeSettings?.address || 'Mode Aura Boutique'}</p>
+                        {storeSettings?.city ? <p>{storeSettings.city}, {storeSettings.province} {storeSettings.postalCode}</p> : <p>Windsor, ON N8X 2S2</p>}
                         {storeSettings?.phone && <p>Tel: {storeSettings.phone}</p>}
                         <p>{storeSettings?.taxId ? `GST/HST Reg. No. ${storeSettings.taxId}` : ''}</p>
                         <p className="mt-1">Visit Us At {storeSettings?.website || 'www.modeaura.ca'}</p>
