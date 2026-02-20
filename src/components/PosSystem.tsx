@@ -1161,12 +1161,13 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             {lastOrder && (
                 <div className="hidden print:block print:w-[80mm] print:p-2 bg-white text-black font-mono text-[10px] leading-tight print:pb-20">
                     <div className="text-center mb-2">
-                        <h1 className="text-xl font-black tracking-tighter mb-1">MODE AURA</h1>
-                        <p className="font-bold">LUXURY ACCESSORIES</p>
-                        <p>2670 Kevin St</p>
-                        <p>Windsor, ON N8W 1Z5</p>
-                        <p>GST/HST Reg. No. 777403038</p>
-                        <p className="mt-1">Visit Us At www.modeaura.ca</p>
+                        <h1 className="text-xl font-black tracking-tighter mb-1">{storeSettings?.storeName || 'MODE AURA'}</h1>
+                        <p className="font-bold">{storeSettings?.tagline || 'Fashion and Accessories'}</p>
+                        <p>{storeSettings?.address || '2670 Kevin St'}</p>
+                        {storeSettings?.city && <p>{storeSettings.city}, {storeSettings.province} {storeSettings.postalCode}</p>}
+                        {storeSettings?.phone && <p>Tel: {storeSettings.phone}</p>}
+                        <p>{storeSettings?.taxId ? `GST/HST Reg. No. ${storeSettings.taxId}` : ''}</p>
+                        <p className="mt-1">Visit Us At {storeSettings?.website || 'www.modeaura.ca'}</p>
                     </div>
 
                     <div className="flex justify-between mb-1">
