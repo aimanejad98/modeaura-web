@@ -219,6 +219,10 @@ export default function SettingsPage() {
 
                         <div>
                             <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Address</label>
+                            <input
+                                value={settings.address || ''}
+                                onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                                className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
                             />
                         </div>
 

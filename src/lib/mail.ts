@@ -33,7 +33,7 @@ const createTransporter = (portOverride?: number, secureOverride?: boolean) => {
  * Robust email sender with fallback logic.
  * Tries the configured port first, then toggles (465 <-> 587) if connection fails.
  */
-async function sendMailWithFallback(mailOptions: any, logTag: string) {
+export async function sendMailWithFallback(mailOptions: any, logTag: string) {
     // 1. Check for missing config (Dev Mode)
     if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
         console.log(`--- DEVELOPMENT MAIL LOG: ${logTag} ---`);
