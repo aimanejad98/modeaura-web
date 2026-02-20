@@ -283,8 +283,8 @@ export async function sendReceiptEmail(email: string, orderDetails: any) {
 
         await transporter.sendMail(mailOptions);
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error('Email delivery failed:', error);
-        return { success: false, error };
+        return { success: false, error: error.message || error };
     }
 }
