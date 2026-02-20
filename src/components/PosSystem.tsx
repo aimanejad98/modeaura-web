@@ -75,6 +75,14 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [receiptEmail, setReceiptEmail] = useState('')
     const [emailSending, setEmailSending] = useState(false)
     const [emailSent, setEmailSent] = useState(false)
+    const [storeSettings, setStoreSettings] = useState<any>(null)
+
+    useEffect(() => {
+        // Fetch settings on mount
+        import('@/app/actions/settings').then(mod => {
+            mod.getStoreSettings().then(setStoreSettings)
+        })
+    }, [])
 
     const generateId = () => `ID #${Date.now().toString().slice(-4)}`
 
@@ -1239,7 +1247,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
                     <div className="mt-6 text-center space-y-2">
                         <p>***********************************</p>
-                        <p className="font-bold">Thank you for shopping with us!</p>
+                        <p className="font-bold">{storeSettings?.receiptNote || 'Thank you for shopping with us!'}</p>
                         <p>NO REFUNDS OR EXCHANGES</p>
                         <p>ON FINAL SALE ITEMS</p>
                         <p>***********************************</p>

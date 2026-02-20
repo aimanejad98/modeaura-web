@@ -309,8 +309,8 @@ export async function emailReceipt(email: string, orderDetails: any) {
     try {
         const result = await sendReceiptEmail(email, orderDetails);
         return result;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to email receipt:', error);
-        return { success: false, error };
+        return { success: false, error: error.message || error };
     }
 }

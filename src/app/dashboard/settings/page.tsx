@@ -267,35 +267,6 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
-                        <h3 className="text-xl font-black pt-4">Tax & Currency</h3>
-
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Tax Rate (%)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={settings.taxRate || 0}
-                                    onChange={(e) => setSettings({ ...settings, taxRate: parseFloat(e.target.value) })}
-                                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Currency</label>
-                                <select
-                                    value={settings.currency || 'CAD'}
-                                    onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37]"
-                                >
-                                    <option value="CAD">CAD - Canadian Dollar</option>
-                                    <option value="USD">USD - US Dollar</option>
-                                    <option value="EUR">EUR - Euro</option>
-                                    <option value="GBP">GBP - British Pound</option>
-                                    <option value="AED">AED - UAE Dirham</option>
-                                </select>
-                            </div>
-                        </div>
-
                         <div>
                             <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Receipt Note</label>
                             <textarea
