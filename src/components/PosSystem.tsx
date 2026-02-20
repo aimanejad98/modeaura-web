@@ -1151,67 +1151,109 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             </div>
             {/* PRINT ONLY RECEIPT LAYOUT */}
             {lastOrder && (
-                <div className="hidden print:block print:w-[80mm] print:p-4 bg-white text-black font-sans text-sm print:pb-20">
-                    <div className="text-center mb-6">
-                        <h1 className="text-3xl font-serif font-bold tracking-tight mb-1">MODE AURA</h1>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-600">Luxury Accessories</p>
-                        <div className="my-4 border-b border-black w-1/3 mx-auto"></div>
-                        <p className="text-xs text-gray-500">{new Date().toLocaleDateString()} &bull; {new Date().toLocaleTimeString()}</p>
-                        <p className="text-xs text-gray-500 mt-1">Order #{lastOrder.orderId}</p>
+                <div className="hidden print:block print:w-[80mm] print:p-2 bg-white text-black font-mono text-[10px] leading-tight print:pb-20">
+                    <div className="text-center mb-2">
+                        <h1 className="text-xl font-black tracking-tighter mb-1">MODE AURA</h1>
+                        <p className="font-bold">LUXURY ACCESSORIES</p>
+                        <p>2670 Kevin St</p>
+                        <p>Windsor, ON N8W 1Z5</p>
+                        <p>GST/HST Reg. No. 777403038</p>
+                        <p className="mt-1">Visit Us At www.modeaura.ca</p>
                     </div>
 
-                    <div className="space-y-3 mb-6">
+                    <div className="flex justify-between mb-1">
+                        <span>Store: 001</span>
+                        <span>Register: 1</span>
+                    </div>
+                    <div className="flex justify-between mb-1">
+                        <span>Date: {new Date().toLocaleDateString()}</span>
+                        <span>Time: {new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                        <span>Trans: {lastOrder.orderId.replace('MA-', '')}</span>
+                        <span>Cashier: Admin</span>
+                    </div>
+
+                    <div className="mb-2 border-b border-black border-dashed"></div>
+
+                    <div className="grid grid-cols-12 font-bold mb-1">
+                        <div className="col-span-6">Item</div>
+                        <div className="col-span-2 text-center">Qty</div>
+                        <div className="col-span-2 text-right">Price</div>
+                        <div className="col-span-2 text-right">Amnt</div>
+                    </div>
+
+                    <div className="mb-2 border-b border-black border-dashed"></div>
+
+                    <div className="space-y-2 mb-2">
                         {lastOrder.items.map((item: any, i: number) => {
                             const itemPrice = Number(item.price) || 0;
                             const itemQty = Number(item.qty) || 1;
                             return (
-                                <div key={i} className="flex justify-between items-start">
-                                    <div className="pr-4">
-                                        <span className="block font-bold text-sm">{item.name}</span>
-                                        <span className="text-[10px] text-gray-500">Qty: {itemQty}</span>
+                                <div key={i}>
+                                    <div className="font-bold">{item.sku || 'ITEM-' + i}</div>
+                                    <div className="grid grid-cols-12">
+                                        <div className="col-span-6 truncate pr-1">{item.name}</div>
+                                        <div className="col-span-2 text-center">{itemQty}</div>
+                                        <div className="col-span-2 text-right">{itemPrice.toFixed(2)}</div>
+                                        <div className="col-span-2 text-right">{(itemPrice * itemQty).toFixed(2)}</div>
                                     </div>
-                                    <span className="font-bold">${(itemPrice * itemQty).toFixed(2)}</span>
                                 </div>
                             );
                         })}
                     </div>
 
-                    <div className="border-t border-black pt-4 space-y-1">
-                        <div className="flex justify-between text-xs text-gray-600">
+                    <div className="mb-2 border-b border-black border-dashed"></div>
+
+                    <div className="space-y-1 text-right max-w-[80%] ml-auto">
+                        <div className="flex justify-between">
                             <span>Subtotal</span>
-                            <span>${(lastOrder.subtotal).toFixed(2)}</span>
+                            <span>{lastOrder.subtotal.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-600">
+                        <div className="flex justify-between">
                             <span>GST (5%)</span>
-                            <span>${(lastOrder.subtotal * 0.05).toFixed(2)}</span>
+                            <span>{(lastOrder.subtotal * 0.05).toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-600">
+                        <div className="flex justify-between">
                             <span>HST (8%)</span>
-                            <span>${(lastOrder.subtotal * 0.08).toFixed(2)}</span>
+                            <span>{(lastOrder.subtotal * 0.08).toFixed(2)}</span>
                         </div>
-
-                        <div className="flex justify-between font-bold text-xl mt-3 pt-3 border-t border-dotted border-gray-400">
+                        <div className="flex justify-between font-black text-sm mt-1">
                             <span>Total</span>
-                            <span>${lastOrder.total.toFixed(2)}</span>
+                            <span>{lastOrder.total.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    <div className="mt-6 space-y-1 text-xs text-gray-600">
+                    <div className="mt-4 mb-2 border-b border-black border-dashed"></div>
+
+                    <div className="space-y-1 text-right max-w-[80%] ml-auto">
                         <div className="flex justify-between">
-                            <span>Payment Method</span>
-                            <span className="font-bold">{lastOrder.payment || 'Card'}</span>
+                            <span>{lastOrder.payment || 'Payment'}</span>
+                            <span>{lastOrder.amountReceived?.toFixed(2) || lastOrder.total.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span>Change Due</span>
-                            <span>${lastOrder.changeDue.toFixed(2)}</span>
+                            <span>Change</span>
+                            <span>{lastOrder.changeDue.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    <div className="mt-8 text-center space-y-2">
-                        <p className="font-serif italic text-lg">Thank you</p>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">Returns & Exchanges</p>
-                        <p className="text-[10px]">modeaura.ca/policy</p>
-                        <div className="pt-6 font-bold text-sm tracking-widest">MODEAURA.CA</div>
+                    <div className="mt-6 text-center space-y-2">
+                        <p>***********************************</p>
+                        <p className="font-bold">Thank you for shopping with us!</p>
+                        <p>NO REFUNDS OR EXCHANGES</p>
+                        <p>ON FINAL SALE ITEMS</p>
+                        <p>***********************************</p>
+
+                        <div className="mt-4 pt-2">
+                            {/* Simulated Barcode */}
+                            <div className="h-12 bg-black w-3/4 mx-auto mask-barcode flex items-end justify-center text-white text-[8px] pb-1 tracking-[4px]">
+                                ||| || ||| || |||
+                            </div>
+                            <p className="text-[8px] mt-1">{lastOrder.orderId}</p>
+                        </div>
+                        <div className="pt-2 text-[8px] uppercase tracking-widest">
+                            Mode Aura &bull; Customer Copy
+                        </div>
                     </div>
                 </div>
             )}
