@@ -9,3 +9,20 @@ dev.db-journal
 *.log
 *.zip
 *.tar.gz
+
+# Testing
+/playwright-report
+/test-results
+/tests
+playwright.config.ts
+
+# Debug
+*_log.txt
+debug_*.txt
+test_output.txt
+tsc_output.txt
+nginx_config_dump.txt
+!/scripts/cleanup_for_live.js
+!/scripts/enable_wal.ts
+!/scripts/retro-sync.ts
+implementation_plan_*.md
