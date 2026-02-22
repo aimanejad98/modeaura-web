@@ -11,7 +11,7 @@ export default function Price({ amount, className = "" }: PriceProps) {
     const { formatPrice } = useCurrency();
 
     return (
-        <span className={className}>
+        <span className={`font-price ${className}`}>
             {formatPrice(amount)}
         </span>
     );

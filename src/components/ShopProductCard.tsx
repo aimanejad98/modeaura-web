@@ -116,7 +116,7 @@ export default function ShopProductCard({ product }: ProductCardProps) {
                 <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
                     {(() => {
                         const effectiveDiscount = product.discountPrice || (
-                            product.sale
+                            product.sale && product.sale.active
                                 ? product.sale.type === 'Percentage'
                                     ? product.price * (1 - product.sale.value / 100)
                                     : product.price - product.sale.value
@@ -124,11 +124,11 @@ export default function ShopProductCard({ product }: ProductCardProps) {
                         );
                         return effectiveDiscount ? (
                             <div className="flex items-center gap-2">
-                                <Price amount={effectiveDiscount} className="text-sm font-bold text-red-500" />
-                                <Price amount={product.price} className="text-[10px] text-gray-400 line-through" />
+                                <Price amount={effectiveDiscount} className="text-[15px] font-black text-red-600" />
+                                <Price amount={product.price} className="text-[11px] text-gray-400 line-through decoration-gray-300" />
                             </div>
                         ) : (
-                            <Price amount={product.price} className="text-sm font-bold text-gray-900" />
+                            <Price amount={product.price} className="text-[15px] font-black text-gray-900" />
                         );
                     })()}
 

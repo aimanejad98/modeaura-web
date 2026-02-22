@@ -120,7 +120,25 @@ export default function TrendingCollection() {
                                 <p className="text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-widest">
                                     {product.category?.name}
                                 </p>
-                                <Price amount={product.price} className="text-sm font-display italic text-[var(--brand-navy)] font-bold pt-1" />
+                                <div className="pt-1">
+                                    {(() => {
+                                        const effectiveDiscount = product.discountPrice || (
+                                            product.sale && product.sale.active
+                                                ? product.sale.type === 'Percentage'
+                                                    ? product.price * (1 - product.sale.value / 100)
+                                                    : product.price - product.sale.value
+                                                : null
+                                        );
+                                        return effectiveDiscount ? (
+                                            <div className="flex items-center gap-2 justify-center">
+                                                <Price amount={effectiveDiscount} className="text-sm font-black text-red-600" />
+                                                <Price amount={product.price} className="text-[10px] text-gray-400 line-through decoration-gray-300" />
+                                            </div>
+                                        ) : (
+                                            <Price amount={product.price} className="text-sm font-black text-[var(--brand-navy)]" />
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         </Link>
                     ))}

@@ -37,7 +37,7 @@ export async function getProducts() {
     try {
         console.log('🧥 [Inventory] Fetching products...');
         const products = await prisma.product.findMany({
-            include: { category: true },
+            include: { category: true, sale: true },
             orderBy: { createdAt: 'desc' }
         });
         console.log(`✅ [Inventory] Found ${products.length} products`);
@@ -270,22 +270,22 @@ export async function getCategories(type: 'Product' | 'Expense' = 'Product') {
 // This part of getProductsByCategory was already modified but let's check the whole function
 export async function getProductsByCategory(categoryName: string) {
     try {
-        const products = await prisma.$queryRawUnsafe(`
-            SELECT p.*, c.name as "categoryName"
-            FROM "Product" p
-            JOIN "Category" c ON p."categoryId" = c.id
-            WHERE c.name = '${categoryName}'
-            ORDER BY p."createdAt" DESC
-        `);
+        const products = await prisma.product.findMany({
+            where: {
+                category: {
+                    name: categoryName
+                }
+            },
+            include: {
+                category: true,
+                sale: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
 
-        const formatted = (products as any[]).map(p => ({
-            ...p,
-            isKids: Boolean(p.isKids),
-            isNewArrival: Boolean(p.isNewArrival),
-            category: { name: p.categoryName }
-        }));
-
-        return JSON.parse(JSON.stringify(formatted));
+        return JSON.parse(JSON.stringify(products));
     } catch (error) {
         console.error('[Inventory] Fetch by category failed:', error);
         return [];

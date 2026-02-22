@@ -102,9 +102,8 @@ export default function ShopClient() {
 
     const availableSizes = useMemo(() => {
         const sizes = new Set<string>();
-        // Only show sizes relevant to the currently filtered products (by category/pattern)
 
-        // Identify if Abayas is the active context (either root or subcategory)
+        // Identify if Abayas is the active context
         const abayaRoot = categories.find(c => c.name.toLowerCase() === 'abayas' && !c.parentId);
         const isAbayaActive = abayaRoot && selectedCategoryIds.some(id => {
             const cat = categories.find(c => c.id === id);
@@ -124,54 +123,27 @@ export default function ShopClient() {
         }
 
         // Apply pattern filter for size list ONLY if NOT Abayas
-        // This satisfies: "iwant sizes in abaya to be all same but for accessories no i need size for every pattern"
         if (selectedStyleNames.length > 0 && !isAbayaActive) {
             const stylesLower = selectedStyleNames.map(s => s.toLowerCase());
-
-            // Collect allowed sizes from the selected patterns (case-insensitive)
-            const patternsWithRestrictions = patterns.filter(p =>
-                stylesLower.includes(p.name.toLowerCase()) && p.allowedSizes
-            );
-
-            const globalAllowedSizes = new Set<string>();
-            if (patternsWithRestrictions.length > 0) {
-                patternsWithRestrictions.forEach(p => {
-                    p.allowedSizes.split(',').forEach((s: string) => globalAllowedSizes.add(s.trim()));
-                });
-            }
-
             productsForSizes = productsForSizes.filter(p => {
                 const styleName = (p.style || '').toLowerCase();
                 const category = categories.find(c => c.id === p.categoryId);
                 const categoryName = (category?.name || '').toLowerCase();
-
                 return stylesLower.includes(styleName) || stylesLower.includes(categoryName);
             });
+        }
 
-            // If we have pattern-specific size restrictions, extract sizes and return filtered set
-            if (globalAllowedSizes.size > 0) {
-                const tempSizes = new Set<string>();
-                productsForSizes.forEach(p => {
-                    if (p.size) {
-                        p.size.split(',').forEach((s: string) => {
-                            const trimmed = s.trim();
-                            if (globalAllowedSizes.has(trimmed)) {
-                                tempSizes.add(trimmed);
-                            }
-                        });
-                    }
-                });
-
-                return Array.from(tempSizes).sort((a, b) => {
-                    const numA = parseFloat(a);
-                    const numB = parseFloat(b);
-                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-                    return a.localeCompare(b);
+        // POPULATE the sizes set from the relevant products
+        productsForSizes.forEach(p => {
+            if (p.size) {
+                p.size.split(',').forEach((s: string) => {
+                    const trimmed = s.trim();
+                    if (trimmed) sizes.add(trimmed);
                 });
             }
-        }
+        });
+
         return Array.from(sizes).sort((a, b) => {
-            // Numeric sort for ring sizes, alphabetical for others
             const numA = parseFloat(a);
             const numB = parseFloat(b);
             if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
