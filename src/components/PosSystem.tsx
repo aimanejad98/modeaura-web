@@ -936,22 +936,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                     </div>
                                 )}
 
-                                {paymentTab === 'card' && (
-                                    <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-lg">
-                                        <button
-                                            onClick={() => setPaymentMethod('Debit Card')}
-                                            className={`flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'Debit Card' ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'}`}
-                                        >
-                                            Debit
-                                        </button>
-                                        <button
-                                            onClick={() => setPaymentMethod('Credit Card')}
-                                            className={`flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${paymentMethod === 'Credit Card' ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'}`}
-                                        >
-                                            Credit
-                                        </button>
-                                    </div>
-                                )}
+
 
                                 {paymentTab === 'cash' ? (
                                     <div className="space-y-6">
@@ -964,7 +949,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                         <button onClick={() => processPayment()} disabled={!tenderedAmount || parseFloat(tenderedAmount) < total} className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-bold text-lg hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:shadow-none">Complete Cash Sale</button>
                                     </div>
                                 ) : (
-                                    <div className="h-[300px] flex flex-col pt-4">
+                                    <div className="flex flex-col pt-4 min-h-[300px]">
                                         {/* READER MANAGEMENT UI */}
                                         <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
                                             <div className="flex items-center gap-3">
