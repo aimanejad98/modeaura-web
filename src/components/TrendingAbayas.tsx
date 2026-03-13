@@ -72,6 +72,7 @@ export default function TrendingCollection() {
                 </div>
 
                 <div className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-8 pt-4 -mx-6 px-6 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-8 pt-4 -mx-6 px-6 md:mx-0 md:px-0">
                     {products.map((product, index) => (
                         <Link
                             key={product.id}
