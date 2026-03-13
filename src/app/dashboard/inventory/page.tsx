@@ -572,222 +572,224 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="card overflow-hidden border-[var(--mocha-border)]">
-                    {/* Desktop Table: Hidden on Mobile */}
-                    <table className="w-full hidden lg:table">
-                        <thead className="bg-[#F4F0EA]/50">
-                            <tr className="text-xs font-black uppercase text-[var(--text-secondary)] tracking-wider">
-                                <th className="p-5 text-left w-10">
-                                    <button onClick={handleSelectAll} className="hover:text-[var(--gold)]">
-                                        {selectedProductIds.size > 0 && selectedProductIds.size === filteredProducts.length ? <CheckSquare size={16} /> : <Square size={16} />}
-                                    </button>
-                                </th>
-                                <th className="p-5 text-left">Article</th>
-                                <th className="p-5 text-left">Details</th>
-                                <th className="p-5 text-left">Designation</th>
-                                <th className="p-5 text-left cursor-pointer hover:bg-black/5" onClick={() => handleSort('category')}>
-                                    Category
-                                    <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'category' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
-                                </th>
-                                <th className="p-5 text-left">Specifications</th>
-                                <th className="p-5 text-right">Valuation</th>
-                                <th className="p-5 text-center cursor-pointer hover:bg-black/5" onClick={() => handleSort('stock')}>
-                                    In Stock
-                                    <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'stock' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
-                                </th>
-                                <th className="p-5 text-center">Expand</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#F3EDE4]">
-                            {groupedProducts.map((group: any) => {
-                                const isGroupSelected = group.ids?.every((id: string) => selectedProductIds.has(id));
-                                return (
-                                    <React.Fragment key={group.name}>
-                                        <tr className={`hover:bg-[#FDFBF9] transition-colors group cursor-pointer ${isGroupSelected ? 'bg-[var(--gold)]/5' : ''}`} onClick={() => toggleGroup(group.name)}>
-                                            <td className="p-5" onClick={(e) => { e.stopPropagation(); handleToggleGroupSelect(group); }}>
-                                                <div className="text-gray-400 hover:text-[var(--gold)] cursor-pointer">
-                                                    {isGroupSelected ? <CheckSquare size={16} /> : <Square size={16} />}
-                                                </div>
-                                            </td>
-                                            <td className="p-5">
-                                                {group.images && group.images.split(',')[0] ? (
-                                                    <img src={group.images.split(',')[0]} alt={group.name} className="w-12 h-12 object-cover rounded-xl" />
-                                                ) : (
-                                                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">📦</div>
-                                                )}
-                                            </td>
-                                            <td className="p-5 flex items-center gap-3">
-                                                <span className="text-xs text-gray-400 italic">{group.variants.length} variant{group.variants.length > 1 ? 's' : ''}</span>
-                                                {canEdit && (
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleAddVariant(group); }}
-                                                        className="w-6 h-6 flex items-center justify-center rounded-full bg-[var(--gold)] text-white text-xs font-bold hover:scale-110 transition-transform"
-                                                        title="Add New Color/Variant"
-                                                    >
-                                                        +
-                                                    </button>
-                                                )}
-                                            </td>
-                                            <td className="p-5">
-                                                <div className="flex items-center gap-2">
-                                                    <p className="font-bold text-gray-900">{group.name}</p>
-                                                    <div className="flex gap-1">
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                if (!confirm(`Mark all variants of "${group.name}" as ${group.isNewArrival ? 'standard' : 'New Arrival'}?`)) return;
-                                                                await toggleGroupNewArrival(group.name, !group.isNewArrival);
-                                                                loadData(true);
-                                                            }}
-                                                            className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider transition-all hover:scale-110 ${group.isNewArrival
-                                                                ? 'bg-[var(--gold)] text-white shadow-md shadow-[var(--gold)]/30'
-                                                                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                                                                }`}
-                                                            title="Toggle New Arrival"
-                                                        >
-                                                            {group.isNewArrival ? 'New' : 'Std'}
-                                                        </button>
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                if (!confirm(`Mark all variants of "${group.name}" as ${group.isKids ? 'Standard' : 'For Kids'}?`)) return;
-                                                                await toggleGroupKids(group.name, !group.isKids);
-                                                                loadData(true);
-                                                            }}
-                                                            className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider transition-all hover:scale-110 ${group.isKids
-                                                                ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
-                                                                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                                                                }`}
-                                                            title="Toggle Kids Collection"
-                                                        >
-                                                            {group.isKids ? 'Kids' : 'Adult'}
-                                                        </button>
+                    {/* Desktop Table: Wrapper allows horizontal scroll on smaller screens */}
+                    <div className="hidden lg:block w-full overflow-x-auto">
+                        <table className="w-full min-w-[1000px]">
+                            <thead className="bg-[#F4F0EA]/50">
+                                <tr className="text-xs font-black uppercase text-[var(--text-secondary)] tracking-wider">
+                                    <th className="p-5 text-left w-10">
+                                        <button onClick={handleSelectAll} className="hover:text-[var(--gold)]">
+                                            {selectedProductIds.size > 0 && selectedProductIds.size === filteredProducts.length ? <CheckSquare size={16} /> : <Square size={16} />}
+                                        </button>
+                                    </th>
+                                    <th className="p-5 text-left">Article</th>
+                                    <th className="p-5 text-left">Details</th>
+                                    <th className="p-5 text-left">Designation</th>
+                                    <th className="p-5 text-left cursor-pointer hover:bg-black/5" onClick={() => handleSort('category')}>
+                                        Category
+                                        <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'category' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
+                                    </th>
+                                    <th className="p-5 text-left">Specifications</th>
+                                    <th className="p-5 text-right">Valuation</th>
+                                    <th className="p-5 text-center cursor-pointer hover:bg-black/5" onClick={() => handleSort('stock')}>
+                                        In Stock
+                                        <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'stock' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
+                                    </th>
+                                    <th className="p-5 text-center">Expand</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#F3EDE4]">
+                                {groupedProducts.map((group: any) => {
+                                    const isGroupSelected = group.ids?.every((id: string) => selectedProductIds.has(id));
+                                    return (
+                                        <React.Fragment key={group.name}>
+                                            <tr className={`hover:bg-[#FDFBF9] transition-colors group cursor-pointer ${isGroupSelected ? 'bg-[var(--gold)]/5' : ''}`} onClick={() => toggleGroup(group.name)}>
+                                                <td className="p-5" onClick={(e) => { e.stopPropagation(); handleToggleGroupSelect(group); }}>
+                                                    <div className="text-gray-400 hover:text-[var(--gold)] cursor-pointer">
+                                                        {isGroupSelected ? <CheckSquare size={16} /> : <Square size={16} />}
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="p-5 text-sm text-gray-500">{group.category?.name}</td>
-                                            <td className="p-5 text-sm text-gray-500">
-                                                <div className="flex flex-col gap-1">
-                                                    {group.sizes.size > 0 && <span className="text-[10px] font-bold text-gray-400 uppercase">Sizes: {Array.from(group.sizes).filter(Boolean).join(', ')}</span>}
-                                                    {group.colors.size > 0 && <span className="text-[10px] font-bold text-gray-400 uppercase">Colors: {Array.from(group.colors).filter(Boolean).join(', ')}</span>}
-                                                </div>
-                                            </td>
-                                            <td className="p-5 text-right">
-                                                <div className="flex flex-col items-end">
-                                                    {group.variants[0].discountPrice || group.variants[0].sale ? (
-                                                        <>
-                                                            <span className="text-[10px] text-gray-400 line-through decoration-[var(--gold)]/30">${group.price.toFixed(2)}</span>
-                                                            <span className="font-black text-red-500">
-                                                                ${(group.variants[0].discountPrice || (
-                                                                    group.variants[0].sale.type === 'Percentage'
-                                                                        ? group.price * (1 - group.variants[0].sale.value / 100)
-                                                                        : group.price - group.variants[0].sale.value
-                                                                )).toFixed(2)}
-                                                            </span>
-                                                        </>
+                                                </td>
+                                                <td className="p-5">
+                                                    {group.images && group.images.split(',')[0] ? (
+                                                        <img src={group.images.split(',')[0]} alt={group.name} className="w-12 h-12 object-cover rounded-xl" />
                                                     ) : (
-                                                        <span className="font-black text-[#D4AF37]">${group.price.toFixed(2)}</span>
+                                                        <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">📦</div>
                                                     )}
-                                                </div>
-                                            </td>
-                                            <td className="p-5 text-center">
-                                                <span className={`badge min-w-[3rem] ${group.totalStock > 10 ? 'badge-green' : group.totalStock > 0 ? 'bg-yellow-100 text-yellow-600' : 'badge-red'}`}>
-                                                    {group.totalStock}
-                                                </span>
-                                            </td>
-                                            <td className="p-5 text-center">
-                                                <span className={`transition-transform duration-300 inline-block ${expandedGroups.has(group.name) ? 'rotate-180' : ''}`}>▼</span>
-                                            </td>
-                                        </tr>
-                                        {expandedGroups.has(group.name) && group.variants.map((product: any) => {
-                                            const colorHex = getColorHex(product.color);
-                                            return (
-                                                <tr key={product.id} className={`bg-[#FAF9F6]/80 border-l-4 border-[var(--gold)] animate-in slide-in-from-left-2 group/variant ${selectedProductIds.has(product.id) ? 'bg-[var(--gold)]/10' : ''}`}>
-                                                    <td className="p-2 pl-4">
-                                                        <button onClick={(e) => { e.stopPropagation(); handleSelectProduct(product.id); }} className="text-gray-400 hover:text-[var(--gold)]">
-                                                            {selectedProductIds.has(product.id) ? <CheckSquare size={14} /> : <Square size={14} />}
+                                                </td>
+                                                <td className="p-5 flex items-center gap-3">
+                                                    <span className="text-xs text-gray-400 italic">{group.variants.length} variant{group.variants.length > 1 ? 's' : ''}</span>
+                                                    {canEdit && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleAddVariant(group); }}
+                                                            className="w-6 h-6 flex items-center justify-center rounded-full bg-[var(--gold)] text-white text-xs font-bold hover:scale-110 transition-transform"
+                                                            title="Add New Color/Variant"
+                                                        >
+                                                            +
                                                         </button>
-                                                    </td>
-                                                    <td className="p-2">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="shrink-0">
-                                                                {product.images && product.images.split(',')[0] ? (
-                                                                    <img src={product.images.split(',')[0]} alt={product.sku} className="w-10 h-10 object-cover rounded-lg border border-gray-100 shadow-sm" />
+                                                    )}
+                                                </td>
+                                                <td className="p-5">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold text-gray-900">{group.name}</p>
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    if (!confirm(`Mark all variants of "${group.name}" as ${group.isNewArrival ? 'standard' : 'New Arrival'}?`)) return;
+                                                                    await toggleGroupNewArrival(group.name, !group.isNewArrival);
+                                                                    loadData(true);
+                                                                }}
+                                                                className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider transition-all hover:scale-110 ${group.isNewArrival
+                                                                    ? 'bg-[var(--gold)] text-white shadow-md shadow-[var(--gold)]/30'
+                                                                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                                                                    }`}
+                                                                title="Toggle New Arrival"
+                                                            >
+                                                                {group.isNewArrival ? 'New' : 'Std'}
+                                                            </button>
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    if (!confirm(`Mark all variants of "${group.name}" as ${group.isKids ? 'Standard' : 'For Kids'}?`)) return;
+                                                                    await toggleGroupKids(group.name, !group.isKids);
+                                                                    loadData(true);
+                                                                }}
+                                                                className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider transition-all hover:scale-110 ${group.isKids
+                                                                    ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
+                                                                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                                                                    }`}
+                                                                title="Toggle Kids Collection"
+                                                            >
+                                                                {group.isKids ? 'Kids' : 'Adult'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-5 text-sm text-gray-500">{group.category?.name}</td>
+                                                <td className="p-5 text-sm text-gray-500">
+                                                    <div className="flex flex-col gap-1">
+                                                        {group.sizes.size > 0 && <span className="text-[10px] font-bold text-gray-400 uppercase">Sizes: {Array.from(group.sizes).filter(Boolean).join(', ')}</span>}
+                                                        {group.colors.size > 0 && <span className="text-[10px] font-bold text-gray-400 uppercase">Colors: {Array.from(group.colors).filter(Boolean).join(', ')}</span>}
+                                                    </div>
+                                                </td>
+                                                <td className="p-5 text-right">
+                                                    <div className="flex flex-col items-end">
+                                                        {group.variants[0].discountPrice || group.variants[0].sale ? (
+                                                            <>
+                                                                <span className="text-[10px] text-gray-400 line-through decoration-[var(--gold)]/30">${group.price.toFixed(2)}</span>
+                                                                <span className="font-black text-red-500">
+                                                                    ${(group.variants[0].discountPrice || (
+                                                                        group.variants[0].sale.type === 'Percentage'
+                                                                            ? group.price * (1 - group.variants[0].sale.value / 100)
+                                                                            : group.price - group.variants[0].sale.value
+                                                                    )).toFixed(2)}
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            <span className="font-black text-[#D4AF37]">${group.price.toFixed(2)}</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="p-5 text-center">
+                                                    <span className={`badge min-w-[3rem] ${group.totalStock > 10 ? 'badge-green' : group.totalStock > 0 ? 'bg-yellow-100 text-yellow-600' : 'badge-red'}`}>
+                                                        {group.totalStock}
+                                                    </span>
+                                                </td>
+                                                <td className="p-5 text-center">
+                                                    <span className={`transition-transform duration-300 inline-block ${expandedGroups.has(group.name) ? 'rotate-180' : ''}`}>▼</span>
+                                                </td>
+                                            </tr>
+                                            {expandedGroups.has(group.name) && group.variants.map((product: any) => {
+                                                const colorHex = getColorHex(product.color);
+                                                return (
+                                                    <tr key={product.id} className={`bg-[#FAF9F6]/80 border-l-4 border-[var(--gold)] animate-in slide-in-from-left-2 group/variant ${selectedProductIds.has(product.id) ? 'bg-[var(--gold)]/10' : ''}`}>
+                                                        <td className="p-2 pl-4">
+                                                            <button onClick={(e) => { e.stopPropagation(); handleSelectProduct(product.id); }} className="text-gray-400 hover:text-[var(--gold)]">
+                                                                {selectedProductIds.has(product.id) ? <CheckSquare size={14} /> : <Square size={14} />}
+                                                            </button>
+                                                        </td>
+                                                        <td className="p-2">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="shrink-0">
+                                                                    {product.images && product.images.split(',')[0] ? (
+                                                                        <img src={product.images.split(',')[0]} alt={product.sku} className="w-10 h-10 object-cover rounded-lg border border-gray-100 shadow-sm" />
+                                                                    ) : (
+                                                                        <div className="w-10 h-10 bg-white border border-gray-100 rounded-lg flex items-center justify-center text-[10px] text-gray-300">NO IMG</div>
+                                                                    )}
+                                                                </div>
+                                                                <code className="text-[10px] bg-white border border-gray-200 px-2 py-1 rounded font-mono text-gray-400">{product.sku}</code>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-2">
+                                                            <div className="flex items-center gap-2">
+                                                                {product.color && (
+                                                                    <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-full border border-gray-100 shadow-sm">
+                                                                        {colorHex && (
+                                                                            <div
+                                                                                className="w-2.5 h-2.5 rounded-full border border-black/5"
+                                                                                style={{ backgroundColor: colorHex }}
+                                                                            />
+                                                                        )}
+                                                                        <span className="text-[10px] font-black uppercase tracking-tight text-gray-600">{product.color}</span>
+                                                                    </div>
+                                                                )}
+                                                                {product.size && (
+                                                                    <span className="text-[10px] font-black bg-gray-900 text-white px-2 py-1 rounded-md min-w-[1.5rem] text-center">{product.size}</span>
+                                                                )}
+                                                                {!product.color && !product.size && <span className="text-[10px] font-bold text-gray-400 italic">Standard</span>}
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-2">
+                                                            <span className="text-[10px] text-gray-400 uppercase font-bold">{group.name}</span>
+                                                        </td>
+                                                        <td className="p-2">
+                                                            <span className="text-[10px] text-gray-300 uppercase font-black tracking-widest">{group.category?.name}</span>
+                                                        </td>
+                                                        <td className="p-2">
+                                                            <span className="text-[10px] text-gray-400 uppercase">{product.material || ''}</span>
+                                                        </td>
+                                                        <td className="p-2 text-right">
+                                                            <div className="flex flex-col items-end">
+                                                                {product.discountPrice || product.sale ? (
+                                                                    <>
+                                                                        <span className="text-[9px] text-gray-300 line-through">${product.price}</span>
+                                                                        <span className="text-xs font-bold text-red-500">
+                                                                            ${(product.discountPrice || (
+                                                                                product.sale.type === 'Percentage'
+                                                                                    ? product.price * (1 - product.sale.value / 100)
+                                                                                    : product.price - product.sale.value
+                                                                            )).toFixed(2)}
+                                                                        </span>
+                                                                    </>
                                                                 ) : (
-                                                                    <div className="w-10 h-10 bg-white border border-gray-100 rounded-lg flex items-center justify-center text-[10px] text-gray-300">NO IMG</div>
+                                                                    <span className="text-xs font-bold text-[#D4AF37]">${product.price}</span>
                                                                 )}
                                                             </div>
-                                                            <code className="text-[10px] bg-white border border-gray-200 px-2 py-1 rounded font-mono text-gray-400">{product.sku}</code>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-2">
-                                                        <div className="flex items-center gap-2">
-                                                            {product.color && (
-                                                                <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-full border border-gray-100 shadow-sm">
-                                                                    {colorHex && (
-                                                                        <div
-                                                                            className="w-2.5 h-2.5 rounded-full border border-black/5"
-                                                                            style={{ backgroundColor: colorHex }}
-                                                                        />
-                                                                    )}
-                                                                    <span className="text-[10px] font-black uppercase tracking-tight text-gray-600">{product.color}</span>
-                                                                </div>
-                                                            )}
-                                                            {product.size && (
-                                                                <span className="text-[10px] font-black bg-gray-900 text-white px-2 py-1 rounded-md min-w-[1.5rem] text-center">{product.size}</span>
-                                                            )}
-                                                            {!product.color && !product.size && <span className="text-[10px] font-bold text-gray-400 italic">Standard</span>}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-2">
-                                                        <span className="text-[10px] text-gray-400 uppercase font-bold">{group.name}</span>
-                                                    </td>
-                                                    <td className="p-2">
-                                                        <span className="text-[10px] text-gray-300 uppercase font-black tracking-widest">{group.category?.name}</span>
-                                                    </td>
-                                                    <td className="p-2">
-                                                        <span className="text-[10px] text-gray-400 uppercase">{product.material || ''}</span>
-                                                    </td>
-                                                    <td className="p-2 text-right">
-                                                        <div className="flex flex-col items-end">
-                                                            {product.discountPrice || product.sale ? (
-                                                                <>
-                                                                    <span className="text-[9px] text-gray-300 line-through">${product.price}</span>
-                                                                    <span className="text-xs font-bold text-red-500">
-                                                                        ${(product.discountPrice || (
-                                                                            product.sale.type === 'Percentage'
-                                                                                ? product.price * (1 - product.sale.value / 100)
-                                                                                : product.price - product.sale.value
-                                                                        )).toFixed(2)}
-                                                                    </span>
-                                                                </>
-                                                            ) : (
-                                                                <span className="text-xs font-bold text-[#D4AF37]">${product.price}</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-2 text-center">
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <button onClick={(e) => { e.stopPropagation(); handleQuickStock(product, -1); }} className="w-5 h-5 flex items-center justify-center rounded bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 transition-colors shadow-sm">-</button>
-                                                            <span className={`text-[11px] font-black w-6 text-center ${product.stock <= 5 ? 'text-red-500' : 'text-gray-900'}`}>{product.stock}</span>
-                                                            <button onClick={(e) => { e.stopPropagation(); handleQuickStock(product, 1); }} className="w-5 h-5 flex items-center justify-center rounded bg-white border border-gray-100 text-gray-400 hover:text-green-500 hover:border-green-100 transition-colors shadow-sm">+</button>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-2 text-center">
-                                                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover/variant:opacity-100 transition-opacity">
-                                                            {canEdit && <button onClick={(e) => { e.stopPropagation(); startEdit(product); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Edit">✏️</button>}
-                                                            {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDuplicate(product); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Duplicate">📋</button>}
-                                                            <button onClick={(e) => { e.stopPropagation(); printBarcode(product.sku, product.name, product.price, product.size, product.color, product.material); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Barcode">🏷️</button>
-                                                            {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-red-500" title="Delete">🗑️</button>}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </React.Fragment>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                                        </td>
+                                                        <td className="p-2 text-center">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <button onClick={(e) => { e.stopPropagation(); handleQuickStock(product, -1); }} className="w-5 h-5 flex items-center justify-center rounded bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 transition-colors shadow-sm">-</button>
+                                                                <span className={`text-[11px] font-black w-6 text-center ${product.stock <= 5 ? 'text-red-500' : 'text-gray-900'}`}>{product.stock}</span>
+                                                                <button onClick={(e) => { e.stopPropagation(); handleQuickStock(product, 1); }} className="w-5 h-5 flex items-center justify-center rounded bg-white border border-gray-100 text-gray-400 hover:text-green-500 hover:border-green-100 transition-colors shadow-sm">+</button>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-2 text-center">
+                                                            <div className="flex items-center justify-center gap-1 opacity-0 group-hover/variant:opacity-100 transition-opacity">
+                                                                {canEdit && <button onClick={(e) => { e.stopPropagation(); startEdit(product); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Edit">✏️</button>}
+                                                                {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDuplicate(product); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Duplicate">📋</button>}
+                                                                <button onClick={(e) => { e.stopPropagation(); printBarcode(product.sku, product.name, product.price, product.size, product.color, product.material); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm" title="Barcode">🏷️</button>
+                                                                {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-red-500" title="Delete">🗑️</button>}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
 
                     {/* Mobile Card List: Hidden on Desktop */}
                     <div className="lg:hidden divide-y divide-[#F3EDE4]">
@@ -827,8 +829,8 @@ export default function InventoryPage() {
                                             <span className="font-black text-[var(--gold)] ml-2">${group.price.toFixed(2)}</span>
                                         </div>
                                         <div className="flex flex-wrap gap-2 mt-3">
-                                            <span className={`badge text-[9px] ${group.totalStock > 10 ? 'badge-green' : group.totalStock > 0 ? 'bg-yellow-100 text-yellow-600' : 'badge-red'}`}>
-                                                Stock: {group.totalStock}
+                                            <span className={`badge text-[9px] ${group.totalStock > 10 ? 'badge-green' : group.totalStock > 0 ? 'bg-yellow-100 text-yellow-600' : (group.totalStock === 0 && group.isNewArrival) ? 'badge-gold' : 'badge-red'}`}>
+                                                {(group.totalStock === 0 && group.isNewArrival) ? 'Coming Soon' : `Stock: ${group.totalStock}`}
                                             </span>
                                             {group.isNewArrival && <span className="badge-gold text-[9px]">New Collection</span>}
                                         </div>
@@ -1058,7 +1060,7 @@ export default function InventoryPage() {
                                     <div className="grid grid-cols-1 gap-4">
                                         <div>
                                             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Stock Qty</label>
-                                            <input required type="number" value={newProduct.stock || ''} onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
+                                            <input required type="number" value={newProduct.stock === 0 ? 0 : (newProduct.stock || '')} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value ? parseInt(e.target.value) : 0 })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
                                             {selectedMain && (
                                                 <p className="text-[10px] text-gray-400 mt-2 italic">💡 Tip: Define sizes for "{selectedMain.name}" in Filter Management to enable multi-size bulk entry.</p>
                                             )}
@@ -1225,7 +1227,7 @@ export default function InventoryPage() {
                                 <div className="grid grid-cols-1 gap-4">
                                     <div>
                                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Stock Level</label>
-                                        <input required type="number" value={editingProduct.stock || ''} onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
+                                        <input required type="number" value={editingProduct.stock === 0 ? 0 : (editingProduct.stock || '')} onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value ? parseInt(e.target.value) : 0 })} className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-[#D4AF37] transition-all" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[#D4AF37]/5 rounded-2xl border border-[#D4AF37]/10">

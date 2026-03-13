@@ -47,7 +47,7 @@ export default function TrendingCollection() {
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                 });
 
-                setProducts(sorted.slice(0, 4));
+                setProducts(sorted.slice(0, 12));
             } catch (error) {
                 console.error('Failed to load collection:', error);
             } finally {
@@ -73,12 +73,12 @@ export default function TrendingCollection() {
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-8 pt-4 -mx-6 px-6 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {products.map((product, index) => (
                         <Link
                             key={product.id}
                             href={`/product/${product.id}`}
-                            className="group relative flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700"
+                            className="group relative flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 min-w-[75vw] sm:min-w-[40vw] lg:min-w-[280px] snap-center shrink-0"
                             style={{ animationDelay: `${index * 150}ms` }}
                         >
                             <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-[#f8f5f0]">

@@ -37,7 +37,7 @@ export async function getProducts() {
     try {
         console.log('🧥 [Inventory] Fetching products...');
         const products = await prisma.product.findMany({
-            include: { category: true, sale: true },
+            include: { category: { include: { parent: true } }, sale: true },
             orderBy: { createdAt: 'desc' }
         });
         console.log(`✅ [Inventory] Found ${products.length} products`);
@@ -277,7 +277,7 @@ export async function getProductsByCategory(categoryName: string) {
                 }
             },
             include: {
-                category: true,
+                category: { include: { parent: true } },
                 sale: true
             },
             orderBy: {
