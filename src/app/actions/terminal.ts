@@ -17,10 +17,11 @@ export async function registerTerminalReader(registrationCode: string, label: st
             const location = await stripe.terminal.locations.create({
                 display_name: settings?.storeName || 'Mode Aura Boutique',
                 address: {
-                    line1: settings?.address || '123 Fashion St',
-                    city: 'Toronto', // Default fallback
+                    line1: settings?.address || '785 Wyandotte St E',
+                    city: 'Windsor',
+                    state: 'ON',
                     country: 'CA',
-                    postal_code: 'M5V 2H1', // Default fallback
+                    postal_code: 'N9A 3J3',
                 }
             })
             locationId = location.id
