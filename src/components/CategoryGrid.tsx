@@ -71,10 +71,10 @@ export default function CategoryGrid() {
                     getProducts()
                 ]);
 
-                // Option A: Extract main categories that have an explicit image saved (featured)
-                let mainCats = allCats.filter((c: any) => !c.parentId && c.image);
+                // Option A: Extract main categories that have been explicitly toggled to show on homepage
+                let mainCats = allCats.filter((c: any) => !c.parentId && c.showOnHome);
 
-                // Fallback: If no categories have custom images yet, just pick the top 3
+                // Fallback: If no categories are explicitly selected yet, just pick the top 3
                 if (mainCats.length === 0) {
                     mainCats = allCats.filter((c: any) => !c.parentId).slice(0, 3);
                 }

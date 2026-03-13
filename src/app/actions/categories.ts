@@ -44,6 +44,7 @@ export async function addCategory(data: {
     fields?: string;
     image?: string;
     addToNav?: boolean;
+    showOnHome?: boolean;
 }) {
     try {
         const categoryCode = data.code.toUpperCase().slice(0, 3);
@@ -58,6 +59,7 @@ export async function addCategory(data: {
                     }
                 }),
                 fields: data.fields || 'size,color,material',
+                showOnHome: data.showOnHome || false,
                 // image field temporarily disabled until schema migration completes
                 // image: data.image || null,
             }
@@ -104,7 +106,7 @@ export async function addCategory(data: {
 }
 
 // Update category
-export async function updateCategory(id: string, data: { name?: string; code?: string; fields?: string; image?: string }) {
+export async function updateCategory(id: string, data: { name?: string; code?: string; fields?: string; image?: string; showOnHome?: boolean }) {
     try {
         const oldCategory = await prisma.category.findUnique({ where: { id } });
 
@@ -115,6 +117,7 @@ export async function updateCategory(id: string, data: { name?: string; code?: s
                 ...(data.code && { code: data.code.toUpperCase().slice(0, 3) }),
                 ...(data.fields !== undefined && { fields: data.fields }),
                 ...(data.image !== undefined && { image: data.image }),
+                ...(data.showOnHome !== undefined && { showOnHome: data.showOnHome }),
             }
         });
 

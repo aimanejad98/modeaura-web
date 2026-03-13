@@ -17,7 +17,7 @@ export default function CategoriesPage() {
     const [showAddSub, setShowAddSub] = useState<string | null>(null)
     const [editingFields, setEditingFields] = useState<string | null>(null)
     const [editingCategory, setEditingCategory] = useState<any>(null)
-    const [newCat, setNewCat] = useState({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false })
+    const [newCat, setNewCat] = useState({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false, showOnHome: false })
 
     useEffect(() => {
         loadCategories()
@@ -36,9 +36,10 @@ export default function CategoriesPage() {
             name: newCat.name,
             code: newCat.code,
             fields: newCat.fields.join(','),
-            addToNav: newCat.addToNav
+            addToNav: newCat.addToNav,
+            showOnHome: newCat.showOnHome
         })
-        setNewCat({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false })
+        setNewCat({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false, showOnHome: false })
         setShowAddMain(false)
         loadCategories()
     }
@@ -52,7 +53,7 @@ export default function CategoriesPage() {
             fields: newCat.fields.join(','),
             addToNav: false // Subcategories don't usually go to main nav directly, or maybe user wants it? User request implied "when i add category", didn't specify main/sub. Let's keep it simple for now or adding to sub form too? The request was "add category". I'll add to main for now.
         })
-        setNewCat({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false })
+        setNewCat({ name: '', code: '', fields: ['size', 'color', 'material'], addToNav: false, showOnHome: false })
         setShowAddSub(null)
         loadCategories()
     }
@@ -63,6 +64,7 @@ export default function CategoriesPage() {
         await updateCategory(editingCategory.id, {
             name: editingCategory.name,
             code: editingCategory.code,
+            showOnHome: editingCategory.showOnHome
         })
         setEditingCategory(null)
         loadCategories()
@@ -121,6 +123,11 @@ export default function CategoriesPage() {
                                     {cat.code}
                                 </span>
                                 <span className="font-black text-base lg:text-lg truncate">{cat.name}</span>
+                                {cat.showOnHome && (
+                                    <span className="shrink-0 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] lg:text-xs font-bold whitespace-nowrap">
+                                        🏠 On Homepage
+                                    </span>
+                                )}
                                 <span className="text-gray-400 text-xs shrink-0">({cat.children?.length || 0})</span>
                             </div>
                             <div className="flex gap-2 shrink-0">
@@ -288,15 +295,26 @@ export default function CategoriesPage() {
                                 className="w-full p-4 bg-gray-50 rounded-xl"
                             />
 
-                            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={newCat.addToNav}
-                                    onChange={(e) => setNewCat({ ...newCat, addToNav: e.target.checked })}
-                                    className="w-5 h-5 accent-[var(--gold)]"
-                                />
-                                <span className="font-bold text-gray-700">Add to Navigation Menu</span>
-                            </label>
+                            <div className="grid grid-cols-2 gap-4">
+                                <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={newCat.addToNav}
+                                        onChange={(e) => setNewCat({ ...newCat, addToNav: e.target.checked })}
+                                        className="w-5 h-5 accent-[var(--gold)]"
+                                    />
+                                    <span className="font-bold text-gray-700 text-sm">Add to Navigation</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer border border-[#D4AF37]/30">
+                                    <input
+                                        type="checkbox"
+                                        checked={newCat.showOnHome}
+                                        onChange={(e) => setNewCat({ ...newCat, showOnHome: e.target.checked })}
+                                        className="w-5 h-5 accent-[var(--gold)]"
+                                    />
+                                    <span className="font-bold text-[#D4AF37] text-sm">Show on Homepage</span>
+                                </label>
+                            </div>
 
                             <div className="bg-gray-50 p-4 rounded-xl">
                                 <p className="text-xs font-bold text-gray-400 uppercase mb-3">Product Fields Required</p>
@@ -354,6 +372,16 @@ export default function CategoriesPage() {
                                     className="w-full p-4 bg-gray-50 rounded-xl mt-1"
                                 />
                             </div>
+
+                            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer border border-[#D4AF37]/30 w-full mt-2">
+                                <input
+                                    type="checkbox"
+                                    checked={editingCategory.showOnHome || false}
+                                    onChange={(e) => setEditingCategory({ ...editingCategory, showOnHome: e.target.checked })}
+                                    className="w-5 h-5 accent-[var(--gold)]"
+                                />
+                                <span className="font-bold text-[#D4AF37] text-sm">Show on Homepage (Curated Category)</span>
+                            </label>
 
                             <div className="flex flex-col sm:flex-row gap-4 pt-4">
                                 <button type="button" onClick={() => setEditingCategory(null)} className="flex-1 p-4 bg-gray-100 rounded-xl font-bold">

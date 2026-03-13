@@ -17,6 +17,7 @@ model Category {
   parentId          String?
   createdAt         DateTime           @default(now())
   image             String?
+  showOnHome        Boolean            @default(false)
   parent            Category?          @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children          Category[]         @relation("CategoryHierarchy")
   colors            Color[]

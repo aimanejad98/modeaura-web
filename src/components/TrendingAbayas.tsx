@@ -26,11 +26,8 @@ export default function TrendingCollection() {
                     } else {
                         acc[p.name].availableSizes.add(p.size);
                         acc[p.name].allVariants.push(p);
-                        // Use the newest one for the main display properties if needed
-                        if (new Date(p.createdAt) > new Date(acc[p.name].createdAt)) {
-                            acc[p.name].createdAt = p.createdAt;
-                            acc[p.name].isNewArrival = acc[p.name].isNewArrival || p.isNewArrival;
-                        }
+                        // If any variant is marked as new arrival, the whole group is
+                        acc[p.name].isNewArrival = acc[p.name].isNewArrival || p.isNewArrival;
                     }
                     return acc;
                 }, {});
@@ -40,14 +37,15 @@ export default function TrendingCollection() {
                     availableSizes: Array.from(p.availableSizes).filter(Boolean).sort()
                 }));
 
-                const filteredArrivals = uniqueProducts.filter((p: any) => p.isNewArrival);
+                // ONLY show products explicitly marked as New Arrival
+                const filteredArrivals = uniqueProducts.filter((p: any) => p.isNewArrival === true);
 
                 // Sort by newest first
                 const sorted = filteredArrivals.sort((a: any, b: any) => {
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                 });
 
-                setProducts(sorted.slice(0, 12));
+                setProducts(sorted);
             } catch (error) {
                 console.error('Failed to load collection:', error);
             } finally {
@@ -78,7 +76,7 @@ export default function TrendingCollection() {
                         <Link
                             key={product.id}
                             href={`/product/${product.id}`}
-                            className="group relative flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 min-w-[75vw] sm:min-w-[40vw] lg:min-w-[280px] snap-center shrink-0"
+                            className="group relative flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 w-[280px] sm:w-[320px] shrink-0 snap-center"
                             style={{ animationDelay: `${index * 150}ms` }}
                         >
                             <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-[#f8f5f0]">
