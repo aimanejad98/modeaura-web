@@ -78,6 +78,10 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [emailSent, setEmailSent] = useState(false)
     const [storeSettings, setStoreSettings] = useState<any>(null)
 
+    // Custom Item State
+    const [showCustomItemModal, setShowCustomItemModal] = useState(false)
+    const [customItem, setCustomItem] = useState({ name: 'Custom Item', price: '' })
+
     useEffect(() => {
         // Fetch settings on mount
         import('@/app/actions/settings').then(mod => {
@@ -375,6 +379,26 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         setCart(cart.filter(item => !(item.id === id && item.variant === variant)))
     }
 
+    function handleAddCustomItem(e: React.FormEvent) {
+        e.preventDefault()
+        const priceNum = parseFloat(customItem.price)
+        if (isNaN(priceNum) || priceNum <= 0) return alert('Invalid price')
+
+        addToCart({
+            id: `custom-${Date.now()}`,
+            name: customItem.name || 'Custom Item',
+            price: priceNum,
+            image: '',
+            quantity: 1,
+            sku: 'CUSTOM',
+            variant: 'Manual Entry',
+            stock: 999
+        })
+
+        setShowCustomItemModal(false)
+        setCustomItem({ name: 'Custom Item', price: '' })
+    }
+
     const filteredProducts = products.filter(p => {
         const matchesCategory = selectedCategory === 'All Items' || (selectedCategory === 'Kids' ? p.isKids === true : (() => {
             const activeCat = categories.find(c => c.name === selectedCategory);
@@ -637,6 +661,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm group-focus-within:text-[var(--gold)]">🔍</span>
                         </form>
                         <div className="flex items-center gap-4">
+                            <button onClick={() => setShowCustomItemModal(true)} className="text-[10px] bg-gray-900 text-white px-3 py-1.5 rounded-lg font-black uppercase tracking-widest hover:bg-[var(--gold)] transition-colors whitespace-nowrap flex items-center gap-1 shadow-sm"><span className="text-sm">+</span> Custom Item</button>
                             <button onClick={() => setSelectedStaff(null)} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors whitespace-nowrap">Switch Staff</button>
                             <div className="w-px h-3 bg-gray-200" />
                             <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors whitespace-nowrap">Admin Exit</Link>
@@ -1203,120 +1228,170 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                     </div>
                 )}
             </div>
-            {/* PRINT ONLY RECEIPT LAYOUT */}
-            {lastOrder && (
-                <div className="hidden print:block print:max-w-[300px] print:mx-auto print:p-2 bg-white text-black font-mono text-[10px] leading-tight print:pb-20">
-                    <div className="text-center mb-2">
-                        <h1 className="text-xl font-black tracking-tighter mb-1">{storeSettings?.storeName || 'MODE AURA'}</h1>
-                        <p className="font-bold">{storeSettings?.tagline || 'Fashion and Accessories'}</p>
-                        <p>{storeSettings?.address || 'Mode Aura Boutique'}</p>
-                        {storeSettings?.city ? <p>{storeSettings.city}, {storeSettings.province} {storeSettings.postalCode}</p> : <p>Windsor, ON N8X 2S2</p>}
-                        {storeSettings?.phone && <p>Tel: {storeSettings.phone}</p>}
-                        <p>{storeSettings?.taxId ? `GST/HST Reg. No. ${storeSettings.taxId}` : ''}</p>
-                        <p className="mt-1">Visit Us At {storeSettings?.website || 'www.modeaura.ca'}</p>
-                    </div>
 
-                    <div className="flex justify-between mb-1">
-                        <span>Store: 001</span>
-                        <span>Register: 1</span>
-                    </div>
-                    <div className="flex justify-between mb-1">
-                        <span>Date: {new Date().toLocaleDateString()}</span>
-                        <span>Time: {new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                        <span>Trans: {lastOrder.orderId.replace('MA-', '')}</span>
-                        <span>Cashier: Admin</span>
-                    </div>
-
-                    <div className="mb-2 border-b border-black border-dashed"></div>
-
-                    <div className="grid grid-cols-12 font-bold mb-1">
-                        <div className="col-span-6">Item</div>
-                        <div className="col-span-2 text-center">Qty</div>
-                        <div className="col-span-2 text-right">Price</div>
-                        <div className="col-span-2 text-right">Amnt</div>
-                    </div>
-
-                    <div className="mb-2 border-b border-black border-dashed"></div>
-
-                    <div className="space-y-2 mb-2">
-                        {lastOrder.items.map((item: any, i: number) => {
-                            const itemPrice = Number(item.price) || 0;
-                            const itemQty = Number(item.qty) || 1;
-                            return (
-                                <div key={i}>
-                                    <div className="font-bold">{item.sku || 'ITEM-' + i}</div>
-                                    <div className="grid grid-cols-12">
-                                        <div className="col-span-6 pr-1">
-                                            <div className="truncate">{item.name}</div>
-                                            <div className="text-[8px] font-normal text-gray-500">
-                                                {item.variant ? item.variant : [item.size, item.color].filter(Boolean).join(' / ')}
-                                            </div>
-                                        </div>
-                                        <div className="col-span-2 text-center">{itemQty}</div>
-                                        <div className="col-span-2 text-right">{itemPrice.toFixed(2)}</div>
-                                        <div className="col-span-2 text-right">{(itemPrice * itemQty).toFixed(2)}</div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    <div className="mb-2 border-b border-black border-dashed"></div>
-
-                    <div className="space-y-1 text-right max-w-[80%] ml-auto">
-                        <div className="flex justify-between">
-                            <span>Subtotal</span>
-                            <span>{lastOrder.subtotal.toFixed(2)}</span>
+            {/* Custom Item Modal */}
+            {showCustomItemModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
+                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in border border-gray-100">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <h3 className="text-lg font-black text-gray-900">Add Custom Item</h3>
+                            <button onClick={() => setShowCustomItemModal(false)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black transition-colors font-bold text-xl">×</button>
                         </div>
-                        <div className="flex justify-between">
-                            <span>GST (5%)</span>
-                            <span>{(lastOrder.subtotal * 0.05).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>HST (8%)</span>
-                            <span>{(lastOrder.subtotal * 0.08).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-black text-sm mt-1">
-                            <span>Total</span>
-                            <span>{lastOrder.total.toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 mb-2 border-b border-black border-dashed"></div>
-
-                    <div className="space-y-1 text-right max-w-[80%] ml-auto">
-                        <div className="flex justify-between">
-                            <span>{lastOrder.payment || 'Payment'}</span>
-                            <span>{lastOrder.amountReceived?.toFixed(2) || lastOrder.total.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Change</span>
-                            <span>{lastOrder.changeDue.toFixed(2)}</span>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 text-center space-y-2">
-                        <p>***********************************</p>
-                        <p className="font-bold">{storeSettings?.receiptNote || 'Thank you for shopping with us!'}</p>
-                        <p>NO REFUNDS OR EXCHANGES</p>
-                        <p>ON FINAL SALE ITEMS</p>
-                        <p>***********************************</p>
-
-                        <div className="mt-4 pt-2">
-                            {/* Simulated Barcode */}
-                            <div className="h-12 bg-black w-3/4 mx-auto mask-barcode flex items-end justify-center text-white text-[8px] pb-1 tracking-[4px]">
-                                ||| || ||| || |||
+                        <form onSubmit={handleAddCustomItem} className="p-6 space-y-5">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Item Description</label>
+                                <input
+                                    autoFocus
+                                    required
+                                    type="text"
+                                    value={customItem.name}
+                                    onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
+                                    placeholder="e.g. Alteration Fee"
+                                    className="w-full bg-gray-50 border border-transparent focus:border-[var(--gold)] rounded-xl px-4 py-3 text-sm font-bold outline-none transition-colors"
+                                />
                             </div>
-                            <p className="text-[8px] mt-1">{lastOrder.orderId}</p>
-                        </div>
-                        <div className="pt-2 text-[8px] uppercase tracking-widest">
-                            Mode Aura &bull; Customer Copy
-                        </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Price ($)</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black">$</span>
+                                    <input
+                                        required
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={customItem.price}
+                                        onChange={(e) => setCustomItem({ ...customItem, price: e.target.value })}
+                                        placeholder="0.00"
+                                        className="w-full bg-gray-50 border border-transparent focus:border-[var(--gold)] rounded-xl pl-8 pr-4 py-3 text-lg font-black outline-none transition-colors"
+                                    />
+                                </div>
+                            </div>
+                            <div className="pt-2">
+                                <button type="submit" className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-gray-200">
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
+
+            {/* PRINT ONLY RECEIPT LAYOUT */}
+            {
+                lastOrder && (
+                    <div className="hidden print:block print:max-w-[300px] print:mx-auto print:p-2 bg-white text-black font-mono text-[10px] leading-tight print:pb-20">
+                        <div className="text-center mb-2">
+                            <h1 className="text-xl font-black tracking-tighter mb-1">{storeSettings?.storeName || 'MODE AURA'}</h1>
+                            <p className="font-bold">{storeSettings?.tagline || 'Fashion and Accessories'}</p>
+                            <p>{storeSettings?.address || 'Mode Aura Boutique'}</p>
+                            {storeSettings?.city ? <p>{storeSettings.city}, {storeSettings.province} {storeSettings.postalCode}</p> : <p>Windsor, ON N8X 2S2</p>}
+                            {storeSettings?.phone && <p>Tel: {storeSettings.phone}</p>}
+                            <p>{storeSettings?.taxId ? `GST/HST Reg. No. ${storeSettings.taxId}` : ''}</p>
+                            <p className="mt-1">Visit Us At {storeSettings?.website || 'www.modeaura.ca'}</p>
+                        </div>
+
+                        <div className="flex justify-between mb-1">
+                            <span>Store: 001</span>
+                            <span>Register: 1</span>
+                        </div>
+                        <div className="flex justify-between mb-1">
+                            <span>Date: {new Date().toLocaleDateString()}</span>
+                            <span>Time: {new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div className="flex justify-between mb-2">
+                            <span>Trans: {lastOrder.orderId.replace('MA-', '')}</span>
+                            <span>Cashier: Admin</span>
+                        </div>
+
+                        <div className="mb-2 border-b border-black border-dashed"></div>
+
+                        <div className="grid grid-cols-12 font-bold mb-1">
+                            <div className="col-span-6">Item</div>
+                            <div className="col-span-2 text-center">Qty</div>
+                            <div className="col-span-2 text-right">Price</div>
+                            <div className="col-span-2 text-right">Amnt</div>
+                        </div>
+
+                        <div className="mb-2 border-b border-black border-dashed"></div>
+
+                        <div className="space-y-2 mb-2">
+                            {lastOrder.items.map((item: any, i: number) => {
+                                const itemPrice = Number(item.price) || 0;
+                                const itemQty = Number(item.qty) || 1;
+                                return (
+                                    <div key={i}>
+                                        <div className="font-bold">{item.sku || 'ITEM-' + i}</div>
+                                        <div className="grid grid-cols-12">
+                                            <div className="col-span-6 pr-1">
+                                                <div className="truncate">{item.name}</div>
+                                                <div className="text-[8px] font-normal text-gray-500">
+                                                    {item.variant ? item.variant : [item.size, item.color].filter(Boolean).join(' / ')}
+                                                </div>
+                                            </div>
+                                            <div className="col-span-2 text-center">{itemQty}</div>
+                                            <div className="col-span-2 text-right">{itemPrice.toFixed(2)}</div>
+                                            <div className="col-span-2 text-right">{(itemPrice * itemQty).toFixed(2)}</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mb-2 border-b border-black border-dashed"></div>
+
+                        <div className="space-y-1 text-right max-w-[80%] ml-auto">
+                            <div className="flex justify-between">
+                                <span>Subtotal</span>
+                                <span>{lastOrder.subtotal.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>GST (5%)</span>
+                                <span>{(lastOrder.subtotal * 0.05).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>HST (8%)</span>
+                                <span>{(lastOrder.subtotal * 0.08).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between font-black text-sm mt-1">
+                                <span>Total</span>
+                                <span>{lastOrder.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 mb-2 border-b border-black border-dashed"></div>
+
+                        <div className="space-y-1 text-right max-w-[80%] ml-auto">
+                            <div className="flex justify-between">
+                                <span>{lastOrder.payment || 'Payment'}</span>
+                                <span>{lastOrder.amountReceived?.toFixed(2) || lastOrder.total.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Change</span>
+                                <span>{lastOrder.changeDue.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 text-center space-y-2">
+                            <p>***********************************</p>
+                            <p className="font-bold">{storeSettings?.receiptNote || 'Thank you for shopping with us!'}</p>
+                            <p>NO REFUNDS OR EXCHANGES</p>
+                            <p>ON FINAL SALE ITEMS</p>
+                            <p>***********************************</p>
+
+                            <div className="mt-4 pt-2">
+                                {/* Simulated Barcode */}
+                                <div className="h-12 bg-black w-3/4 mx-auto mask-barcode flex items-end justify-center text-white text-[8px] pb-1 tracking-[4px]">
+                                    ||| || ||| || |||
+                                </div>
+                                <p className="text-[8px] mt-1">{lastOrder.orderId}</p>
+                            </div>
+                            <div className="pt-2 text-[8px] uppercase tracking-widest">
+                                Mode Aura &bull; Customer Copy
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
         </>
     )
 }
