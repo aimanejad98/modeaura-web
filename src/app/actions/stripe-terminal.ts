@@ -7,7 +7,7 @@ export async function createTerminalPaymentIntent(amount: number) {
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(amount * 100), // Convert to cents
             currency: 'cad', // Assuming CAD based on context
-            payment_method_types: ['card_present'],
+            payment_method_types: ['card_present', 'interac_present'],
             capture_method: 'manual',
         });
 

@@ -268,7 +268,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             }
 
             setPaymentStatus('Payment Successful!');
-            await processPayment('Card'); // Finalize order in DB
+            await processPayment(paymentMethod); // Finalize order in DB
 
         } catch (error: any) {
             console.error('Payment failed:', error);
