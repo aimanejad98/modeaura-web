@@ -292,76 +292,137 @@ export default function ReceiptsPage() {
                     </div>
                 </div>
             </div>
+            {/* Desktop: Table Layout (xl+) */}
+            <div className="hidden xl:block bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                {/* Table Header */}
+                <div className="grid grid-cols-[130px_110px_1fr_140px_110px_70px_100px_130px] gap-3 px-6 py-4 bg-gray-50 border-b border-gray-100">
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order #</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Items</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Source</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Total</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredOrders.map((order) => (
-                    <div key={order.id} className="card p-5 hover:shadow-lg transition-shadow">
-                        <div className="flex justify-between items-start mb-4">
+                {filteredOrders.map((order, idx) => {
+                    const orderDate = new Date(order.createdAt || order.date)
+                    const items = order.items || []
+                    const itemSummary = items.slice(0, 2).map((item: any) => `${item.name} ×${item.qty || 1}`).join(', ')
+                    const moreCount = items.length > 2 ? items.length - 2 : 0
+
+                    return (
+                        <div key={order.id} className={`grid grid-cols-[130px_110px_1fr_140px_110px_70px_100px_130px] gap-3 px-6 py-3.5 items-center hover:bg-gray-50/50 transition-colors ${idx < filteredOrders.length - 1 ? 'border-b border-gray-50' : ''}`}>
                             <div>
-                                <p className="font-black text-lg text-[#D4AF37]">{order.orderId}</p>
-                                <p className="text-xs text-gray-400">{new Date(order.createdAt || order.date).toLocaleString()}</p>
+                                <p className="font-black text-sm text-[#D4AF37]">{order.orderId}</p>
+                                <p className={`text-[9px] font-bold mt-0.5 ${order.status === 'Refunded' ? 'text-rose-500' : 'text-green-500'}`}>
+                                    {order.status === 'Refunded' ? '↩ Refunded' : '✓ Completed'}
+                                </p>
                             </div>
-                            <div className="text-right flex flex-col items-end gap-1">
-                                <p className="text-2xl font-black text-gray-900">${(parseFloat(order.total) || 0).toFixed(2)}</p>
-                                <div className="flex gap-2">
-                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider ${order.source === 'POS' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'}`}>
-                                        {order.source || 'WEBSITE'}
-                                    </span>
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded bg-gray-100 text-gray-500 uppercase tracking-wider">
-                                        {order.paymentMethod || 'Cash'}
-                                    </span>
-                                </div>
+                            <div>
+                                <p className="text-xs font-bold text-gray-700">{orderDate.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}</p>
+                                <p className="text-[10px] text-gray-400 font-medium">{orderDate.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}</p>
                             </div>
-                        </div>
-
-                        <div className="space-y-2 mb-4">
-                            {(order.items || []).slice(0, 3).map((item: any, i: number) => (
-                                <div key={i} className="flex justify-between text-sm text-gray-600">
-                                    <span>{item.name} ×{item.qty || 1}</span>
-                                    <span>${((parseFloat(item.price) || 0) * (item.qty || 1)).toFixed(2)}</span>
-                                </div>
-                            ))}
-                            {(order.items || []).length > 3 && (
-                                <p className="text-xs text-gray-400">+{order.items.length - 3} more items</p>
-                            )}
-                        </div>
-
-                        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                            <span className="text-sm text-gray-500">👤 {order.customer || 'Guest'}</span>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={async () => {
-                                        if (confirm('Delete this order permanently?')) {
-                                            await deleteOrder(order.id)
-                                            loadOrders()
-                                        }
-                                    }}
-                                    className="p-2 hover:bg-red-50 rounded-xl text-gray-300 hover:text-red-500 transition-colors"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
+                            <div className="min-w-0">
+                                <p className="text-xs font-bold text-gray-700 truncate">{itemSummary || 'No items'}</p>
+                                {moreCount > 0 && <p className="text-[10px] text-gray-400">+{moreCount} more</p>}
+                            </div>
+                            <div><p className="text-xs font-bold text-gray-700 truncate">{order.customer || 'Walk-in'}</p></div>
+                            <div>
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${(order.paymentMethod || 'Cash') === 'Cash' ? 'bg-emerald-50 text-emerald-600' : order.paymentMethod === 'Debit Card' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
+                                    {(order.paymentMethod || 'Cash') === 'Cash' ? '💵' : '💳'} {order.paymentMethod || 'Cash'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${order.source === 'POS' ? 'bg-orange-50 text-orange-600' : 'bg-sky-50 text-sky-600'}`}>
+                                    {order.source || 'WEB'}
+                                </span>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-lg font-black text-gray-900">${(parseFloat(order.total) || 0).toFixed(2)}</p>
+                            </div>
+                            <div className="flex items-center justify-end gap-1">
+                                <button onClick={async () => { if (confirm('Delete this order permanently?')) { await deleteOrder(order.id); loadOrders() } }} className="p-2 hover:bg-red-50 rounded-xl text-gray-300 hover:text-red-500 transition-colors" title="Delete"><Trash2 size={14} /></button>
                                 {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped' || order.status === 'Completed' || order.status === 'Order Received' || order.status === 'Order Placed') && (
-                                    <button
-                                        onClick={() => setRefundingOrder(order)}
-                                        className="p-2 hover:bg-rose-50 rounded-xl text-gray-300 hover:text-rose-500 transition-colors"
-                                    >
-                                        <RotateCcw size={16} />
-                                    </button>
+                                    <button onClick={() => setRefundingOrder(order)} className="p-2 hover:bg-rose-50 rounded-xl text-gray-300 hover:text-rose-500 transition-colors" title="Refund"><RotateCcw size={14} /></button>
                                 )}
-                                <button onClick={() => printReceipt(order)} className="gold-btn py-2 px-4 text-xs">🖨️ Print Receipt</button>
+                                <button onClick={() => printReceipt(order)} className="gold-btn py-1.5 px-3 text-[10px] font-black uppercase tracking-wider">🖨️ Print</button>
                             </div>
                         </div>
+                    )
+                })}
+
+                {filteredOrders.length === 0 && (
+                    <div className="p-16 text-center text-gray-400">
+                        <div className="text-4xl mb-4">🧾</div>
+                        <p className="font-bold">No receipts found</p>
+                        <p className="text-sm">Complete a sale to see receipts here</p>
                     </div>
-                ))}
+                )}
             </div>
 
-            {filteredOrders.length === 0 && (
-                <div className="card p-16 text-center text-gray-400">
-                    <div className="text-4xl mb-4">🧾</div>
-                    <p className="font-bold">No receipts found</p>
-                    <p className="text-sm">Complete a sale to see receipts here</p>
-                </div>
-            )}
+            {/* Mobile / Tablet: Card Layout (below xl) */}
+            <div className="xl:hidden space-y-3">
+                {filteredOrders.map((order) => {
+                    const orderDate = new Date(order.createdAt || order.date)
+                    const items = order.items || []
+
+                    return (
+                        <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+                            {/* Top Row: Order ID + Total */}
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <p className="font-black text-base text-[#D4AF37]">{order.orderId}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        {orderDate.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })} • {orderDate.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
+                                <p className="text-xl font-black text-gray-900">${(parseFloat(order.total) || 0).toFixed(2)}</p>
+                            </div>
+
+                            {/* Items */}
+                            <div className="bg-gray-50 rounded-xl p-3 mb-3">
+                                {items.slice(0, 3).map((item: any, i: number) => (
+                                    <div key={i} className="flex justify-between text-xs text-gray-600 py-0.5">
+                                        <span className="font-medium truncate mr-2">{item.name} ×{item.qty || 1}</span>
+                                        <span className="font-bold text-gray-800 shrink-0">${((parseFloat(item.price) || 0) * (item.qty || 1)).toFixed(2)}</span>
+                                    </div>
+                                ))}
+                                {items.length > 3 && <p className="text-[10px] text-gray-400 mt-1">+{items.length - 3} more items</p>}
+                            </div>
+
+                            {/* Bottom Row: Tags + Actions */}
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-xs font-bold text-gray-600">👤 {order.customer || 'Walk-in'}</span>
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${(order.paymentMethod || 'Cash') === 'Cash' ? 'bg-emerald-50 text-emerald-600' : order.paymentMethod === 'Debit Card' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
+                                        {order.paymentMethod || 'Cash'}
+                                    </span>
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${order.source === 'POS' ? 'bg-orange-50 text-orange-600' : 'bg-sky-50 text-sky-600'}`}>
+                                        {order.source || 'WEB'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <button onClick={async () => { if (confirm('Delete this order permanently?')) { await deleteOrder(order.id); loadOrders() } }} className="p-2 hover:bg-red-50 rounded-xl text-gray-300 hover:text-red-500 transition-colors" title="Delete"><Trash2 size={14} /></button>
+                                    {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped' || order.status === 'Completed' || order.status === 'Order Received' || order.status === 'Order Placed') && (
+                                        <button onClick={() => setRefundingOrder(order)} className="p-2 hover:bg-rose-50 rounded-xl text-gray-300 hover:text-rose-500 transition-colors" title="Refund"><RotateCcw size={14} /></button>
+                                    )}
+                                    <button onClick={() => printReceipt(order)} className="gold-btn py-1.5 px-3 text-[10px] font-black uppercase tracking-wider">🖨️ Print</button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+
+                {filteredOrders.length === 0 && (
+                    <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center text-gray-400">
+                        <div className="text-4xl mb-4">🧾</div>
+                        <p className="font-bold">No receipts found</p>
+                        <p className="text-sm">Complete a sale to see receipts here</p>
+                    </div>
+                )}
+            </div>
 
             <DashboardPageGuide
                 pageName={{ en: "Receipt Archive", ar: "أرشيف الإيصالات" }}
