@@ -285,7 +285,15 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
         } catch (error: any) {
             console.error('Payment failed:', error);
-            setPaymentStatus(`Payment Failed: ${error.message}`);
+            const msg = error.message || '';
+            // If the reader disconnected, reset the connected state so they can reconnect
+            if (msg.includes('connection') || msg.includes('discoverReaders') || msg.includes('connectReader')) {
+                setConnectedReader(null);
+                setTerminalStatus('Reader Disconnected');
+                setPaymentStatus('Reader disconnected. Please reconnect and try again.');
+            } else {
+                setPaymentStatus(`Payment Failed: ${msg}`);
+            }
         } finally {
             setIsTerminalLoading(false);
             activePaymentIntentId.current = null;
