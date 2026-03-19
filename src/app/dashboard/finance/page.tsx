@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getExpenses, addExpense, getDashboardStats, getRecurringExpenses, addRecurringExpense, deleteRecurringExpense, checkAndRenewExpenses } from '@/app/actions/finance'
+import { getExpenses, addExpense, deleteExpense, updateExpense, getDashboardStats, getRecurringExpenses, addRecurringExpense, deleteRecurringExpense, updateRecurringExpense, checkAndRenewExpenses } from '@/app/actions/finance'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
 
 export default function FinancePage() {
@@ -15,6 +15,12 @@ export default function FinancePage() {
     // Form States
     const [newExpense, setNewExpense] = useState({ category: 'Rent', description: '', amount: 0, date: '', isRecurring: false })
     const [newRecurring, setNewRecurring] = useState({ category: 'Rent', description: '', amount: 0, frequency: 'Monthly', nextDueDate: '' })
+
+    // Edit States
+    const [editingExpense, setEditingExpense] = useState<any>(null)
+    const [editExpenseForm, setEditExpenseForm] = useState({ category: '', description: '', amount: 0, date: '' })
+    const [editingRecurring, setEditingRecurring] = useState<any>(null)
+    const [editRecurringForm, setEditRecurringForm] = useState({ category: '', description: '', amount: 0, frequency: 'Monthly', nextDueDate: '' })
 
     useEffect(() => {
         loadData()
@@ -50,9 +56,52 @@ export default function FinancePage() {
         loadData()
     }
 
+    async function handleDeleteExpense(id: string) {
+        if (!confirm('Delete this expense?')) return
+        await deleteExpense(id)
+        loadData()
+    }
+
+    function openEditExpense(expense: any) {
+        setEditingExpense(expense)
+        setEditExpenseForm({
+            category: expense.category?.name || 'Other',
+            description: expense.description,
+            amount: expense.amount,
+            date: expense.date
+        })
+    }
+
+    async function handleUpdateExpense(e: React.FormEvent) {
+        e.preventDefault()
+        if (!editingExpense) return
+        await updateExpense(editingExpense.id, editExpenseForm)
+        setEditingExpense(null)
+        loadData()
+    }
+
     async function handleDeleteRecurring(id: string) {
         if (!confirm('Stop this subscription?')) return
         await deleteRecurringExpense(id)
+        loadData()
+    }
+
+    function openEditRecurring(rec: any) {
+        setEditingRecurring(rec)
+        setEditRecurringForm({
+            category: rec.category?.name || 'Other',
+            description: rec.description,
+            amount: rec.amount,
+            frequency: rec.frequency,
+            nextDueDate: new Date(rec.nextDueDate).toISOString().split('T')[0]
+        })
+    }
+
+    async function handleUpdateRecurring(e: React.FormEvent) {
+        e.preventDefault()
+        if (!editingRecurring) return
+        await updateRecurringExpense(editingRecurring.id, editRecurringForm)
+        setEditingRecurring(null)
         loadData()
     }
 
@@ -154,11 +203,12 @@ export default function FinancePage() {
                                 <th className="p-5 text-left">Category</th>
                                 <th className="p-5 text-left">Date</th>
                                 <th className="p-5 text-right">Amount</th>
+                                <th className="p-5 text-right w-24">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {filteredExpenses.map((expense) => (
-                                <tr key={expense.id} className="hover:bg-gray-50 transition-colors">
+                                <tr key={expense.id} className="hover:bg-gray-50 transition-colors group">
                                     <td className="p-5 font-bold text-gray-700">
                                         {expense.description}
                                         {expense.description.includes('Auto-Renew') && (
@@ -172,6 +222,24 @@ export default function FinancePage() {
                                     </td>
                                     <td className="p-5 text-sm text-gray-400">{expense.date}</td>
                                     <td className="p-5 text-right font-black text-red-500">-${expense.amount.toFixed(2)}</td>
+                                    <td className="p-5 text-right">
+                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => openEditExpense(expense)}
+                                                className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors"
+                                                title="Edit"
+                                            >
+                                                ✏️
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteExpense(expense.id)}
+                                                className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                                                title="Delete"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -193,7 +261,23 @@ export default function FinancePage() {
                                             {expense.category?.name || 'Other'}
                                         </span>
                                     </div>
-                                    <p className="font-black text-red-500">-${expense.amount.toFixed(2)}</p>
+                                    <div className="text-right">
+                                        <p className="font-black text-red-500">-${expense.amount.toFixed(2)}</p>
+                                        <div className="flex items-center gap-1 mt-1 justify-end">
+                                            <button
+                                                onClick={() => openEditExpense(expense)}
+                                                className="p-1 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors text-xs"
+                                            >
+                                                ✏️
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteExpense(expense.id)}
+                                                className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors text-xs"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{expense.date}</p>
                             </div>
@@ -228,12 +312,20 @@ export default function FinancePage() {
                                     </div>
                                     <div className="text-right">
                                         <div className="font-bold text-lg">${rec.amount.toFixed(2)}</div>
-                                        <button
-                                            onClick={() => handleDeleteRecurring(rec.id)}
-                                            className="text-[10px] text-red-400 hover:text-red-300 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            Cancel
-                                        </button>
+                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                                            <button
+                                                onClick={() => openEditRecurring(rec)}
+                                                className="text-[10px] text-blue-300 hover:text-blue-200 uppercase tracking-wider"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteRecurring(rec.id)}
+                                                className="text-[10px] text-red-400 hover:text-red-300 uppercase tracking-wider"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -373,6 +465,125 @@ export default function FinancePage() {
                             <button type="submit" className="w-full gold-btn py-4 mt-4">
                                 {addTab === 'one-time' ? 'Add Expense' : 'Start Subscription'}
                             </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Expense Modal */}
+            {editingExpense && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-black">Edit Expense</h3>
+                            <button onClick={() => setEditingExpense(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+                        </div>
+                        <form onSubmit={handleUpdateExpense} className="space-y-4">
+                            <input
+                                required
+                                placeholder="Description"
+                                value={editExpenseForm.description}
+                                onChange={(e) => setEditExpenseForm({ ...editExpenseForm, description: e.target.value })}
+                                className="w-full p-4 bg-gray-50 rounded-xl font-medium focus:ring-2 focus:ring-[#D4AF37]/20 border-transparent outline-none"
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <select
+                                    value={editExpenseForm.category}
+                                    onChange={(e) => setEditExpenseForm({ ...editExpenseForm, category: e.target.value })}
+                                    className="w-full p-4 bg-gray-50 rounded-xl outline-none"
+                                >
+                                    <option value="Rent">Rent</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Supplies">Supplies</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <input
+                                    required
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="$$$"
+                                    value={editExpenseForm.amount || ''}
+                                    onChange={(e) => setEditExpenseForm({ ...editExpenseForm, amount: parseFloat(e.target.value) })}
+                                    className="w-full p-4 bg-gray-50 rounded-xl font-bold"
+                                />
+                            </div>
+                            <input
+                                required
+                                type="date"
+                                value={editExpenseForm.date}
+                                onChange={(e) => setEditExpenseForm({ ...editExpenseForm, date: e.target.value })}
+                                className="w-full p-4 bg-gray-50 rounded-xl"
+                            />
+                            <button type="submit" className="w-full gold-btn py-4 mt-4">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Subscription Modal */}
+            {editingRecurring && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-black">Edit Subscription</h3>
+                            <button onClick={() => setEditingRecurring(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+                        </div>
+                        <form onSubmit={handleUpdateRecurring} className="space-y-4">
+                            <input
+                                required
+                                placeholder="Service Name"
+                                value={editRecurringForm.description}
+                                onChange={(e) => setEditRecurringForm({ ...editRecurringForm, description: e.target.value })}
+                                className="w-full p-4 bg-gray-50 rounded-xl font-medium focus:ring-2 focus:ring-[#D4AF37]/20 border-transparent outline-none"
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <select
+                                    value={editRecurringForm.category}
+                                    onChange={(e) => setEditRecurringForm({ ...editRecurringForm, category: e.target.value })}
+                                    className="w-full p-4 bg-gray-50 rounded-xl outline-none"
+                                >
+                                    <option value="Rent">Rent</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Software">Software</option>
+                                    <option value="Marketing">Marketing</option>
+                                </select>
+                                <input
+                                    required
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="$$$"
+                                    value={editRecurringForm.amount || ''}
+                                    onChange={(e) => setEditRecurringForm({ ...editRecurringForm, amount: parseFloat(e.target.value) })}
+                                    className="w-full p-4 bg-gray-50 rounded-xl font-bold"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block ml-1">Frequency</label>
+                                    <select
+                                        value={editRecurringForm.frequency}
+                                        onChange={(e) => setEditRecurringForm({ ...editRecurringForm, frequency: e.target.value })}
+                                        className="w-full p-4 bg-gray-50 rounded-xl outline-none"
+                                    >
+                                        <option value="Daily">Daily</option>
+                                        <option value="Monthly">Monthly</option>
+                                        <option value="Weekly">Weekly</option>
+                                        <option value="Yearly">Yearly</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block ml-1">Next Due Date</label>
+                                    <input
+                                        required
+                                        type="date"
+                                        value={editRecurringForm.nextDueDate}
+                                        onChange={(e) => setEditRecurringForm({ ...editRecurringForm, nextDueDate: e.target.value })}
+                                        className="w-full p-4 bg-gray-50 rounded-xl"
+                                    />
+                                </div>
+                            </div>
+                            <button type="submit" className="w-full gold-btn py-4 mt-4">Save Changes</button>
                         </form>
                     </div>
                 </div>

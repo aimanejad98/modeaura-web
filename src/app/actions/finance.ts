@@ -53,6 +53,51 @@ export async function addExpense(data: {
     }
 }
 
+export async function deleteExpense(id: string) {
+    try {
+        await prisma.expense.delete({ where: { id } });
+        revalidatePath('/dashboard/finance');
+        return { success: true };
+    } catch (error) {
+        console.error('[Finance] Delete expense failed:', error);
+        return { success: false, error };
+    }
+}
+
+export async function updateExpense(id: string, data: {
+    category: string;
+    description: string;
+    amount: number;
+    date: string;
+}) {
+    try {
+        let categoryRecord = await prisma.category.findFirst({
+            where: { name: data.category, parentId: null }
+        });
+
+        if (!categoryRecord) {
+            categoryRecord = await prisma.category.create({
+                data: { name: data.category, type: 'Expense' }
+            });
+        }
+
+        const expense = await prisma.expense.update({
+            where: { id },
+            data: {
+                categoryId: categoryRecord.id,
+                description: data.description,
+                amount: data.amount,
+                date: data.date,
+            }
+        });
+        revalidatePath('/dashboard/finance');
+        return JSON.parse(JSON.stringify(expense));
+    } catch (error) {
+        console.error('[Finance] Update expense failed:', error);
+        throw error;
+    }
+}
+
 // --- Recurring Expenses (Subscriptions) ---
 
 export async function getRecurringExpenses() {
@@ -114,6 +159,43 @@ export async function deleteRecurringExpense(id: string) {
         return { success: true };
     } catch (error) {
         return { success: false, error };
+    }
+}
+
+export async function updateRecurringExpense(id: string, data: {
+    category: string;
+    description: string;
+    amount: number;
+    frequency: string;
+    nextDueDate: string;
+}) {
+    try {
+        let categoryRecord = await prisma.category.findFirst({
+            where: { name: data.category, parentId: null }
+        });
+
+        if (!categoryRecord) {
+            categoryRecord = await prisma.category.create({
+                data: { name: data.category, type: 'Expense' }
+            });
+        }
+
+        // @ts-ignore
+        const expense = await prisma.recurringExpense.update({
+            where: { id },
+            data: {
+                categoryId: categoryRecord.id,
+                description: data.description,
+                amount: data.amount,
+                frequency: data.frequency,
+                nextDueDate: new Date(data.nextDueDate + 'T12:00:00'),
+            }
+        });
+        revalidatePath('/dashboard/finance');
+        return JSON.parse(JSON.stringify(expense));
+    } catch (error) {
+        console.error('[Finance] Update recurring failed:', error);
+        throw error;
     }
 }
 
