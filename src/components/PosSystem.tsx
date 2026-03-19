@@ -259,12 +259,15 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 throw new Error(processResult.error.message);
             }
 
-            // 4. Capture Payment (Server-side)
-            setPaymentStatus('Capturing Payment...');
-            const captureResult = await captureTerminalPayment(processResult.paymentIntent.id);
+            // 4. Capture Payment (Server-side) - only needed for card_present with manual capture
+            // Interac payments auto-capture and will have status 'succeeded' already
+            if (processResult.paymentIntent.status === 'requires_capture') {
+                setPaymentStatus('Capturing Payment...');
+                const captureResult = await captureTerminalPayment(processResult.paymentIntent.id);
 
-            if (!captureResult.success) {
-                throw new Error('Payment authorized but capture failed. Check Stripe Dashboard.');
+                if (!captureResult.success) {
+                    throw new Error('Payment authorized but capture failed. Check Stripe Dashboard.');
+                }
             }
 
             setPaymentStatus('Payment Successful!');
