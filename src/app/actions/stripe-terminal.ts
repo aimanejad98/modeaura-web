@@ -32,3 +32,13 @@ export async function captureTerminalPayment(paymentIntentId: string) {
         return { success: false, error: error.message };
     }
 }
+
+export async function cancelTerminalPayment(paymentIntentId: string) {
+    try {
+        await stripe.paymentIntents.cancel(paymentIntentId);
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error canceling payment intent:', error);
+        return { success: false, error: error.message };
+    }
+}

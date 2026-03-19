@@ -8,7 +8,7 @@ import { getCustomers, addCustomer, updateCustomer } from '@/app/actions/custome
 import { X, RefreshCw, Wifi, WifiOff, CreditCard, UserPlus, Search, User, ChevronRight, Boxes, Scan, Package, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { loadStripeTerminal } from '@stripe/terminal-js';
-import { createTerminalPaymentIntent, captureTerminalPayment } from '@/app/actions/stripe-terminal'
+import { createTerminalPaymentIntent, captureTerminalPayment, cancelTerminalPayment } from '@/app/actions/stripe-terminal'
 
 export default function PosSystem({ restrictedMode = false }: { restrictedMode?: boolean }) {
     // Data State
@@ -60,6 +60,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [connectedReader, setConnectedReader] = useState<any>(null)
     const [terminalStatus, setTerminalStatus] = useState<string>('Disconnected')
     const [paymentStatus, setPaymentStatus] = useState<string>('')
+    const activePaymentIntentId = useRef<string | null>(null)
 
     // Customer Management State
     const [allCustomers, setAllCustomers] = useState<any[]>([])
@@ -235,6 +236,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
         setIsTerminalLoading(true);
         setPaymentStatus('Initializing Payment...');
+        activePaymentIntentId.current = null;
 
         try {
             // 1. Create PaymentIntent on Server
@@ -242,12 +244,19 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             if (!piResult.success) throw new Error(piResult.error);
 
             const clientSecret = piResult.clientSecret;
+            activePaymentIntentId.current = piResult.id || null;
 
             // 2. Collect Payment Method
             setPaymentStatus('Please tap, insert, or swipe card...');
             const collectResult = await terminal.collectPaymentMethod(clientSecret);
 
             if (collectResult.error) {
+                // If user cancelled, don't show as error
+                if (collectResult.error.code === 'canceled') {
+                    setPaymentStatus('Payment cancelled.');
+                    activePaymentIntentId.current = null;
+                    return;
+                }
                 throw new Error(collectResult.error.message);
             }
 
@@ -271,12 +280,34 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             }
 
             setPaymentStatus('Payment Successful!');
+            activePaymentIntentId.current = null;
             await processPayment(paymentMethod); // Finalize order in DB
 
         } catch (error: any) {
             console.error('Payment failed:', error);
             setPaymentStatus(`Payment Failed: ${error.message}`);
         } finally {
+            setIsTerminalLoading(false);
+            activePaymentIntentId.current = null;
+        }
+    }
+
+    async function cancelCardPayment() {
+        try {
+            // 1. Cancel collection on the reader
+            if (terminal) {
+                await terminal.cancelCollectPaymentMethod();
+            }
+            // 2. Cancel the PaymentIntent on Stripe
+            if (activePaymentIntentId.current) {
+                await cancelTerminalPayment(activePaymentIntentId.current);
+                activePaymentIntentId.current = null;
+            }
+            setPaymentStatus('Payment cancelled. You can switch to cash.');
+            setIsTerminalLoading(false);
+        } catch (error: any) {
+            console.error('Cancel failed:', error);
+            setPaymentStatus('Cancel failed. Try again.');
             setIsTerminalLoading(false);
         }
     }
@@ -1035,14 +1066,23 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                             </div>
                                         </div>
 
-                                        <div className="mt-auto pt-4">
-                                            <button
-                                                onClick={handleCardPayment}
-                                                disabled={!connectedReader || isTerminalLoading}
-                                                className="w-full py-4 bg-[#D4AF37] text-white rounded-xl font-black text-lg hover:bg-[#B8962E] transition-all shadow-lg shadow-[#D4AF37]/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
-                                            >
-                                                <span>⚡</span> {isTerminalLoading ? 'Processing...' : `Charge $${total.toFixed(2)}`}
-                                            </button>
+                                        <div className="mt-auto pt-4 space-y-2">
+                                            {isTerminalLoading ? (
+                                                <button
+                                                    onClick={cancelCardPayment}
+                                                    className="w-full py-4 bg-red-500 text-white rounded-xl font-black text-lg hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
+                                                >
+                                                    ✕ Cancel Payment
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={handleCardPayment}
+                                                    disabled={!connectedReader}
+                                                    className="w-full py-4 bg-[#D4AF37] text-white rounded-xl font-black text-lg hover:bg-[#B8962E] transition-all shadow-lg shadow-[#D4AF37]/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
+                                                >
+                                                    <span>⚡</span> Charge ${total.toFixed(2)}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 )}
