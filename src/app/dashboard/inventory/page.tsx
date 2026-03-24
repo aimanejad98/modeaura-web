@@ -1333,6 +1333,8 @@ export default function InventoryPage() {
             {
                 showPicker && (
                     <MediaPicker
+                        multiSelect={true}
+                        onMultiSelect={(urls) => setImages(prev => [...prev, ...urls])}
                         onSelect={(url) => setImages(prev => [...prev, url])}
                         onClose={() => setShowPicker(false)}
                     />
