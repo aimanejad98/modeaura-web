@@ -186,35 +186,46 @@ export default function ReceiptsPage() {
             <div class="text-right text-xs" style="margin-left: auto; width: 80%;">
                 <div class="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${((order.total / 1.13) + (parseFloat(order.discountAmount) || 0)).toFixed(2)}</span>
+                    <span>${((Number(order.total) / 1.13) + (parseFloat(order.discountAmount) || 0)).toFixed(2)}</span>
                 </div>
                 ${hasDiscount ? `
                 <div class="flex justify-between" style="color: #d32f2f;">
                     <span>Discount${discountCode ? ' (' + discountCode + ')' : ''}</span>
-                    <span>-${parseFloat(order.discountAmount).toFixed(2)}</span>
+                    <span>-${(parseFloat(order.discountAmount) || 0).toFixed(2)}</span>
                 </div>
                 ` : ''}
                 <div class="flex justify-between">
                     <span>HST (13%)</span>
-                    <span>${(order.total - (order.total / 1.13)).toFixed(2)}</span>
+                    <span>${(Number(order.total) - (Number(order.total) / 1.13)).toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between font-bold text-sm mt-1" style="border-top: 1px solid black; padding-top: 4px;">
                     <span>TOTAL</span>
-                    <span>${order.total.toFixed(2)}</span>
+                    <span>${(Number(order.total) || 0).toFixed(2)}</span>
                 </div>
             </div>
 
             <div class="mt-4 border-dashed mb-1"></div>
 
             <div class="text-right text-xs" style="margin-left: auto; width: 80%;">
+                ${order.paymentMethod?.includes('Split') || (order.splitCash !== null && order.splitCash !== undefined) ? `
+                <div class="flex justify-between font-bold">
+                    <span>💵 CASH PD</span>
+                    <span>${(Number(order.splitCash) || 0).toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between font-bold">
+                    <span>💳 CARD PD</span>
+                    <span>${(Number(order.splitCard) || 0).toFixed(2)}</span>
+                </div>
+                ` : `
                 <div class="flex justify-between">
                     <span>${order.paymentMethod || 'Payment'}</span>
-                    <span>${(order.amountPaid || order.total).toFixed(2)}</span>
+                    <span>${(Number(order.amountPaid) || Number(order.total) || 0).toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between">
                     <span>Change</span>
-                    <span>${(order.change || 0).toFixed(2)}</span>
+                    <span>${(Number(order.change) || 0).toFixed(2)}</span>
                 </div>
+                `}
             </div>
 
             <div class="text-center mt-4 text-xs">

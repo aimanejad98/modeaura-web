@@ -596,7 +596,9 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 postalCode: selectedCustomer?.postalCode,
                 discountCode: appliedDiscount?.code,
                 discountAmount: discountAmount,
-                cashierName: selectedStaff?.name || 'Admin'
+                cashierName: selectedStaff?.name || 'Admin',
+                splitCash: paymentTab === 'split' ? parseFloat(splitCashAmount) || 0 : undefined,
+                splitCard: paymentTab === 'split' ? (total - (parseFloat(splitCashAmount) || 0)) : undefined
             })
 
             if (appliedDiscount) {
@@ -1058,9 +1060,9 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 </button>
                                 <h3 className="text-xl font-black text-gray-900 mb-6">Select Payment Method</h3>
                                 <div className="flex gap-4 mb-8">
-                                    <button onClick={() => setPaymentTab('cash')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'cash' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💵 Cash</button>
-                                    <button onClick={() => setPaymentTab('card')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'card' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💳 Card / Terminal</button>
-                                    <button onClick={() => setPaymentTab('split')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'split' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💵💳 Split</button>
+                                    <button disabled={isTerminalLoading} onClick={() => setPaymentTab('cash')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'cash' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'} disabled:opacity-50`}>💵 Cash</button>
+                                    <button disabled={isTerminalLoading} onClick={() => setPaymentTab('card')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'card' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'} disabled:opacity-50`}>💳 Card / Terminal</button>
+                                    <button disabled={isTerminalLoading} onClick={() => setPaymentTab('split')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'split' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'} disabled:opacity-50`}>💵💳 Split</button>
                                 </div>
 
                                 {paymentTab === 'card' && (
@@ -1181,6 +1183,11 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
                                         <button
                                             onClick={async () => {
+                                                if (isTerminalLoading && activePaymentIntentId.current) {
+                                                    await cancelCardPayment()
+                                                    return
+                                                }
+
                                                 const cashPart = parseFloat(splitCashAmount) || 0
                                                 const cardAmount = total - cashPart
                                                 
@@ -1226,10 +1233,10 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                                     activePaymentIntentId.current = null
                                                 }
                                             }}
-                                            disabled={!splitCashAmount || parseFloat(splitCashAmount) <= 0 || parseFloat(splitCashAmount) >= total || !connectedReader || isTerminalLoading}
-                                            className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-bold text-lg hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:shadow-none"
+                                            disabled={(!splitCashAmount || parseFloat(splitCashAmount) <= 0 || parseFloat(splitCashAmount) >= total || !connectedReader || isTerminalLoading) && !activePaymentIntentId.current}
+                                            className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:shadow-none ${isTerminalLoading && activePaymentIntentId.current ? 'bg-red-500 hover:bg-red-600' : 'bg-[#1E1E1E] hover:bg-black'} text-white`}
                                         >
-                                            {isTerminalLoading ? 'Processing...' : `Charge $${Math.max(0, total - (parseFloat(splitCashAmount) || 0)).toFixed(2)} to Card`}
+                                            {isTerminalLoading && activePaymentIntentId.current ? 'Cancel Payment' : isTerminalLoading ? 'Processing...' : `Charge $${Math.max(0, total - (parseFloat(splitCashAmount) || 0)).toFixed(2)} to Card`}
                                         </button>
                                     </div>
                                 ) : (

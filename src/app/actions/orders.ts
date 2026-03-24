@@ -55,6 +55,8 @@ export async function createOrder(data: {
     tax?: number;
     shippingCost?: number;
     cashierName?: string;
+    splitCash?: number;
+    splitCard?: number;
 }) {
     try {
         const { paymentMethod, amountPaid, change, source, status, items, tax, shippingCost, ...rest } = data;
@@ -79,7 +81,9 @@ export async function createOrder(data: {
             source: source || 'WEBSITE',
             discountCode: data.discountCode || null,
             discountAmount: data.discountAmount || 0,
-            cashierName: data.cashierName || null
+            cashierName: data.cashierName || null,
+            splitCash: data.splitCash || null,
+            splitCard: data.splitCard || null
         };
 
         const order = await prisma.$transaction(async (tx) => {

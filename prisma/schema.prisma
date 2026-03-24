@@ -159,6 +159,8 @@ model Order {
   discountAmount Float?    @default(0)
   discountCode   String?
   cashierName    String?
+  splitCash      Float?
+  splitCard      Float?
   trackingNumber String?
   courier               String?
   province              String?
