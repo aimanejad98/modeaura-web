@@ -1128,6 +1128,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                         <button
                                             onClick={async () => {
                                                 const cashPart = parseFloat(splitCashAmount) || 0
+                                                const cardAmount = total - cashPart
+                                                
                                                 if (cashPart <= 0 || cashPart >= total) {
                                                     alert('Cash amount must be between $0.01 and the total.')
                                                     return
@@ -1136,10 +1138,9 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                                     alert('Please connect a card reader for the card portion.')
                                                     return
                                                 }
-                                                // Process card portion via terminal
-                                                const cardAmount = total - cashPart
+                                                
                                                 setIsTerminalLoading(true)
-                                                setPaymentStatus('Processing card portion...')
+                                                setPaymentStatus(`Charging $${cardAmount.toFixed(2)} to card...`)
                                                 try {
                                                     const piResult = await createTerminalPaymentIntent(cardAmount)
                                                     if (!piResult.success) throw new Error(piResult.error)
@@ -1174,7 +1175,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                             disabled={!splitCashAmount || parseFloat(splitCashAmount) <= 0 || parseFloat(splitCashAmount) >= total || !connectedReader || isTerminalLoading}
                                             className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-bold text-lg hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:shadow-none"
                                         >
-                                            {isTerminalLoading ? 'Processing...' : `Complete Split Payment`}
+                                            {isTerminalLoading ? 'Processing...' : `Charge $${Math.max(0, total - (parseFloat(splitCashAmount) || 0)).toFixed(2)} to Card`}
                                         </button>
                                     </div>
                                 ) : (

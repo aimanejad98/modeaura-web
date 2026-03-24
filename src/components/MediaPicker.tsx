@@ -165,16 +165,16 @@ export default function MediaPicker({ onSelect, onMultiSelect, onClose, title = 
                                 return (
                                     <div
                                         key={asset.id}
+                                        onClick={() => {
+                                            if (multiSelect) {
+                                                toggleMultiSelect(asset.url)
+                                            } else {
+                                                setSelectedUrl(asset.url)
+                                            }
+                                        }}
                                         className="group relative aspect-square rounded-3xl overflow-hidden cursor-pointer transition-all duration-300"
                                     >
                                         <div
-                                            onClick={() => {
-                                                if (multiSelect) {
-                                                    toggleMultiSelect(asset.url)
-                                                } else {
-                                                    setSelectedUrl(asset.url)
-                                                }
-                                            }}
                                             className={`w-full h-full ${isSelected ? 'ring-4 ring-[var(--gold)] ring-offset-4 ring-offset-[#FAF9F6] rounded-3xl' : 'hover:scale-[0.98] border border-[#E8E2D9] rounded-3xl'}`}
                                         >
                                             <img

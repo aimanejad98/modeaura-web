@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe';
 
 export async function createTerminalPaymentIntent(amount: number) {
     try {
+        console.log(`💳 [Terminal] Creating PaymentIntent for: $${amount.toFixed(2)} (${Math.round(amount * 100)} cents)`);
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(amount * 100), // Convert to cents
             currency: 'cad',
