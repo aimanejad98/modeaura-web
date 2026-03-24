@@ -130,6 +130,17 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             clearInterval(idleCheck)
         }
     }, [selectedStaff, lastActivity, IDLE_TIMEOUT])
+    
+    // Body Scroll Lock for Modal
+    useEffect(() => {
+        if (showPaymentModal) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = 'unset'
+        }
+        return () => { document.body.style.overflow = 'unset' }
+    }, [showPaymentModal])
+
 
     async function loadData() {
         setLoading(true)
@@ -524,6 +535,18 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             setTransactionId(`#${Math.floor(1000 + Math.random() * 9000)}`)
         }
     }
+
+    function closePaymentModal() {
+        if (activePaymentIntentId.current) {
+            if (confirm('A payment intent is active on the reader. Progress will be lost. Cancel payment?')) {
+                cancelCardPayment()
+                setShowPaymentModal(false)
+            }
+        } else {
+            setShowPaymentModal(false)
+        }
+    }
+
 
     // Finalize
     async function processPayment(methodOverride?: string) {
@@ -1012,7 +1035,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 {/* Payment Modal */}
                 {showPaymentModal && (
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-[2rem] w-full max-w-4xl overflow-hidden shadow-2xl animate-fade-in flex">
+                        <div className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl animate-fade-in flex">
                             {/* Left: Summary */}
                             <div className="w-1/3 bg-gray-50 p-8 border-r border-gray-100 flex flex-col justify-between">
                                 <div className="space-y-4">
@@ -1025,7 +1048,14 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                             </div>
 
                             {/* Right: Payment Method */}
-                            <div className="w-2/3 p-8">
+                            <div className="w-2/3 p-8 overflow-y-auto custom-scrollbar relative">
+                                <button 
+                                    onClick={closePaymentModal}
+                                    className="absolute top-8 right-8 w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gray-200 transition-all font-bold text-xl z-20"
+                                    title="Cancel Payment"
+                                >
+                                    ×
+                                </button>
                                 <h3 className="text-xl font-black text-gray-900 mb-6">Select Payment Method</h3>
                                 <div className="flex gap-4 mb-8">
                                     <button onClick={() => setPaymentTab('cash')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'cash' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💵 Cash</button>
@@ -1115,15 +1145,39 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                         </div>
 
                                         {/* Reader status for card portion */}
-                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                            <div className={`w-2.5 h-2.5 rounded-full ${connectedReader ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
-                                            <span className="text-xs font-bold text-gray-500">{connectedReader ? `Reader: ${connectedReader.label}` : 'No reader connected'}</span>
-                                            {!connectedReader && (
-                                                <button onClick={discoverReaders} disabled={isTerminalLoading} className="ml-auto text-[10px] font-bold text-[#D4AF37] hover:underline">
-                                                    {isTerminalLoading ? 'Searching...' : 'Connect'}
-                                                </button>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                                <div className={`w-2.5 h-2.5 rounded-full ${connectedReader ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
+                                                <span className="text-xs font-bold text-gray-500">{connectedReader ? `Reader: ${connectedReader.label}` : 'No reader connected'}</span>
+                                                {!connectedReader ? (
+                                                    <button onClick={discoverReaders} disabled={isTerminalLoading} className="ml-auto text-[10px] font-bold text-[#D4AF37] hover:underline">
+                                                        {isTerminalLoading ? 'Searching...' : 'Connect'}
+                                                    </button>
+                                                ) : (
+                                                    <button onClick={async () => { await terminal.disconnectReader(); setConnectedReader(null); }} className="ml-auto text-[10px] font-bold text-red-500 hover:underline">
+                                                        Disconnect
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Reader Discovery List (Split Tab) */}
+                                            {readers.length > 0 && !connectedReader && (
+                                                <div className="overflow-y-auto border border-amber-100 bg-amber-50/20 rounded-xl p-2 max-h-[150px] animate-in slide-in-from-top-2">
+                                                    <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-2 px-2">Discovered Readers</p>
+                                                    {readers.map((reader) => (
+                                                        <button
+                                                            key={reader.id}
+                                                            onClick={() => connectToReader(reader)}
+                                                            className="w-full text-left p-2.5 hover:bg-white rounded-lg flex justify-between items-center group transition-colors shadow-sm mb-1 bg-white/50"
+                                                        >
+                                                            <span className="font-bold text-[11px] text-gray-700 group-hover:text-black">{reader.label}</span>
+                                                            <span className="text-[9px] font-mono text-gray-400 uppercase">{reader.serial_number}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             )}
                                         </div>
+
 
                                         <button
                                             onClick={async () => {
