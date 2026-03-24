@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getOrders, deleteOrder, refundOrder } from '@/app/actions/orders'
 import { getStoreSettings } from '@/app/actions/settings'
-import { Trash2, RotateCcw, CheckCircle2, AlertCircle, DollarSign } from 'lucide-react'
+import { Trash2, RotateCcw, CheckCircle2, AlertCircle, DollarSign, Eye, X } from 'lucide-react'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
 import JsBarcode from 'jsbarcode'
 
@@ -19,6 +19,9 @@ export default function ReceiptsPage() {
     const [refundingOrder, setRefundingOrder] = useState<any>(null)
     const [restockItems, setRestockItems] = useState(true)
     const [processingRefund, setProcessingRefund] = useState(false)
+
+    // View Receipt State
+    const [viewingOrder, setViewingOrder] = useState<any>(null)
 
     useEffect(() => {
         loadOrders()
@@ -53,7 +56,7 @@ export default function ReceiptsPage() {
         setProcessingRefund(false)
     }
 
-    function printReceipt(order: any) {
+    function generateReceiptHtml(order: any, forPrint: boolean = true) {
         // Create a hidden canvas for barcode generation
         const canvas = document.createElement('canvas');
         try {
@@ -68,9 +71,6 @@ export default function ReceiptsPage() {
             console.error('Barcode gen failed', e);
         }
         const barcodeDataUrl = canvas.toDataURL("image/png");
-
-        const printWindow = window.open('', '_blank', 'width=400,height=600')
-        if (!printWindow) return
 
         const items = order.items || []
 
@@ -100,7 +100,14 @@ export default function ReceiptsPage() {
         const dateStr = date.toLocaleDateString()
         const timeStr = date.toLocaleTimeString()
 
-        printWindow.document.write(`
+        const isRefunded = order.status === 'Refunded'
+        const cashierName = order.cashierName || 'Admin'
+
+        // Discount info
+        const hasDiscount = order.discountAmount && order.discountAmount > 0
+        const discountCode = order.discountCode || ''
+
+        return `
         <!DOCTYPE html>
         <html>
         <head>
@@ -109,6 +116,7 @@ export default function ReceiptsPage() {
                 @media print { 
                     body { -webkit-print-color-adjust: exact; margin: 0; padding: 10px; } 
                     @page { margin: 0; size: auto; }
+                    .no-print { display: none !important; }
                 }
                 body { 
                     font-family: 'Courier New', Courier, monospace; 
@@ -133,9 +141,16 @@ export default function ReceiptsPage() {
                 .text-xs { font-size: 10px; }
                 .text-sm { font-size: 12px; }
                 .text-lg { font-size: 18px; }
+                .refund-banner { 
+                    background: #000; color: #fff; padding: 6px; 
+                    text-align: center; font-weight: bold; font-size: 14px; 
+                    letter-spacing: 2px; margin-bottom: 8px; 
+                }
             </style>
         </head>
         <body>
+            ${isRefunded ? '<div class="refund-banner">⚠ REFUNDED</div>' : ''}
+
             <div class="text-center mb-2">
                 <div class="text-lg font-bold">${settings?.storeName || 'MODE AURA'}</div>
                 <div class="text-xs font-bold">${settings?.tagline || 'Luxury Essentials'}</div>
@@ -150,7 +165,7 @@ export default function ReceiptsPage() {
             </div>
             <div class="flex justify-between text-xs mb-2">
                 <span>Trans: ${order.orderId}</span>
-                <span>Cashier: Admin</span>
+                <span>Cashier: ${cashierName}</span>
             </div>
 
             <div class="border-dashed mb-1"></div>
@@ -171,10 +186,16 @@ export default function ReceiptsPage() {
             <div class="text-right text-xs" style="margin-left: auto; width: 80%;">
                 <div class="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${(order.total / 1.13).toFixed(2)}</span>
+                    <span>${((order.total / 1.13) + (parseFloat(order.discountAmount) || 0)).toFixed(2)}</span>
                 </div>
+                ${hasDiscount ? `
+                <div class="flex justify-between" style="color: #d32f2f;">
+                    <span>Discount${discountCode ? ' (' + discountCode + ')' : ''}</span>
+                    <span>-${parseFloat(order.discountAmount).toFixed(2)}</span>
+                </div>
+                ` : ''}
                 <div class="flex justify-between">
-                    <span>Tax (13%)</span>
+                    <span>HST (13%)</span>
                     <span>${(order.total - (order.total / 1.13)).toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between font-bold text-sm mt-1" style="border-top: 1px solid black; padding-top: 4px;">
@@ -209,16 +230,27 @@ export default function ReceiptsPage() {
                 </div>
             </div>
 
+            ${forPrint ? `
             <script>
                 window.onload = () => {
                     window.print();
-                    // window.close();
                 };
             </script>
+            ` : ''}
         </body>
         </html>
-        `)
+        `
+    }
+
+    function printReceipt(order: any) {
+        const printWindow = window.open('', '_blank', 'width=400,height=600')
+        if (!printWindow) return
+        printWindow.document.write(generateReceiptHtml(order, true))
         printWindow.document.close()
+    }
+
+    function viewReceipt(order: any) {
+        setViewingOrder(order)
     }
 
     const filteredOrders = orders.filter(order => {
@@ -295,7 +327,7 @@ export default function ReceiptsPage() {
             {/* Desktop: Table Layout (xl+) */}
             <div className="hidden xl:block bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
                 {/* Table Header */}
-                <div className="grid grid-cols-[130px_110px_1fr_140px_110px_70px_100px_130px] gap-3 px-6 py-4 bg-gray-50 border-b border-gray-100">
+                <div className="grid grid-cols-[130px_110px_1fr_140px_110px_70px_100px_160px] gap-3 px-6 py-4 bg-gray-50 border-b border-gray-100">
                     <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order #</div>
                     <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</div>
                     <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Items</div>
@@ -313,7 +345,7 @@ export default function ReceiptsPage() {
                     const moreCount = items.length > 2 ? items.length - 2 : 0
 
                     return (
-                        <div key={order.id} className={`grid grid-cols-[130px_110px_1fr_140px_110px_70px_100px_130px] gap-3 px-6 py-3.5 items-center hover:bg-gray-50/50 transition-colors ${idx < filteredOrders.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                        <div key={order.id} className={`grid grid-cols-[130px_110px_1fr_140px_110px_70px_100px_160px] gap-3 px-6 py-3.5 items-center hover:bg-gray-50/50 transition-colors ${idx < filteredOrders.length - 1 ? 'border-b border-gray-50' : ''}`}>
                             <div>
                                 <p className="font-black text-sm text-[#D4AF37]">{order.orderId}</p>
                                 <p className={`text-[9px] font-bold mt-0.5 ${order.status === 'Refunded' ? 'text-rose-500' : 'text-green-500'}`}>
@@ -330,8 +362,8 @@ export default function ReceiptsPage() {
                             </div>
                             <div><p className="text-xs font-bold text-gray-700 truncate">{order.customer || 'Walk-in'}</p></div>
                             <div>
-                                <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${(order.paymentMethod || 'Cash') === 'Cash' ? 'bg-emerald-50 text-emerald-600' : order.paymentMethod === 'Debit Card' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
-                                    {(order.paymentMethod || 'Cash') === 'Cash' ? '💵' : '💳'} {order.paymentMethod || 'Cash'}
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${(order.paymentMethod || 'Cash') === 'Cash' ? 'bg-emerald-50 text-emerald-600' : order.paymentMethod?.includes('Split') ? 'bg-violet-50 text-violet-600' : order.paymentMethod === 'Debit Card' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
+                                    {(order.paymentMethod || 'Cash') === 'Cash' ? '💵' : order.paymentMethod?.includes('Split') ? '💵💳' : '💳'} {order.paymentMethod || 'Cash'}
                                 </span>
                             </div>
                             <div>
@@ -341,12 +373,14 @@ export default function ReceiptsPage() {
                             </div>
                             <div className="text-right">
                                 <p className="text-lg font-black text-gray-900">${(parseFloat(order.total) || 0).toFixed(2)}</p>
+                                {order.discountAmount > 0 && <p className="text-[9px] text-red-500 font-bold">-${parseFloat(order.discountAmount).toFixed(2)} off</p>}
                             </div>
                             <div className="flex items-center justify-end gap-1">
                                 <button onClick={async () => { if (confirm('Delete this order permanently?')) { await deleteOrder(order.id); loadOrders() } }} className="p-2 hover:bg-red-50 rounded-xl text-gray-300 hover:text-red-500 transition-colors" title="Delete"><Trash2 size={14} /></button>
                                 {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped' || order.status === 'Completed' || order.status === 'Order Received' || order.status === 'Order Placed') && (
                                     <button onClick={() => setRefundingOrder(order)} className="p-2 hover:bg-rose-50 rounded-xl text-gray-300 hover:text-rose-500 transition-colors" title="Refund"><RotateCcw size={14} /></button>
                                 )}
+                                <button onClick={() => viewReceipt(order)} className="p-2 hover:bg-blue-50 rounded-xl text-gray-300 hover:text-blue-500 transition-colors" title="View Receipt"><Eye size={14} /></button>
                                 <button onClick={() => printReceipt(order)} className="gold-btn py-1.5 px-3 text-[10px] font-black uppercase tracking-wider">🖨️ Print</button>
                             </div>
                         </div>
@@ -377,8 +411,14 @@ export default function ReceiptsPage() {
                                     <p className="text-xs text-gray-400 mt-0.5">
                                         {orderDate.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })} • {orderDate.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}
                                     </p>
+                                    {order.status === 'Refunded' && (
+                                        <span className="inline-block mt-1 text-[9px] font-black px-2 py-0.5 rounded-md bg-rose-50 text-rose-500 uppercase tracking-wider">↩ Refunded</span>
+                                    )}
                                 </div>
-                                <p className="text-xl font-black text-gray-900">${(parseFloat(order.total) || 0).toFixed(2)}</p>
+                                <div className="text-right">
+                                    <p className="text-xl font-black text-gray-900">${(parseFloat(order.total) || 0).toFixed(2)}</p>
+                                    {order.discountAmount > 0 && <p className="text-[9px] text-red-500 font-bold">-${parseFloat(order.discountAmount).toFixed(2)} off</p>}
+                                </div>
                             </div>
 
                             {/* Items */}
@@ -396,18 +436,22 @@ export default function ReceiptsPage() {
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className="text-xs font-bold text-gray-600">👤 {order.customer || 'Walk-in'}</span>
-                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${(order.paymentMethod || 'Cash') === 'Cash' ? 'bg-emerald-50 text-emerald-600' : order.paymentMethod === 'Debit Card' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${(order.paymentMethod || 'Cash') === 'Cash' ? 'bg-emerald-50 text-emerald-600' : order.paymentMethod?.includes('Split') ? 'bg-violet-50 text-violet-600' : order.paymentMethod === 'Debit Card' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
                                         {order.paymentMethod || 'Cash'}
                                     </span>
                                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${order.source === 'POS' ? 'bg-orange-50 text-orange-600' : 'bg-sky-50 text-sky-600'}`}>
                                         {order.source || 'WEB'}
                                     </span>
+                                    {order.cashierName && (
+                                        <span className="text-[9px] font-bold text-gray-400">by {order.cashierName}</span>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button onClick={async () => { if (confirm('Delete this order permanently?')) { await deleteOrder(order.id); loadOrders() } }} className="p-2 hover:bg-red-50 rounded-xl text-gray-300 hover:text-red-500 transition-colors" title="Delete"><Trash2 size={14} /></button>
                                     {(order.status === 'Paid' || order.status === 'Pending' || order.status === 'Shipped' || order.status === 'Completed' || order.status === 'Order Received' || order.status === 'Order Placed') && (
                                         <button onClick={() => setRefundingOrder(order)} className="p-2 hover:bg-rose-50 rounded-xl text-gray-300 hover:text-rose-500 transition-colors" title="Refund"><RotateCcw size={14} /></button>
                                     )}
+                                    <button onClick={() => viewReceipt(order)} className="p-2 hover:bg-blue-50 rounded-xl text-gray-300 hover:text-blue-500 transition-colors" title="View"><Eye size={14} /></button>
                                     <button onClick={() => printReceipt(order)} className="gold-btn py-1.5 px-3 text-[10px] font-black uppercase tracking-wider">🖨️ Print</button>
                                 </div>
                             </div>
@@ -432,6 +476,35 @@ export default function ReceiptsPage() {
                     { title: { en: "Order Search", ar: "البحث عن الطلبات" }, description: { en: "Find orders by ID or customer.", ar: "البحث عن المعاملات." }, icon: "🔍" }
                 ]}
             />
+
+            {/* View Receipt Modal */}
+            {viewingOrder && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setViewingOrder(null)} />
+                    <div className="relative bg-white rounded-[2rem] max-w-lg w-full shadow-2xl animate-in zoom-in-95 overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
+                            <div>
+                                <h3 className="text-xl font-black text-gray-900">Receipt Preview</h3>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">{viewingOrder.orderId}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => { printReceipt(viewingOrder); }} className="gold-btn py-2 px-4 text-[10px] font-black uppercase tracking-wider rounded-xl">🖨️ Print</button>
+                                <button onClick={() => setViewingOrder(null)} className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-6">
+                            <iframe
+                                srcDoc={generateReceiptHtml(viewingOrder, false)}
+                                className="w-full border-0 rounded-xl bg-white"
+                                style={{ minHeight: '500px' }}
+                                title="Receipt Preview"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {refundingOrder && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">

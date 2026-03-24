@@ -29,10 +29,12 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
     // Payment Modal State
     const [showPaymentModal, setShowPaymentModal] = useState(false)
-    const [paymentTab, setPaymentTab] = useState<'cash' | 'card'>('cash')
+    const [paymentTab, setPaymentTab] = useState<'cash' | 'card' | 'split'>('cash')
     const [paymentMethod, setPaymentMethod] = useState<string>('Card')
     const [tenderedAmount, setTenderedAmount] = useState('')
+    const [splitCashAmount, setSplitCashAmount] = useState('')
     const [lastOrder, setLastOrder] = useState<any>(null)
+    const [duplicateNames, setDuplicateNames] = useState<string[]>([])
 
     // Login State
     const [lastActivity, setLastActivity] = useState<number>(0)
@@ -146,6 +148,14 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             setProducts(productData)
             setCategories(categoriesData)
             setAllCustomers(customerData)
+
+            // Find duplicates by name
+            const nameCount: { [key: string]: number } = {}
+            productData.forEach((p: any) => {
+                nameCount[p.name] = (nameCount[p.name] || 0) + 1
+            })
+            const dupes = Object.keys(nameCount).filter(name => nameCount[name] > 1)
+            setDuplicateNames(dupes)
 
             if (settingsData && settingsData.taxRate) {
                 setTaxRate(settingsData.taxRate / 100)
@@ -519,9 +529,21 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     async function processPayment(methodOverride?: string) {
         try {
             const orderId = `ORD-${Date.now().toString().slice(-6)}`
-            const paymentMethod = methodOverride || (paymentTab === 'cash' ? 'Cash' : 'Card')
-            const received = paymentTab === 'cash' ? parseFloat(tenderedAmount) : total
-            const changeDue = received - total
+            let finalPaymentMethod = methodOverride || (paymentTab === 'cash' ? 'Cash' : paymentTab === 'split' ? 'Split (Cash/Card)' : 'Card')
+            let received: number
+            let changeDue: number
+
+            if (paymentTab === 'split') {
+                const cashPart = parseFloat(splitCashAmount) || 0
+                received = total  // full amount covered
+                changeDue = 0
+            } else if (paymentTab === 'cash') {
+                received = parseFloat(tenderedAmount)
+                changeDue = received - total
+            } else {
+                received = total
+                changeDue = 0
+            }
 
             const { createOrder } = await import('@/app/actions/orders')
             const order = await createOrder({
@@ -541,7 +563,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                     color: item.color,
                     image: item.image
                 })),
-                paymentMethod,
+                paymentMethod: finalPaymentMethod,
                 amountPaid: received,
                 change: changeDue,
                 source: 'POS',
@@ -550,7 +572,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 city: selectedCustomer?.city,
                 postalCode: selectedCustomer?.postalCode,
                 discountCode: appliedDiscount?.code,
-                discountAmount: discountAmount
+                discountAmount: discountAmount,
+                cashierName: selectedStaff?.name || 'Admin'
             })
 
             if (appliedDiscount) {
@@ -572,12 +595,15 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                     image: item.image
                 })),
                 changeDue: paymentTab === 'cash' ? changeDue : 0,
-                paymentMethod,
+                paymentMethod: finalPaymentMethod,
                 amountReceived: received,
-                payment: paymentMethod,
+                payment: finalPaymentMethod,
                 discount: appliedDiscount,
                 subtotal,
-                tax
+                tax,
+                cashierName: selectedStaff?.name || 'Admin',
+                splitCash: paymentTab === 'split' ? parseFloat(splitCashAmount) || 0 : undefined,
+                splitCard: paymentTab === 'split' ? (total - (parseFloat(splitCashAmount) || 0)) : undefined
             })
             setCart([])
             setAppliedDiscount(null)
@@ -689,6 +715,18 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
     return (
         <>
+            {/* Warning for Duplicate Names */}
+            {duplicateNames.length > 0 && (
+                <div className="bg-red-600 text-white px-6 py-2 flex items-center justify-between z-[100] relative">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                        <span className="text-lg">⚠️</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest truncate">
+                            Duplicate names detected: {duplicateNames.join(', ')}. Please rename products in Dashboard to avoid confusion.
+                        </span>
+                    </div>
+                    <button onClick={() => setDuplicateNames([])} className="text-white/70 hover:text-white text-xs font-bold px-2 ml-4">✕</button>
+                </div>
+            )}
             <div className="flex flex-col md:flex-row h-[100dvh] gap-1 lg:gap-1.5 bg-[#F8F9FB] p-1 lg:p-1.5 overflow-hidden font-sans print:hidden">
                 {/* LEFT Side (Product Browser) */}
                 <div className="h-[55dvh] md:h-full flex-1 flex flex-col gap-1.5 lg:overflow-hidden min-h-0">
@@ -721,7 +759,10 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                     {/* Grid */}
                     <div className="flex-1 overflow-y-auto lg:pr-1">
                         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 lg:gap-2.5">
-                            {filteredProducts.map((product) => (
+                            {filteredProducts.map((product) => {
+                                const hasDiscount = product.discountPrice && product.discountPrice < product.price
+                                const discountPercent = hasDiscount ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : 0
+                                return (
                                 <button key={product.id} onClick={() => openVariantLookup(product)} className="bg-white p-1.5 rounded-lg hover:shadow-xl transition-all border border-gray-100 group flex flex-col items-center text-center relative">
                                     {product.stock <= 3 && (
                                         <span className="absolute top-1 right-1 flex h-1.5 w-1.5 z-10">
@@ -729,14 +770,25 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
                                         </span>
                                     )}
+                                    {hasDiscount && (
+                                        <span className="absolute top-1 left-1 z-10 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow">
+                                            -{discountPercent}%
+                                        </span>
+                                    )}
                                     <div className="w-full aspect-[1/1.1] bg-gray-50 rounded mb-1.5 overflow-hidden relative border border-gray-50">
                                         {product.images ? <img src={product.images.split(',')[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" /> : <div className="w-full h-full flex items-center justify-center text-gray-300 text-[12px]">🛍️</div>}
-                                        <div className="absolute bottom-1 right-1 bg-white/95 backdrop-blur text-[10px] font-black px-1.5 py-0.5 rounded shadow border border-gray-50 text-[#1E1E1E] tracking-tighter">${product.price}</div>
+                                        <div className="absolute bottom-1 right-1 bg-white/95 backdrop-blur text-[10px] font-black px-1.5 py-0.5 rounded shadow border border-gray-50 text-[#1E1E1E] tracking-tighter">
+                                            {hasDiscount ? (
+                                                <><span className="line-through text-gray-400 text-[8px] mr-1">${product.price}</span><span className="text-red-600">${product.discountPrice}</span></>
+                                            ) : (
+                                                <>${product.price}</>
+                                            )}
+                                        </div>
                                     </div>
                                     <p className="font-bold text-gray-900 text-[10px] line-clamp-1 mb-0.5 group-hover:text-[var(--gold)] transition-colors leading-tight">{product.name}</p>
                                     <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mt-auto opacity-70">{product.category?.name}</p>
                                 </button>
-                            ))}
+                            )})}
                         </div>
                     </div>
                 </div>
@@ -978,6 +1030,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 <div className="flex gap-4 mb-8">
                                     <button onClick={() => setPaymentTab('cash')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'cash' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💵 Cash</button>
                                     <button onClick={() => setPaymentTab('card')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'card' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💳 Card / Terminal</button>
+                                    <button onClick={() => setPaymentTab('split')} className={`flex-1 py-4 rounded-xl border-2 font-bold text-lg transition-all flex items-center justify-center gap-2 ${paymentTab === 'split' ? 'border-[#D4AF37] bg-[#D4AF37]/5 text-[#D4AF37]' : 'border-gray-100 text-gray-400 hover:border-gray-200'}`}>💵💳 Split</button>
                                 </div>
 
                                 {paymentTab === 'card' && (
@@ -1014,6 +1067,115 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                         </div>
                                         <div className="bg-gray-50 p-5 rounded-xl flex justify-between items-center"><span className="font-bold text-gray-500">Change Due</span><span className={`text-2xl font-black ${parseFloat(tenderedAmount || '0') >= total ? 'text-green-600' : 'text-gray-300'}`}>${Math.max(0, parseFloat(tenderedAmount || '0') - total).toFixed(2)}</span></div>
                                         <button onClick={() => processPayment()} disabled={!tenderedAmount || parseFloat(tenderedAmount) < total} className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-bold text-lg hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:shadow-none">Complete Cash Sale</button>
+                                    </div>
+                                ) : paymentTab === 'split' ? (
+                                    /* SPLIT PAYMENT UI */
+                                    <div className="space-y-6">
+                                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 text-amber-700">
+                                            <span className="text-lg">💡</span>
+                                            <div className="text-xs font-medium">
+                                                <p className="font-bold mb-0.5">Split Payment</p>
+                                                <p>Enter the cash amount first. The remaining balance will be charged to card.</p>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">💵 Cash Portion</label>
+                                            <input
+                                                autoFocus
+                                                type="number"
+                                                value={splitCashAmount}
+                                                onChange={(e) => {
+                                                    const val = e.target.value
+                                                    if (val === '' || parseFloat(val) <= total) setSplitCashAmount(val)
+                                                }}
+                                                placeholder="0.00"
+                                                className="w-full text-4xl font-black text-gray-900 border-b-2 border-gray-100 focus:border-[#D4AF37] outline-none py-2 placeholder-gray-200"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-4 gap-3">
+                                            {[10, 20, 50].map(amount => (
+                                                <button key={amount} onClick={() => setSplitCashAmount(Math.min(amount, total).toString())} className="py-2 bg-gray-50 hover:bg-gray-100 rounded-lg font-bold text-gray-600 transition-colors text-sm">${amount}</button>
+                                            ))}
+                                            <button onClick={() => setSplitCashAmount(Math.floor(total / 2).toString())} className="py-2 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 rounded-lg font-bold transition-colors text-sm">Half</button>
+                                        </div>
+
+                                        <div className="bg-gray-50 p-5 rounded-xl space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-bold text-gray-500 text-sm">💵 Cash</span>
+                                                <span className="text-xl font-black text-gray-900">${(parseFloat(splitCashAmount) || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center border-t border-gray-200 pt-3">
+                                                <span className="font-bold text-gray-500 text-sm">💳 Card (Remaining)</span>
+                                                <span className={`text-xl font-black ${(parseFloat(splitCashAmount) || 0) > 0 && (parseFloat(splitCashAmount) || 0) < total ? 'text-[#D4AF37]' : 'text-gray-300'}`}>
+                                                    ${Math.max(0, total - (parseFloat(splitCashAmount) || 0)).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Reader status for card portion */}
+                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                            <div className={`w-2.5 h-2.5 rounded-full ${connectedReader ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
+                                            <span className="text-xs font-bold text-gray-500">{connectedReader ? `Reader: ${connectedReader.label}` : 'No reader connected'}</span>
+                                            {!connectedReader && (
+                                                <button onClick={discoverReaders} disabled={isTerminalLoading} className="ml-auto text-[10px] font-bold text-[#D4AF37] hover:underline">
+                                                    {isTerminalLoading ? 'Searching...' : 'Connect'}
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <button
+                                            onClick={async () => {
+                                                const cashPart = parseFloat(splitCashAmount) || 0
+                                                if (cashPart <= 0 || cashPart >= total) {
+                                                    alert('Cash amount must be between $0.01 and the total.')
+                                                    return
+                                                }
+                                                if (!connectedReader) {
+                                                    alert('Please connect a card reader for the card portion.')
+                                                    return
+                                                }
+                                                // Process card portion via terminal
+                                                const cardAmount = total - cashPart
+                                                setIsTerminalLoading(true)
+                                                setPaymentStatus('Processing card portion...')
+                                                try {
+                                                    const piResult = await createTerminalPaymentIntent(cardAmount)
+                                                    if (!piResult.success) throw new Error(piResult.error)
+                                                    activePaymentIntentId.current = piResult.id || null
+                                                    setPaymentStatus('Please tap, insert, or swipe card...')
+                                                    const collectResult = await terminal.collectPaymentMethod(piResult.clientSecret)
+                                                    if (collectResult.error) {
+                                                        if (collectResult.error.code === 'canceled') {
+                                                            setPaymentStatus('Payment cancelled.')
+                                                            activePaymentIntentId.current = null
+                                                            return
+                                                        }
+                                                        throw new Error(collectResult.error.message)
+                                                    }
+                                                    setPaymentStatus('Processing...')
+                                                    const processResult = await terminal.processPayment(collectResult.paymentIntent)
+                                                    if (processResult.error) throw new Error(processResult.error.message)
+                                                    if (processResult.paymentIntent.status === 'requires_capture') {
+                                                        const captureResult = await captureTerminalPayment(processResult.paymentIntent.id)
+                                                        if (!captureResult.success) throw new Error('Capture failed')
+                                                    }
+                                                    setPaymentStatus('Card portion successful!')
+                                                    activePaymentIntentId.current = null
+                                                    await processPayment('Split (Cash/Card)')
+                                                } catch (error: any) {
+                                                    setPaymentStatus(`Failed: ${error.message}`)
+                                                } finally {
+                                                    setIsTerminalLoading(false)
+                                                    activePaymentIntentId.current = null
+                                                }
+                                            }}
+                                            disabled={!splitCashAmount || parseFloat(splitCashAmount) <= 0 || parseFloat(splitCashAmount) >= total || !connectedReader || isTerminalLoading}
+                                            className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-bold text-lg hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:shadow-none"
+                                        >
+                                            {isTerminalLoading ? 'Processing...' : `Complete Split Payment`}
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col pt-4 min-h-[300px]">
@@ -1351,7 +1513,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                         </div>
                         <div className="flex justify-between mb-2">
                             <span>Trans: {lastOrder.orderId.replace('MA-', '')}</span>
-                            <span>Cashier: Admin</span>
+                            <span>Cashier: {lastOrder.cashierName || selectedStaff?.name || 'Admin'}</span>
                         </div>
 
                         <div className="mb-2 border-b border-black border-dashed"></div>
@@ -1395,13 +1557,15 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                 <span>Subtotal</span>
                                 <span>{lastOrder.subtotal.toFixed(2)}</span>
                             </div>
+                            {lastOrder.discountAmount > 0 && (
+                                <div className="flex justify-between">
+                                    <span>Discount</span>
+                                    <span>-{lastOrder.discountAmount.toFixed(2)}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between">
-                                <span>GST (5%)</span>
-                                <span>{(lastOrder.subtotal * 0.05).toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>HST (8%)</span>
-                                <span>{(lastOrder.subtotal * 0.08).toFixed(2)}</span>
+                                <span>HST (13%)</span>
+                                <span>{lastOrder.tax.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between font-black text-sm mt-1">
                                 <span>Total</span>
@@ -1412,14 +1576,29 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                         <div className="mt-4 mb-2 border-b border-black border-dashed"></div>
 
                         <div className="space-y-1 text-right max-w-[80%] ml-auto">
-                            <div className="flex justify-between">
-                                <span>{lastOrder.payment || 'Payment'}</span>
-                                <span>{lastOrder.amountReceived?.toFixed(2) || lastOrder.total.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Change</span>
-                                <span>{lastOrder.changeDue.toFixed(2)}</span>
-                            </div>
+                            {lastOrder.splitCash !== undefined ? (
+                                <>
+                                    <div className="flex justify-between">
+                                        <span>Cash</span>
+                                        <span>{lastOrder.splitCash.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Card</span>
+                                        <span>{lastOrder.splitCard?.toFixed(2)}</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex justify-between">
+                                        <span>{lastOrder.payment || 'Payment'}</span>
+                                        <span>{lastOrder.amountReceived?.toFixed(2) || lastOrder.total.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Change</span>
+                                        <span>{lastOrder.changeDue.toFixed(2)}</span>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="mt-6 text-center space-y-2">

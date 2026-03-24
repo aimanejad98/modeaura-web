@@ -158,6 +158,7 @@ model Order {
   shippingMethod String?   @default("Standard")
   discountAmount Float?    @default(0)
   discountCode   String?
+  cashierName    String?
   trackingNumber String?
   courier               String?
   province              String?
