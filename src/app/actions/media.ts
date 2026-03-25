@@ -32,10 +32,10 @@ export async function uploadToGallery(formData: FormData) {
         const file = formData.get('file') as File;
         if (!file) throw new Error('No file provided');
 
-        // Simple Mistake Check: Validate file size (e.g., 10MB limit for server stability)
-        const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+        // Simple Mistake Check: Validate file size (e.g., 50MB limit for server stability)
+        const MAX_SIZE = 50 * 1024 * 1024; // 50MB
         if (file.size > MAX_SIZE) {
-            throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Limit is 10MB.`);
+            throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Limit is 50MB.`);
         }
 
         console.log(`[Media] Uploading: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`);

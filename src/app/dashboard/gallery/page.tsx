@@ -49,7 +49,7 @@ export default function GalleryPage() {
 
             if (failed > 0) {
                 console.error('Some uploads failed', results.filter(r => r.status === 'rejected'))
-                alert(`Upload complete: ${successful} successful, ${failed} failed. Common causes: file too large (max 10MB), unsupported format, or server error.`)
+                alert(`Upload complete: ${successful} successful, ${failed} failed.\n\nTips:\n- Max file size is 50MB.\n- If using iPhone, try "Most Compatible" format (JPEG).\n- Ensure you have a stable internet connection.`)
             }
 
             if (successful > 0) {
