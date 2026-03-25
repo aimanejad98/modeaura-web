@@ -249,7 +249,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         }
     }
 
-    async function handleCardPayment() {
+    async function startCardPayment(amountOverride?: number, methodOverride?: string) {
         if (!terminal || !connectedReader) {
             setPaymentStatus('No reader connected. Please connect a reader first.');
             return;
@@ -259,9 +259,11 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         setPaymentStatus('Initializing Payment...');
         activePaymentIntentId.current = null;
 
+        const amount = typeof amountOverride === 'number' ? amountOverride : total;
+
         try {
             // 1. Create PaymentIntent on Server
-            const piResult = await createTerminalPaymentIntent(total);
+            const piResult = await createTerminalPaymentIntent(amount);
             if (!piResult.success) throw new Error(piResult.error);
 
             const clientSecret = piResult.clientSecret;
@@ -289,8 +291,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 throw new Error(processResult.error.message);
             }
 
-            // 4. Capture Payment (Server-side) - only needed for card_present with manual capture
-            // Interac payments auto-capture and will have status 'succeeded' already
+            // 4. Capture Payment (Server-side)
             if (processResult.paymentIntent.status === 'requires_capture') {
                 setPaymentStatus('Capturing Payment...');
                 const captureResult = await captureTerminalPayment(processResult.paymentIntent.id);
@@ -302,18 +303,18 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
 
             setPaymentStatus('Payment Successful!');
             activePaymentIntentId.current = null;
-            await processPayment(paymentMethod); // Finalize order in DB
+            await processPayment(methodOverride || paymentMethod); // Finalize order in DB
 
         } catch (error: any) {
             console.error('Payment failed:', error);
             const msg = error.message || '';
-            // If the reader disconnected, reset the connected state so they can reconnect
             if (msg.includes('connection') || msg.includes('discoverReaders') || msg.includes('connectReader')) {
                 setConnectedReader(null);
                 setTerminalStatus('Reader Disconnected');
                 setPaymentStatus('Reader disconnected. Please reconnect and try again.');
             } else {
                 setPaymentStatus(`Payment Failed: ${msg}`);
+                alert(`Payment Error: ${msg}`); // Explicit alert for debugging
             }
         } finally {
             setIsTerminalLoading(false);
@@ -568,7 +569,6 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                 changeDue = 0
             }
 
-            const { createOrder } = await import('@/app/actions/orders')
             const order = await createOrder({
                 orderId,
                 customer: selectedCustomer?.name || selectedCustomerType,
@@ -1195,43 +1195,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                                     alert('Cash amount must be between $0.01 and the total.')
                                                     return
                                                 }
-                                                if (!connectedReader) {
-                                                    alert('Please connect a card reader for the card portion.')
-                                                    return
-                                                }
                                                 
-                                                setIsTerminalLoading(true)
-                                                setPaymentStatus(`Charging $${cardAmount.toFixed(2)} to card...`)
-                                                try {
-                                                    const piResult = await createTerminalPaymentIntent(cardAmount)
-                                                    if (!piResult.success) throw new Error(piResult.error)
-                                                    activePaymentIntentId.current = piResult.id || null
-                                                    setPaymentStatus('Please tap, insert, or swipe card...')
-                                                    const collectResult = await terminal.collectPaymentMethod(piResult.clientSecret)
-                                                    if (collectResult.error) {
-                                                        if (collectResult.error.code === 'canceled') {
-                                                            setPaymentStatus('Payment cancelled.')
-                                                            activePaymentIntentId.current = null
-                                                            return
-                                                        }
-                                                        throw new Error(collectResult.error.message)
-                                                    }
-                                                    setPaymentStatus('Processing...')
-                                                    const processResult = await terminal.processPayment(collectResult.paymentIntent)
-                                                    if (processResult.error) throw new Error(processResult.error.message)
-                                                    if (processResult.paymentIntent.status === 'requires_capture') {
-                                                        const captureResult = await captureTerminalPayment(processResult.paymentIntent.id)
-                                                        if (!captureResult.success) throw new Error('Capture failed')
-                                                    }
-                                                    setPaymentStatus('Card portion successful!')
-                                                    activePaymentIntentId.current = null
-                                                    await processPayment('Split (Cash/Card)')
-                                                } catch (error: any) {
-                                                    setPaymentStatus(`Failed: ${error.message}`)
-                                                } finally {
-                                                    setIsTerminalLoading(false)
-                                                    activePaymentIntentId.current = null
-                                                }
+                                                await startCardPayment(cardAmount, 'Split (Cash/Card)')
                                             }}
                                             disabled={(!splitCashAmount || parseFloat(splitCashAmount) <= 0 || parseFloat(splitCashAmount) >= total || !connectedReader || isTerminalLoading) && !activePaymentIntentId.current}
                                             className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:shadow-none ${isTerminalLoading && activePaymentIntentId.current ? 'bg-red-500 hover:bg-red-600' : 'bg-[#1E1E1E] hover:bg-black'} text-white`}
@@ -1308,7 +1273,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                                 </button>
                                             ) : (
                                                 <button
-                                                    onClick={handleCardPayment}
+                                                    onClick={() => startCardPayment()}
                                                     disabled={!connectedReader}
                                                     className="w-full py-4 bg-[#D4AF37] text-white rounded-xl font-black text-lg hover:bg-[#B8962E] transition-all shadow-lg shadow-[#D4AF37]/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
                                                 >
