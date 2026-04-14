@@ -48,7 +48,8 @@ export default function InventoryPage() {
     const [activeTab, setActiveTab] = useState<string>('All')
     const [showSaleDropdown, setShowSaleDropdown] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
-    const [itemsPerPage, setItemsPerPage] = useState(50)
+    const [itemsPerPage, setItemsPerPage] = useState(25)
+
 
 
     const fileRef = useRef<HTMLInputElement>(null)
