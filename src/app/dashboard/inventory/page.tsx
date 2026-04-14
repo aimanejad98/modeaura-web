@@ -10,7 +10,8 @@ import { uploadImage } from '@/app/actions/upload'
 import DashboardTour from '@/components/DashboardTour'
 import MediaPicker from '@/components/MediaPicker'
 import DashboardPageGuide from '@/components/DashboardPageGuide'
-import { Search, ArrowUpDown, CheckSquare, Square, Trash2, Tag, Archive, Package, Barcode, TrendingDown, Layers } from 'lucide-react'
+import { Search, ArrowUpDown, CheckSquare, Square, Trash2, Tag, Archive, Package, Barcode, TrendingDown, Layers, ChevronLeft, ChevronRight } from 'lucide-react'
+
 
 export default function InventoryPage() {
     const [products, setProducts] = useState<any[]>([])
@@ -46,6 +47,9 @@ export default function InventoryPage() {
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null)
     const [activeTab, setActiveTab] = useState<string>('All')
     const [showSaleDropdown, setShowSaleDropdown] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(50)
+
 
     const fileRef = useRef<HTMLInputElement>(null)
     const imageRef = useRef<HTMLInputElement>(null)
@@ -183,6 +187,12 @@ export default function InventoryPage() {
             }
         }
     }, [showAdd, activeTab, categories])
+
+    // Reset pagination on filter change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchQuery, activeTab])
+
 
     function handleDuplicate(product: any) {
         const subCat = product.category
@@ -410,6 +420,9 @@ export default function InventoryPage() {
                 if (sortConfig.key === 'category') {
                     aVal = a.category?.name || ''
                     bVal = b.category?.name || ''
+                } else if (sortConfig.key === 'name') {
+                    aVal = a.name.toLowerCase()
+                    bVal = b.name.toLowerCase()
                 }
 
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1
@@ -418,8 +431,10 @@ export default function InventoryPage() {
             })
         }
 
+
         return result
-    }, [products, activeTab, searchQuery, sortConfig, categories])
+    }, [products, activeTab, searchQuery, sortConfig])
+
 
     const groupedProducts = useMemo(() => {
         const groups = filteredProducts.reduce((acc, p) => {
@@ -442,8 +457,41 @@ export default function InventoryPage() {
             }
             return acc;
         }, {} as Record<string, any>);
-        return Object.values(groups);
-    }, [filteredProducts]);
+        
+        const sortedGroups = Object.values(groups);
+        
+        // Handle sorting at the group level as well for Name/Price/Stock
+        if (sortConfig) {
+            sortedGroups.sort((a: any, b: any) => {
+                let aVal = a[sortConfig.key]
+                let bVal = b[sortConfig.key]
+
+                if (sortConfig.key === 'stock') {
+                    aVal = a.totalStock
+                    bVal = b.totalStock
+                } else if (sortConfig.key === 'category') {
+                    aVal = a.category?.name || ''
+                    bVal = b.category?.name || ''
+                } else if (sortConfig.key === 'name') {
+                    aVal = a.name.toLowerCase()
+                    bVal = b.name.toLowerCase()
+                }
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1
+                return 0
+            })
+        }
+
+        return sortedGroups;
+    }, [filteredProducts, sortConfig]);
+
+    const totalPages = Math.ceil(groupedProducts.length / itemsPerPage)
+    const paginatedProducts = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage
+        return groupedProducts.slice(start, start + itemsPerPage)
+    }, [groupedProducts, currentPage, itemsPerPage])
+
 
     // Bulk Actions Handlers
     const handleSelectAll = () => {
@@ -583,23 +631,34 @@ export default function InventoryPage() {
                                         </button>
                                     </th>
                                     <th className="p-5 text-left">Article</th>
-                                    <th className="p-5 text-left">Details</th>
-                                    <th className="p-5 text-left">Designation</th>
+                                    <th className="p-5 text-left cursor-pointer hover:bg-black/5" onClick={() => handleSort('name')}>
+                                        Details
+                                        <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'name' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
+                                    </th>
+                                    <th className="p-5 text-left cursor-pointer hover:bg-black/5" onClick={() => handleSort('name')}>
+                                        Designation
+                                        <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'name' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
+                                    </th>
                                     <th className="p-5 text-left cursor-pointer hover:bg-black/5" onClick={() => handleSort('category')}>
                                         Category
                                         <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'category' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
                                     </th>
                                     <th className="p-5 text-left">Specifications</th>
-                                    <th className="p-5 text-right">Valuation</th>
+                                    <th className="p-5 text-right cursor-pointer hover:bg-black/5" onClick={() => handleSort('price')}>
+                                        Valuation
+                                        <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'price' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
+                                    </th>
                                     <th className="p-5 text-center cursor-pointer hover:bg-black/5" onClick={() => handleSort('stock')}>
                                         In Stock
                                         <ArrowUpDown size={12} className={`inline ml-1 ${sortConfig?.key === 'stock' ? 'text-[var(--gold)] opacity-100' : 'opacity-20'}`} />
                                     </th>
                                     <th className="p-5 text-center">Expand</th>
+
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#F3EDE4]">
-                                {groupedProducts.map((group: any) => {
+                                {paginatedProducts.map((group: any) => {
+
                                     const isGroupSelected = group.ids?.every((id: string) => selectedProductIds.has(id));
                                     return (
                                         <React.Fragment key={group.name}>
@@ -791,6 +850,56 @@ export default function InventoryPage() {
                         </table>
                     </div>
 
+                    {/* Desktop Pagination Controls */}
+                    <div className="bg-[#F4F0EA]/30 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-[var(--mocha-border)]">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                            Showing {Math.min(groupedProducts.length, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(groupedProducts.length, currentPage * itemsPerPage)} of {groupedProducts.length} articles
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-[var(--mocha-border)] text-gray-500 hover:text-[var(--gold)] disabled:opacity-30 disabled:hover:text-gray-500 transition-all shadow-sm"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <div className="flex items-center gap-1">
+                                {[...Array(totalPages)].map((_, i) => {
+                                    const pageNum = i + 1;
+                                    if (
+                                        pageNum === 1 ||
+                                        pageNum === totalPages ||
+                                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                    ) {
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`w-8 h-8 text-[10px] font-black rounded-lg transition-all ${currentPage === pageNum ? 'bg-[var(--gold)] text-white shadow-md' : 'bg-white border border-[var(--mocha-border)] text-gray-400 hover:border-[var(--gold)] hover:text-[var(--gold)]'}`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    } else if (
+                                        pageNum === currentPage - 2 ||
+                                        pageNum === currentPage + 2
+                                    ) {
+                                        return <span key={pageNum} className="text-gray-300 px-1">...</span>;
+                                    }
+                                    return null;
+                                })}
+                            </div>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-[var(--mocha-border)] text-gray-500 hover:text-[var(--gold)] disabled:opacity-30 disabled:hover:text-gray-500 transition-all shadow-sm"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+
+
                     {/* Mobile Card List: Hidden on Desktop */}
                     <div className="lg:hidden divide-y divide-[#F3EDE4]">
                         <div className="p-4 bg-gray-50 flex justify-between items-center">
@@ -802,7 +911,8 @@ export default function InventoryPage() {
                                 <span className="text-[var(--gold)] font-bold text-xs">{selectedProductIds.size} Selected</span>
                             )}
                         </div>
-                        {groupedProducts.map((group: any) => (
+                        {paginatedProducts.map((group: any) => (
+
                             <div key={group.name} className="p-6 space-y-4">
                                 <div className="flex gap-4 items-start">
                                     <div className="shrink-0 flex gap-3">
@@ -890,6 +1000,30 @@ export default function InventoryPage() {
                             </div>
                         )}
                     </div>
+
+                    {/* Mobile Pagination Controls */}
+                    <div className="bg-[#F4F0EA]/30 px-6 py-4 flex flex-col justify-center items-center gap-4 border-t border-[var(--mocha-border)]">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                            Page {currentPage} of {totalPages} ({groupedProducts.length} articles)
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 flex items-center gap-2 rounded-lg bg-white border border-[var(--mocha-border)] text-[10px] font-black uppercase text-gray-500 hover:text-[var(--gold)] disabled:opacity-30 transition-all shadow-sm"
+                            >
+                                <ChevronLeft size={14} /> Prev
+                            </button>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="px-4 py-2 flex items-center gap-2 rounded-lg bg-white border border-[var(--mocha-border)] text-[10px] font-black uppercase text-gray-500 hover:text-[var(--gold)] disabled:opacity-30 transition-all shadow-sm"
+                            >
+                                Next <ChevronRight size={14} />
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div >
 
