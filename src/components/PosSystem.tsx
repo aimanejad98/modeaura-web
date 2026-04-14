@@ -75,6 +75,8 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
     const [transactionId, setTransactionId] = useState('')
     const [mounted, setMounted] = useState(false)
     const [taxRate, setTaxRate] = useState(0.13) // Default to 13%
+    const [taxEnabled, setTaxEnabled] = useState(true)
+
     // Email Receipt State
     const [receiptEmail, setReceiptEmail] = useState('')
     const [emailSending, setEmailSending] = useState(false)
@@ -486,7 +488,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
         return Math.min(appliedDiscount.value, subtotal)
     }, [subtotal, appliedDiscount])
     const taxableAmount = Math.max(0, subtotal - discountAmount)
-    const tax = taxableAmount * taxRate
+    const tax = taxEnabled ? (taxableAmount * taxRate) : 0
     const total = taxableAmount + tax
 
     // Discounts
@@ -635,6 +637,7 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
             setAppliedDiscount(null)
             setShowPaymentModal(false)
             setTransactionId(generateId())
+            setTaxEnabled(true)
             // Pre-fill email if customer is selected
             if (selectedCustomer && selectedCustomer.email) {
                 setReceiptEmail(selectedCustomer.email)
@@ -1098,7 +1101,26 @@ export default function PosSystem({ restrictedMode = false }: { restrictedMode?:
                                             <button onClick={() => setTenderedAmount(total.toFixed(2))} className="py-2 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 rounded-lg font-bold transition-colors">Exact</button>
                                         </div>
                                         <div className="bg-gray-50 p-5 rounded-xl flex justify-between items-center"><span className="font-bold text-gray-500">Change Due</span><span className={`text-2xl font-black ${parseFloat(tenderedAmount || '0') >= total ? 'text-green-600' : 'text-gray-300'}`}>${Math.max(0, parseFloat(tenderedAmount || '0') - total).toFixed(2)}</span></div>
+                                        {/* Tax Toggle (Cash Only) */}
+                                        <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                                            <div>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Tax Management</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-black text-gray-900">Include HST ({(taxRate * 100).toFixed(0)}%)</span>
+                                                    {!taxEnabled && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-black uppercase">Tax Removed</span>}
+                                                </div>
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setTaxEnabled(!taxEnabled)}
+                                                className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${taxEnabled ? 'bg-[#D4AF37]' : 'bg-gray-200'}`}
+                                            >
+                                                <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm ${taxEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                                            </button>
+                                        </div>
+
                                         <button onClick={() => processPayment()} disabled={!tenderedAmount || parseFloat(tenderedAmount) < total} className="w-full py-4 bg-[#1E1E1E] text-white rounded-xl font-bold text-lg hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:shadow-none">Complete Cash Sale</button>
+
                                     </div>
                                 ) : paymentTab === 'split' ? (
                                     /* SPLIT PAYMENT UI */

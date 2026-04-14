@@ -249,6 +249,20 @@ export async function checkAndRenewExpenses() {
     }
 }
 
+// --- Sales Orders ---
+
+export async function getSalesOrders() {
+    try {
+        const orders = await prisma.order.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
+        return JSON.parse(JSON.stringify(orders));
+    } catch (error) {
+        console.error('[Finance] Sales orders fetch failed:', error);
+        return [];
+    }
+}
+
 // --- Stats ---
 
 export async function getDashboardStats() {
