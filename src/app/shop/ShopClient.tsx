@@ -247,7 +247,7 @@ export default function ShopClient() {
     }, [allProducts, managedColors, selectedCollectionIds]);
 
     const filteredAndGroupedProducts = useMemo(() => {
-        let filtered = allProducts;
+        let filtered = allProducts.filter(p => p.showOnWebsite !== false);
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(p => {

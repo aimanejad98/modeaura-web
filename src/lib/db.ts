@@ -17,14 +17,20 @@ const prismaClientSingleton = () => {
             if (!fs.existsSync(tmpDbPath)) {
                 if (fs.existsSync(sourceDbPath)) {
                     fs.copyFileSync(sourceDbPath, tmpDbPath);
-                    console.log('✅ Database cloned to /tmp');
+                    console.log('✅ [DB] Database cloned to /tmp');
+                } else {
+                    console.error('⚠️ [DB] WARNING: Source database NOT FOUND at', sourceDbPath);
+                    console.error('⚠️ [DB] Data will be lost on next restart/cold start if not persisted elsewhere.');
                 }
+            } else {
+                console.log('ℹ️ [DB] Using existing database in /tmp');
             }
         } catch (error) {
-            console.error('❌ Failed to copy database:', error);
+            console.error('❌ [DB] Failed to manage database in /tmp:', error);
         }
 
         url = `file:${tmpDbPath}`;
+        console.warn('⚠️ [DB] CAUTION: Running with ephemeral SQLite database. Changes will disappear on cold starts.');
     }
 
     return new PrismaClient({

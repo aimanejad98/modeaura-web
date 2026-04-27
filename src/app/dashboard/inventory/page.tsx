@@ -152,6 +152,8 @@ export default function InventoryPage() {
                 setNewProduct({ ...newProduct, name: '', size: '', color: '', material: '', isNewArrival: false, isKids: false, discountPrice: 0, saleId: '' })
                 setBulkStock({})
                 setImages([])
+                setSearchQuery('') 
+                setCurrentPage(1) // Return to first page
                 await loadData(true)
             } else {
                 setNewProduct({ name: '', categoryId: '', price: 0, costPrice: 0, stock: 0, size: '', color: '', material: '', isNewArrival: false, isKids: false, discountPrice: 0, saleId: '' })
@@ -159,11 +161,18 @@ export default function InventoryPage() {
                 setSelectedMain(null)
                 setImages([])
                 setShowAdd(false)
+                setSearchQuery('') 
+                setCurrentPage(1) // Return to first page to see new product
                 await loadData(true)
             }
         } catch (error: any) {
-            console.error('Failed to add product:', error)
-            alert(`Failed to add product: ${error.message || 'Unknown error'}`)
+            console.error('[Inventory] Failed to add:', error)
+            if (error.message?.includes('Server Action') || error.message?.includes('failed to find')) {
+                alert('The website was recently updated. For security and stability, the page will now refresh. Please try adding the product again after the refresh.')
+                window.location.reload()
+            } else {
+                alert(error.message || 'Failed to save product. Please check your connection.')
+            }
         } finally {
             setIsSubmitting(false)
         }

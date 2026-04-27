@@ -4,6 +4,12 @@ import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { ensureSizeExists } from "./sizes";
 
+const DEPLOYMENT_ID = Date.now().toString();
+
+export async function getDeploymentId() {
+    return DEPLOYMENT_ID;
+}
+
 // Generate SKU based on category hierarchy
 async function generateSku(categoryId: string): Promise<string> {
     const category = await prisma.category.findUnique({
@@ -469,6 +475,7 @@ export async function bulkRemoveSale(ids: string[]) {
         return { success: false };
     }
 }
+
 export async function getProductSku(productId: string) {
     try {
         const product = await prisma.product.findUnique({
@@ -481,3 +488,4 @@ export async function getProductSku(productId: string) {
         return null;
     }
 }
+
